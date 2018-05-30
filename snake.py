@@ -139,8 +139,8 @@ class Target:
         screen = pg.display.get_surface()
         bounds = screen.get_size()
 
-        px = random.randrange(0, (bounds[0] // GS)-1)
-        py = random.randrange(0, (bounds[1] // GS)-1)
+        px = random.randrange(1, (bounds[0] // GS)-1)
+        py = random.randrange(2, (bounds[1] // GS)-1)
         self.pos = (px * GS, py * GS)
 
 
@@ -157,7 +157,7 @@ def draw_score(surface, score, font_size=20, pos=(10, 10)):
     font_name   = pg.font.match_font('arial')
     font        = pg.font.Font(font_name, font_size)
 
-    tsurface    = font.render("Score : " + str(score), True, pg.Color('white'))
+    tsurface    = font.render("score  " + str(score), True, pg.Color('white'))
     text_rect   = tsurface.get_rect()
     text_rect.topleft = pos
     surface.blit(tsurface, text_rect)
