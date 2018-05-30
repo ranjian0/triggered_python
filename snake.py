@@ -153,14 +153,26 @@ def draw_grid(surface):
         for y in range(cy):
             pg.draw.rect(surface, pg.Color('grey'), [x*GS, y*GS, GS, GS], 1)
 
-def draw_score(surface, score, font_size=20, pos=(10, 10)):
+def draw_score(surface, score):
     font_name   = pg.font.match_font('arial')
-    font        = pg.font.Font(font_name, font_size)
 
-    tsurface    = font.render("score  " + str(score), True, pg.Color('white'))
+    font        = pg.font.Font(font_name, 12)
+    font.set_bold(True)
+    tsurface    = font.render("Score", True, pg.Color('black'))
     text_rect   = tsurface.get_rect()
-    text_rect.topleft = pos
+    text_rect.topleft = (10, 5)
+
+    font        = pg.font.Font(font_name, 15)
+    font.set_bold(True)
+
+    ssurface    = font.render(str(score), True, pg.Color('white'))
+    stext_rect  = tsurface.get_rect()
+    stext_rect.topleft = (10, 22)
+
+    pg.draw.rect(surface, pg.Color("grey"), [0, 0, SIZE[0], 50])
+    pg.draw.rect(surface, (80, 80, 80), [10, 20, 50, 20])
     surface.blit(tsurface, text_rect)
+    surface.blit(ssurface, stext_rect)
 
 def draw_game_over(surface, score):
     font_name   = pg.font.match_font('arial')
