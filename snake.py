@@ -12,13 +12,13 @@ import pygame as pg
 from pygame.math import Vector2 as vec2
 
 # GLOBALS
-FPS = 5
-SIZE = 500, 500
-CAPTION = "Snake"
-BACKGROUND = (100, 100, 100)
-GS = 25
+FPS         = 5
+SIZE        = 500, 500
+CAPTION     = "Snake"
+BACKGROUND  = 100, 100, 100
 
-# Input
+
+GS          = 25
 keys        = [pg.K_w, pg.K_s, pg.K_a, pg.K_d]
 opt_keys    = [pg.K_UP, pg.K_DOWN, pg.K_LEFT, pg.K_RIGHT]
 directions  = [(0, -1), (0, 1), (-1, 0), (1, 0)]
@@ -143,6 +143,7 @@ class Target:
         py = random.randrange(0, (bounds[1] // GS)-1)
         self.pos = (px * GS, py * GS)
 
+
 def draw_grid(surface):
     """
     Draw the snake playground
@@ -161,6 +162,9 @@ def draw_score(surface, score, font_size=20, pos=(10, 10)):
     text_rect.topleft = pos
     surface.blit(tsurface, text_rect)
 
+def draw_game_over(surface, score, font_size=20):
+    pass
+
 def main():
 
     # Pygame Context
@@ -174,8 +178,8 @@ def main():
     target  = Target((100, 100), (GS, GS), pg.Color('green'))
 
     # Game Variables
-    score   = 0
-    dt      = 0
+    score    = 0
+    gameover = False
 
     # Game Loop
     while True:
@@ -186,27 +190,38 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     sys.exit()
+
+                if gameover and event.key == pg.K_SPACE:
+                    # -- reset items
+                    score   = 0
+                    snake   = Snake((225, 225), 5, pg.Color('red'))
+                    target  = Target((100, 100), (GS, GS), pg.Color('green'))
+
+                    # -- resume
+                    gameover = False
+
             snake.event(event)
 
         # Draw
         screen.fill(BACKGROUND)
-
-        draw_score(screen, score)
-        snake.draw(screen)
-        target.draw(screen)
+        if gameover:
+            draw_game_over(screen, score)
+        else:
+            draw_score(screen, score)
+            snake.draw(screen)
+            target.draw(screen)
 
         pg.display.flip()
 
         # Update
-        snake.update(dt)
-        if snake.collide_target(target):
-            score += 1
-
-        if snake.collide_walls() or snake.collide_self():
-            print("Game Over ! Score ==> {}".format(score))
-            sys.exit()
-
         dt = clock.tick(FPS) / 1000.0
+        if not gameover:
+            snake.update(dt)
+            if snake.collide_target(target):
+                score += 1
+
+            if snake.collide_walls() or snake.collide_self():
+                gameover = True
 
 
 if __name__ == '__main__':
