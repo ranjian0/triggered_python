@@ -144,15 +144,6 @@ class Target:
         self.pos = (px * GS, py * GS)
 
 
-def draw_grid(surface):
-    """
-    Draw the snake playground
-    """
-    cx, cy = SIZE[0] // GS, SIZE[1] // GS
-    for x in range(cx):
-        for y in range(cy):
-            pg.draw.rect(surface, pg.Color('grey'), [x*GS, y*GS, GS, GS], 1)
-
 def draw_score(surface, score):
     font_name   = pg.font.match_font('arial')
 
