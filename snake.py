@@ -108,7 +108,7 @@ class Snake:
     def collide_walls(self):
         width, height = pg.display.get_surface().get_size()
         beyond_x = self.snake[0].x > width or self.snake[0].x < 0
-        beyond_y = self.snake[0].y > height or self.snake[0].y < 0
+        beyond_y = self.snake[0].y > height or self.snake[0].y < 50
         if beyond_x or beyond_y:
             return True
         return False
