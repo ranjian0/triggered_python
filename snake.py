@@ -162,8 +162,38 @@ def draw_score(surface, score, font_size=20, pos=(10, 10)):
     text_rect.topleft = pos
     surface.blit(tsurface, text_rect)
 
-def draw_game_over(surface, score, font_size=20):
-    pass
+def draw_game_over(surface, score):
+    font_name   = pg.font.match_font('arial')
+
+    # -- Draw Game Over Text
+    font        = pg.font.Font(font_name, 40)
+    font.set_bold(True)
+
+    tsurface    = font.render("GAME OVER", True, pg.Color('red'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, 100)
+    surface.blit(tsurface, text_rect)
+
+
+    # -- Draw score text
+    font        = pg.font.Font(font_name, 20)
+    font.set_bold(True)
+
+    tsurface    = font.render("Your Score " + str(score), True, pg.Color('white'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, 200)
+    surface.blit(tsurface, text_rect)
+
+    # -- Draw instructions
+    font        = pg.font.Font(font_name, 12)
+    font.set_bold(True)
+    font.set_italic(True)
+
+    tsurface    = font.render("Press Escape to QUIT, Space to RESTART", True, pg.Color('white'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, SIZE[1]-20)
+    surface.blit(tsurface, text_rect)
+
 
 def main():
 
