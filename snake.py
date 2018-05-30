@@ -143,7 +143,6 @@ class Target:
         py = random.randrange(2, (bounds[1] // GS)-1)
         self.pos = (px * GS, py * GS)
 
-
 def draw_score(surface, score):
     font_name   = pg.font.match_font('arial')
 
@@ -197,7 +196,6 @@ def draw_game_over(surface, score):
     text_rect.center = (SIZE[0]//2, SIZE[1]-20)
     surface.blit(tsurface, text_rect)
 
-
 def main():
 
     # Pygame Context
@@ -213,6 +211,7 @@ def main():
     # Game Variables
     score    = 0
     gameover = False
+    paused   = False
 
     # Game Loop
     while True:
@@ -224,6 +223,9 @@ def main():
                 if event.key == pg.K_ESCAPE:
                     sys.exit()
 
+                if event.key == pg.K_TAB:
+                    paused = not paused
+
                 if gameover and event.key == pg.K_SPACE:
                     # -- reset items
                     score   = 0
@@ -233,7 +235,11 @@ def main():
                     # -- resume
                     gameover = False
 
-            snake.event(event)
+            if not paused:
+                snake.event(event)
+
+        if paused:
+            continue
 
         # Draw
         screen.fill(BACKGROUND)
