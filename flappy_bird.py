@@ -70,6 +70,7 @@ def main():
         pg.display.flip()
 
         # -- Update
+        # print(clock.get_fps())
         dt = clock.tick(FPS) / 1000.0
         for _ in range(PHYSICS_STEP):
             space.step(0.1 / PHYSICS_STEP)
@@ -115,7 +116,6 @@ class Bird:
 
         self.flap_strength = 50
 
-
     def flap(self):
         vx, vy = self.body.velocity
         self.body.velocity = (vx, -self.flap_strength)
@@ -137,16 +137,18 @@ class Bird:
 
 class Blocks:
 
-    def __init__(self, width = 30, gap = 75, space=None):
+    def __init__(self, width = 30, gap = 100, space=None):
         self.width = width
         self.gap = gap
-        self.speed = 10
+        self.speed = 20
         self.space = space
 
         self.blocks = []
         self.spawn_time  = 0
         self.spawn_delay = 100
         self.spawn()
+
+        self.block_image = self.make_image()
 
     def make_image(self):
         m = 6
@@ -172,7 +174,7 @@ class Blocks:
         px, py = pos
 
         # Top Block
-        tbody  = pm.Body(1,1, pm.Body.KINEMATIC)
+        tbody  = pm.Body(body_type=pm.Body.KINEMATIC)
         tbody.position  = (px, py-((h/2) + (self.gap/2)))
 
         tshape = pm.Poly.create_box(tbody, size=(w,h))
@@ -180,29 +182,26 @@ class Blocks:
         self.space.add(tbody, tshape)
 
         # Bottom Block
-        bbody = pm.Body(1,1, pm.Body.KINEMATIC)
+        bbody = pm.Body(body_type=pm.Body.KINEMATIC)
         bbody.position  = (px, py+((h/2) + (self.gap/2)))
 
         bshape = pm.Poly.create_box(bbody, size=(w,h))
         bshape.collision_type = COLLISION_MAP.get("BlockType")
         self.space.add(bbody, bshape)
 
-
-        block = [bbody, tbody]
-        for b in block:
+        for b in [bbody, tbody]:
             b.velocity = (-self.speed, 0)
-        self.blocks.append([bbody, tbody])
+        self.blocks.append([bshape, tshape])
 
     def draw(self, surface):
         for bblock, tblock in self.blocks:
-            p = ((bblock.position + tblock.position)/2)
+            p = ((bblock.body.position + tblock.body.position)/2)
             self.draw_block(surface, (p.x, p.y))
 
     def draw_block(self, surface, pos):
-        img = self.make_image()
+        img = self.block_image.copy()
         rect = img.get_rect(center=pos)
         surface.blit(img, rect)
-
 
     def update(self, dt):
         # Do spawn
@@ -211,11 +210,17 @@ class Blocks:
             self.spawn()
             self.spawn_time = 0
 
-        # # remove blocks out of view
-        # for bodies in self.blocks:
-        #     for body in bodies:
-        #         if body.position.x + self.width < 0:
-        #             self.space.remove(body)
+        # remove blocks out of view
+        mean_pos = lambda s: (s[0].body.position+s[1].body.position)/2
+        for shape in [s for b in self.blocks for s in b]:
+            if shape.body.position.x < 0:
+                if shape.body in self.space.bodies:
+                    self.space.remove(shape.body, shape)
+
+        for b in self.blocks:
+            if mean_pos(b).x < 0:
+                self.blocks.remove(b)
+                break
 
     def spawn(self):
         rand_y = random.randrange(self.gap, SIZE[1] - self.gap)
