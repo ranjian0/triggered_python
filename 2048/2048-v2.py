@@ -312,7 +312,7 @@ def main():
 
 
         # Update
-        dt = clock.tick(25) / 1000.0
+        dt = clock.tick(35) / 1000.0
         board.update(dt)
 
         if board.full:
