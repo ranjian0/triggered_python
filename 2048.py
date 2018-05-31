@@ -20,10 +20,13 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import os
 import sys
+import pickle
 import random
 import pygame as pg
 import itertools as it
+from pathlib import Path
 from pprint import pprint
 from pygame.math import Vector2 as vec2
 
@@ -95,6 +98,27 @@ def draw_highscore(surface, hscore=0):
     pg.draw.rect(surface, pg.Color('gray'), bgrect)
     surface.blit(itsurface, itrect)
     surface.blit(stsurface, strect)
+
+def load_highscore():
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    data_file = os.path.join(cur_dir, '2048.data')
+    if Path(data_file).exists():
+        return pickle.load(open(data_file, 'rb'))['highscore']
+    else:
+        return 0
+
+def set_highscore(score):
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    data_file = os.path.join(cur_dir, '2048.data')
+
+    if Path(data_file).exists():
+        data = pickle.load(open(data_file, 'rb'))
+        if data['highscore'] < score:
+            with open(data_file, 'wb') as file:
+                pickle.dump({'highscore' : score}, file)
+    else:
+        with open(data_file, 'wb') as file:
+            pickle.dump({'highscore' : score}, file)
 
 class Tile:
     """Tile methods and properties"""
@@ -185,14 +209,11 @@ class Board:
 
         empty_positions = list(set(chain(self.positions)) - set(t.pos for t in chain(self.tiles) if t))
 
-        if not empty_positions:
-            self.full = True
-            return
-
         for _ in range(count):
             # create new tile
             p = random.choice(empty_positions)
-            t = Tile(2, (tx, ty), p)
+            v = random.choice([2**x for x in range(1, 12)])
+            t = Tile(v, (tx, ty), p)
 
             # add to board
             self.set_tile(t, p)
@@ -211,6 +232,9 @@ class Board:
 
     def update(self, dt):
         """Update tiles"""
+        if all(list(chain(self.tiles))):
+            self.full = True
+
         if not any(self.direction):
             return
 
@@ -291,6 +315,7 @@ def main():
 
     # Objects
     board = Board((4, 4))
+    hscore = load_highscore()
 
     dt      = 0
     while True:
@@ -312,7 +337,7 @@ def main():
 
         draw_title(screen)
         draw_score(screen, board.score)
-        draw_highscore(screen)
+        draw_highscore(screen, hscore)
         board.draw(screen)
 
         pg.display.flip()
@@ -320,9 +345,11 @@ def main():
         # Update
         dt = clock.tick(20) / 1000.0
         board.update(dt)
+        hscore = max(hscore, board.score)
 
         if board.full:
-            print("Game Over")
+            set_highscore(hscore)
+            break
 
 if __name__ == '__main__':
     main()
