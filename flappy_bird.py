@@ -76,16 +76,16 @@ def main():
         bird.update(dt)
         blocks.update(dt)
 
+def post_hit():
+    hit_event = pg.event.Event(EVENT_MAP.get("HitEvent"))
+    pg.event.post(hit_event)
+
 def add_ground(space):
     w, h = SIZE[0], 20
     shape = pm.Poly.create_box(space.static_body, size=(w, h))
     shape.body.position  = (w/2, SIZE[1]+h/2)
     shape.collision_type = COLLISION_MAP.get("GroundType")
     space.add(shape)
-
-def post_hit():
-    hit_event = pg.event.Event(EVENT_MAP.get("HitEvent"))
-    pg.event.post(hit_event)
 
 def setup_collisions(space, score):
 
