@@ -190,7 +190,6 @@ def draw_gameover(surface, score):
     text_rect.center = (SIZE[0]//2, SIZE[1]-20)
     surface.blit(tsurface, text_rect)
 
-
 class Tile:
     """Tile methods and properties"""
 
@@ -266,6 +265,7 @@ class Board:
         return [[None for _ in range(sx)] for _ in range(sy)]
 
     def init_positions(self):
+        """Initialize positions for tiles on the board"""
         cx, cy = self.size
         sx, sy = [int(s/c) for s, c in zip(BOARD_SIZE, self.size)]
         offx, offy = 55, 155
@@ -296,6 +296,7 @@ class Board:
             empty_positions.remove(p)
 
     def reset(self):
+        """Reset board"""
         self.tiles      = self.init_tiles()
         self.positions  = self.init_positions()
         self.direction  = (0, 0)
@@ -305,6 +306,27 @@ class Board:
         self.prev_pos   = []
 
         self.add_tile(3)
+
+    def check_no_mergable(self):
+        """Ensure no tiles in board can be merged"""
+        for _dir in [(0,1), (0, -1), (1, 0), (-1, 0)]:
+            tiles = [(x, y, t) for y, row in enumerate(self.tiles)
+                               for x, t   in enumerate(row) if t]
+
+            for idx, idy, tile in tiles:
+                tx, ty = tile.pos
+                dx, dy = _dir
+                sx, sy = [int(s/c) for s, c in zip(BOARD_SIZE, self.size)]
+                npos   = tx+(dx * sx), ty+(dy * sy)
+
+                occupied    = npos in [t.pos for row in self.tiles for t in row if t]
+
+                if occupied:
+                    ntile = self.tiles[idy + dy][idx + dx]
+
+                    if tile != ntile and tile.value == ntile.value:
+                        return False
+        return True
 
     def draw(self, screen):
         """Draw the board"""
@@ -318,7 +340,8 @@ class Board:
     def update(self, dt):
         """Update tiles"""
         if all(list(chain(self.tiles))):
-            self.full = True
+            if self.check_no_mergable():
+                self.full = True
 
         if not any(self.direction):
             return
