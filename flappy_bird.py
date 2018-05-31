@@ -64,8 +64,8 @@ def main():
         bird.draw(screen)
         blocks.draw(screen)
 
-        options = putils.DrawOptions(screen)
-        space.debug_draw(options)
+        # options = putils.DrawOptions(screen)
+        # space.debug_draw(options)
 
         pg.display.flip()
 
@@ -121,8 +121,11 @@ class Bird:
         self.body.velocity = (vx, -self.flap_strength)
 
     def draw(self, surface):
-        pg.draw.circle(surface, pg.Color("red"),
-            tuple(map(int, self.body.position)), int(self.shape.radius))
+        r = int(self.shape.radius)
+        px, py = tuple(map(int, self.body.position))
+
+        pg.draw.circle(surface, pg.Color("yellow"), (px, py), r)
+        pg.draw.rect(surface, pg.Color("black"), [px, py-(r/4), r, r/2])
 
     def event(self, ev):
         if ev.type == pg.KEYDOWN:
