@@ -149,19 +149,21 @@ class Blocks:
         self.spawn()
 
     def make_image(self):
+        m = 6
         w, h = self.width, SIZE[1]*2
-        surf = pg.Surface((w, h)).convert_alpha()
+        surf = pg.Surface((w+m, h+m)).convert_alpha()
         surf.fill((0, 0, 0, 0))
 
         # -- top block
         top = int(h/2) - int(self.gap/2)
-        pg.draw.rect(surf, pg.Color("green"), [0, 0, w, top])
-        pg.draw.rect(surf, pg.Color("black"), [0, 0, w, top], 2)
+        pg.draw.rect(surf, pg.Color("black"), [0, 0, w+m, top+m])
+        pg.draw.rect(surf, pg.Color("green"), [m/2, m/2, w, top])
+
 
         # -- bottom block
         bot = int(h/2) + int(self.gap/2)
-        pg.draw.rect(surf, pg.Color("green"), [0, bot, w, h])
-        pg.draw.rect(surf, pg.Color("black"), [0, bot, w, h], 2)
+        pg.draw.rect(surf, pg.Color("black"), [0, bot, w+m, h+m])
+        pg.draw.rect(surf, pg.Color("green"), [m/2, bot+m/2, w, h])
 
         return surf
 
@@ -185,25 +187,22 @@ class Blocks:
         bshape.collision_type = COLLISION_MAP.get("BlockType")
         self.space.add(bbody, bshape)
 
-        # Score line
-        score_body = pm.Body(1,1, pm.Body.KINEMATIC)
-        score_body.position  = (px, py)
 
-        score_shape = pm.Poly.create_box(score_body, size=(5, self.gap))
-        score_shape.collision_type = COLLISION_MAP.get("PointType")
-        score_shape.filter = pm.ShapeFilter(categories=1)
-        self.space.add(score_body, score_shape)
-
-        block = [bbody, tbody, score_body]
+        block = [bbody, tbody]
         for b in block:
             b.velocity = (-self.speed, 0)
-
-        self.blocks.append(block)
+        self.blocks.append([bbody, tbody])
 
     def draw(self, surface):
-        pass
-        # for block in self.blocks:
-        #     surface.blit(block['surf'], block['rect'])
+        for bblock, tblock in self.blocks:
+            p = ((bblock.position + tblock.position)/2)
+            self.draw_block(surface, (p.x, p.y))
+
+    def draw_block(self, surface, pos):
+        img = self.make_image()
+        rect = img.get_rect(center=pos)
+        surface.blit(img, rect)
+
 
     def update(self, dt):
         # Do spawn
@@ -220,7 +219,7 @@ class Blocks:
 
     def spawn(self):
         rand_y = random.randrange(self.gap, SIZE[1] - self.gap)
-        # self.make_block((500, rand_y))
+        self.make_block((500, rand_y))
 
 
 if __name__ == '__main__':
