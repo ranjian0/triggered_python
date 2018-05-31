@@ -113,7 +113,7 @@ class Snake:
     def collide_target(self, target):
 
         if self.snake[0].colliderect(target.rect):
-            target.spawn()
+            target.spawn(self)
             return True
         else:
             del self.snake[-1]
@@ -149,13 +149,19 @@ class Target:
         self.rect = pg.Rect(px, py, sx, sy)
 
 
-    def spawn(self):
+    def spawn(self, snake):
         screen = pg.display.get_surface()
         bounds = screen.get_size()
 
-        px = random.randrange(1, (bounds[0] // GS)-1)
-        py = random.randrange(2, (bounds[1] // GS)-1)
-        self.pos = (px * GS, py * GS)
+        # -- target can't spawn on current location or on the snake
+        invalid = [self.pos]
+        invalid.extend([(s.x, s.y) for s in snake.snake])
+
+        valid = [(x*GS, y*GS) for x in range(1, (SIZE[0] // GS))
+                              for y in range(2, (SIZE[1] // GS))
+                              if (x*GS, y*GS) not in invalid]
+
+        self.pos = random.choice(valid)
 
 def draw_score(surface, score):
     font_name   = pg.font.match_font('arial')
