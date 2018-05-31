@@ -13,6 +13,8 @@ CAPTION     = '2048'
 SIZE        = 500, 600
 BOARD_SIZE  = 400, 400
 
+chain = it.chain.from_iterable
+
 colors = {
     2   : pg.Color("red"),
     4   : pg.Color("blue"),
@@ -28,7 +30,57 @@ colors = {
     4096: pg.Color("lavender")
 }
 
-chain = it.chain.from_iterable
+action_map = [
+    {"keys" : [pg.K_w, pg.K_UP],    "direction":( 0, -1)},
+    {"keys" : [pg.K_s, pg.K_DOWN],  "direction":( 0,  1)},
+    {"keys" : [pg.K_a, pg.K_LEFT],  "direction":(-1,  0)},
+    {"keys" : [pg.K_d, pg.K_RIGHT], "direction":( 1,  0)},
+]
+
+def main():
+    pg.init()
+    pg.display.set_caption(CAPTION)
+    screen  = pg.display.set_mode(SIZE, 0, 32)
+    clock   = pg.time.Clock()
+
+    # Objects
+    board = Board((4, 4))
+    hscore = load_highscore()
+
+    dt      = 0
+    while True:
+        # Events
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                sys.exit()
+
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    sys.exit()
+
+                for action in action_map:
+                    if event.key in action.get("keys"):
+                        board.set_direction(action.get("direction"))
+
+        # Draw
+        screen.fill((100, 100, 100))
+
+        draw_title(screen)
+        draw_score(screen, board.score)
+        draw_highscore(screen, hscore)
+        board.draw(screen)
+
+        pg.display.flip()
+
+        # Update
+        dt = clock.tick(20) / 1000.0
+        board.update(dt)
+        hscore = max(hscore, board.score)
+
+        if board.full:
+            set_highscore(hscore)
+            break
+
 
 def draw_title(surface):
     font_name   = pg.font.match_font('arial')
@@ -281,56 +333,6 @@ class Board:
             self.prev_pos = [(x, y) for y, r in enumerate(self.tiles)
                                     for x, t in enumerate(r) if t]
 
-action_map = [
-    {"keys" : [pg.K_w, pg.K_UP],    "direction":( 0, -1)},
-    {"keys" : [pg.K_s, pg.K_DOWN],  "direction":( 0,  1)},
-    {"keys" : [pg.K_a, pg.K_LEFT],  "direction":(-1,  0)},
-    {"keys" : [pg.K_d, pg.K_RIGHT], "direction":( 1,  0)},
-]
-
-def main():
-    pg.init()
-    pg.display.set_caption(CAPTION)
-    screen  = pg.display.set_mode(SIZE, 0, 32)
-    clock   = pg.time.Clock()
-
-    # Objects
-    board = Board((4, 4))
-    hscore = load_highscore()
-
-    dt      = 0
-    while True:
-        # Events
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                sys.exit()
-
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    sys.exit()
-
-                for action in action_map:
-                    if event.key in action.get("keys"):
-                        board.set_direction(action.get("direction"))
-
-        # Draw
-        screen.fill((100, 100, 100))
-
-        draw_title(screen)
-        draw_score(screen, board.score)
-        draw_highscore(screen, hscore)
-        board.draw(screen)
-
-        pg.display.flip()
-
-        # Update
-        dt = clock.tick(20) / 1000.0
-        board.update(dt)
-        hscore = max(hscore, board.score)
-
-        if board.full:
-            set_highscore(hscore)
-            break
 
 if __name__ == '__main__':
     main()
