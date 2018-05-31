@@ -40,7 +40,7 @@ def main():
     blocks = Blocks(space=space)
 
     add_ground(space)
-    setup_collisions(space, score)
+    setup_collisions(space, blocks, bird)
 
     while True:
 
@@ -88,7 +88,7 @@ def add_ground(space):
     shape.collision_type = COLLISION_MAP.get("GroundType")
     space.add(shape)
 
-def setup_collisions(space, score):
+def setup_collisions(space, blocks, bird):
 
     def bird_ground_solve(arbiter, space, data):
         post_hit()
@@ -99,6 +99,18 @@ def setup_collisions(space, score):
             COLLISION_MAP.get("GroundType")
         )
     bghandler.begin = bird_ground_solve
+
+    def bird_block_solve(arbiter, space, data):
+        bird.deactivate()
+        blocks.deactivate()
+        return True
+
+    bbhandler = space.add_collision_handler(
+            COLLISION_MAP.get("BirdType"),
+            COLLISION_MAP.get("BlockType")
+        )
+    bbhandler.begin = bird_block_solve
+
 
 class Bird:
 
@@ -119,6 +131,9 @@ class Bird:
     def flap(self):
         vx, vy = self.body.velocity
         self.body.velocity = (vx, -self.flap_strength)
+
+    def deactivate(self):
+        self.flap_strength = 0
 
     def draw(self, surface):
         r = int(self.shape.radius)
@@ -149,6 +164,7 @@ class Blocks:
         self.spawn()
 
         self.block_image = self.make_image()
+        self.active = True
 
     def make_image(self):
         m = 6
@@ -160,7 +176,6 @@ class Blocks:
         top = int(h/2) - int(self.gap/2)
         pg.draw.rect(surf, pg.Color("black"), [0, 0, w+m, top+m])
         pg.draw.rect(surf, pg.Color("green"), [m/2, m/2, w, top])
-
 
         # -- bottom block
         bot = int(h/2) + int(self.gap/2)
@@ -193,6 +208,11 @@ class Blocks:
             b.velocity = (-self.speed, 0)
         self.blocks.append([bshape, tshape])
 
+    def deactivate(self):
+        self.active = False
+        for shape in [s for block in self.blocks for s in block]:
+            shape.body.velocity = (0, 0)
+
     def draw(self, surface):
         for bblock, tblock in self.blocks:
             p = ((bblock.body.position + tblock.body.position)/2)
@@ -205,6 +225,9 @@ class Blocks:
 
     def update(self, dt):
         # Do spawn
+        if not self.active:
+            return
+
         self.spawn_time += 1
         if self.spawn_time == self.spawn_delay:
             self.spawn()
