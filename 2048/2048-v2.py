@@ -275,10 +275,12 @@ def main():
                 sys.exit()
 
             if event.type == pg.KEYDOWN:
+                if event.key == pg.ESCAPE:
+                    sys.exit()
+
                 for action in action_map:
                     if event.key in action.get("keys"):
                         board.set_direction(action.get("direction"))
-                        #board.add_tile()
 
         # Draw
         screen.fill((100, 100, 100))
