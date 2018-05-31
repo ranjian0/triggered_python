@@ -2,7 +2,7 @@
 #
 #  snake.py
 #
-#  Copyright 2018 Ian Ichung'wa Karanj <karanjaichungwa@gmail.com>
+#  Copyright 2018 Ian Ichung'wa Karanja <karanjaichungwa@gmail.com>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
