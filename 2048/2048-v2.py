@@ -139,6 +139,7 @@ class Board:
         self.direction  = (0, 0)
         self.score      = 0
         self.full       = False
+        self.movedone   = False
 
         self.add_tile(3)
 
@@ -209,6 +210,15 @@ class Board:
 
     def update(self, dt):
         """Update tiles"""
+        if self.movedone:
+            self.add_tile()
+            self.movedone = False
+            self.prev_dir = (self.direction[0], self.direction[1])
+            self.direction = (0, 0)
+
+        if not any(self.direction):
+            return
+
         tiles = [(x, y, t) for y, row in enumerate(self.tiles)
                            for x, t   in enumerate(row) if t]
 
@@ -217,6 +227,7 @@ class Board:
         if self.direction[1]:
             tiles.sort(key=lambda t: t[2].pos[1], reverse=True if self.direction[1] > 0 else False)
 
+        moving = []
         for idx, idy, tile in tiles:
 
             # -- Calculate next position on board based on direction
@@ -238,6 +249,9 @@ class Board:
                 self.tiles[idy][idx] = None
                 self.tiles[idy + dy][idx + dx] = tile
 
+                moving.append(True)
+                break
+
             # -- if npos has tile with same value as tile
             if occupied:
                 ntile = self.tiles[idy + dy][idx + dx]
@@ -249,6 +263,11 @@ class Board:
                     # Add score
                     self.score += ntile.value
 
+                    moving.append(True)
+                    break
+
+            moving.append(False)
+        self.movedone = not any(moving)
 
 action_map = [
     {"keys" : [pg.K_w, pg.K_UP],    "direction":( 0, -1)},
@@ -268,7 +287,6 @@ def main():
 
     dt      = 0
     while True:
-
         # Events
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -294,7 +312,7 @@ def main():
 
 
         # Update
-        dt = clock.tick(15) / 1000.0
+        dt = clock.tick(25) / 1000.0
         board.update(dt)
 
         if board.full:
