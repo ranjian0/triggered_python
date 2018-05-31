@@ -140,6 +140,7 @@ class Board:
         self.score      = 0
         self.full       = False
         self.movedone   = False
+        self.prev_pos   = []
 
         self.add_tile(3)
 
@@ -210,17 +211,13 @@ class Board:
 
     def update(self, dt):
         """Update tiles"""
-        if self.movedone:
-            self.add_tile()
-            self.movedone = False
-            self.prev_dir = (self.direction[0], self.direction[1])
-            self.direction = (0, 0)
-
         if not any(self.direction):
             return
 
         tiles = [(x, y, t) for y, row in enumerate(self.tiles)
                            for x, t   in enumerate(row) if t]
+
+        current_positions = [(t[0], t[1]) for t in tiles]
 
         if self.direction[0]:
             tiles.sort(key=lambda t: t[2].pos[0], reverse=True if self.direction[0] > 0 else False)
@@ -249,9 +246,6 @@ class Board:
                 self.tiles[idy][idx] = None
                 self.tiles[idy + dy][idx + dx] = tile
 
-                moving.append(True)
-                break
-
             # -- if npos has tile with same value as tile
             if occupied:
                 ntile = self.tiles[idy + dy][idx + dx]
@@ -262,12 +256,25 @@ class Board:
 
                     # Add score
                     self.score += ntile.value
+                    # pg.time.wait(50)
 
-                    moving.append(True)
-                    break
+        updated_positions = [(x, y) for y, row in enumerate(self.tiles)
+                                    for x, t   in enumerate(row) if t]
+        no_merge = len(current_positions) == len(updated_positions)
+        no_move = current_positions == updated_positions
+        if no_move and no_merge:
+            self.movedone = True
 
-            moving.append(False)
-        self.movedone = not any(moving)
+        if self.movedone:
+            end = [(x, y) for y, r in enumerate(self.tiles)
+                            for x, t in enumerate(r) if t]
+
+            if end != self.prev_pos:
+                self.add_tile()
+            self.movedone = False
+            self.direction = (0, 0)
+            self.prev_pos = [(x, y) for y, r in enumerate(self.tiles)
+                                    for x, t in enumerate(r) if t]
 
 action_map = [
     {"keys" : [pg.K_w, pg.K_UP],    "direction":( 0, -1)},
@@ -310,13 +317,11 @@ def main():
 
         pg.display.flip()
 
-
         # Update
-        dt = clock.tick(35) / 1000.0
+        dt = clock.tick(20) / 1000.0
         board.update(dt)
 
         if board.full:
-            # Game Over
             print("Game Over")
 
 if __name__ == '__main__':
