@@ -213,7 +213,7 @@ class Board:
             # create new tile
             random.seed(pg.time.get_ticks())
             p = random.choice(empty_positions)
-            v = 2 if max(list([t.value for t in chain(self.tiles) it t])) < 1024 else random.choice([2, 4])
+            v = 2 if max(list([t.value for t in chain(self.tiles) if t])) < 1024 else random.choice([2, 4])
             t = Tile(v, (tx, ty), p)
 
             # add to board
