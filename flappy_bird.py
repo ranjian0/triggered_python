@@ -21,7 +21,7 @@ COLLISION_MAP = {
 putils.positive_y_is_up = False
 
 EVENT_MAP = {
-    "HitEvent" : pg.USEREVENT + 1
+    "ScoreEvent" : pg.USEREVENT + 1
 }
 
 
@@ -46,15 +46,16 @@ def main():
 
         # -- Events
         for event in pg.event.get():
-
             QUIT_COND = [
                 event.type == pg.QUIT,
-                event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE,]
-                # event.type == EVENT_MAP.get("HitEvent")]
+                event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE]
 
             if any(QUIT_COND):
                 pg.quit()
                 sys.exit()
+
+            if event.type == EVENT_MAP.get("ScoreEvent"):
+                score += 1
 
 
             bird.event(event)
@@ -75,11 +76,11 @@ def main():
         for _ in range(PHYSICS_STEP):
             space.step(0.1 / PHYSICS_STEP)
         bird.update(dt)
-        blocks.update(dt)
+        blocks.update(dt, bird)
 
-def post_hit():
-    hit_event = pg.event.Event(EVENT_MAP.get("HitEvent"))
-    pg.event.post(hit_event)
+def post_score():
+    score_event = pg.event.Event(EVENT_MAP.get("ScoreEvent"))
+    pg.event.post(score_event)
 
 def add_ground(space):
     w, h = SIZE[0], 20
@@ -91,7 +92,8 @@ def add_ground(space):
 def setup_collisions(space, blocks, bird):
 
     def bird_ground_solve(arbiter, space, data):
-        post_hit()
+        bird.deactivate()
+        blocks.deactivate()
         return True
 
     bghandler = space.add_collision_handler(
@@ -158,6 +160,8 @@ class Blocks:
         self.speed = 20
         self.space = space
 
+        self.goal = None
+        self.goal_index = 0
         self.blocks = []
         self.spawn_time  = 0
         self.spawn_delay = 100
@@ -208,30 +212,48 @@ class Blocks:
             b.velocity = (-self.speed, 0)
         self.blocks.append([bshape, tshape])
 
+    def make_goal(self):
+        mean_pos = lambda s: (s[0].body.position+s[1].body.position)/2
+        pos = mean_pos(self.blocks[self.goal_index])
+
+        return pg.Rect(pos.x+self.width/2, pos.y-self.gap/2, 25, self.gap)
+
     def deactivate(self):
         self.active = False
         for shape in [s for block in self.blocks for s in block]:
             shape.body.velocity = (0, 0)
-
-    def draw(self, surface):
-        for bblock, tblock in self.blocks:
-            p = ((bblock.body.position + tblock.body.position)/2)
-            self.draw_block(surface, (p.x, p.y))
 
     def draw_block(self, surface, pos):
         img = self.block_image.copy()
         rect = img.get_rect(center=pos)
         surface.blit(img, rect)
 
-    def update(self, dt):
-        # Do spawn
+    def spawn(self):
+        rand_y = random.randrange(self.gap, SIZE[1] - self.gap)
+        self.make_block((500, rand_y))
+
+    def draw(self, surface):
+        if self.goal:
+            pg.draw.rect(surface, pg.Color("red"), self.goal, 2)
+        for bblock, tblock in self.blocks:
+            p = ((bblock.body.position + tblock.body.position)/2)
+            self.draw_block(surface, (p.x, p.y))
+
+    def update(self, dt, bird):
         if not self.active:
             return
 
+        # Spawn block
         self.spawn_time += 1
         if self.spawn_time == self.spawn_delay:
             self.spawn()
             self.spawn_time = 0
+
+        # Update goal
+        self.goal = self.make_goal()
+        if self.goal.collidepoint(bird.body.position):
+            self.goal_index += 1
+            post_score()
 
         # remove blocks out of view
         mean_pos = lambda s: (s[0].body.position+s[1].body.position)/2
@@ -243,12 +265,8 @@ class Blocks:
         for b in self.blocks:
             if mean_pos(b).x < 0:
                 self.blocks.remove(b)
+                self.goal_index -= 1
                 break
-
-    def spawn(self):
-        rand_y = random.randrange(self.gap, SIZE[1] - self.gap)
-        self.make_block((500, rand_y))
-
 
 if __name__ == '__main__':
     main()
