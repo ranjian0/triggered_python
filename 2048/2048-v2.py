@@ -275,7 +275,7 @@ def main():
                 sys.exit()
 
             if event.type == pg.KEYDOWN:
-                if event.key == pg.ESCAPE:
+                if event.key == pg.K_ESCAPE:
                     sys.exit()
 
                 for action in action_map:
