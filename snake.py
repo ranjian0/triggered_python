@@ -23,7 +23,6 @@
 import sys
 import random
 import pygame as pg
-from pygame.math import Vector2 as vec2
 
 # GLOBALS
 FPS         = 5
@@ -189,7 +188,6 @@ def draw_score(surface, score):
         rect.center = pos
 
         surface.blit(surf, rect)
-
 
 def draw_game_over(surface, score):
     font_name   = pg.font.match_font('arial')
