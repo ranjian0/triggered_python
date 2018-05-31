@@ -57,13 +57,13 @@ def main():
             if event.type == EVENT_MAP.get("ScoreEvent"):
                 score += 1
 
-
             bird.event(event)
 
         # -- Draw
         screen.fill(BACKGROUND)
         bird.draw(screen)
         blocks.draw(screen)
+        draw_score(screen, score)
 
         # options = putils.DrawOptions(screen)
         # space.debug_draw(options)
@@ -81,6 +81,28 @@ def main():
 def post_score():
     score_event = pg.event.Event(EVENT_MAP.get("ScoreEvent"))
     pg.event.post(score_event)
+
+def draw_score(surface, score):
+    font_name   = pg.font.match_font('arial')
+    options = [
+        ("Score",    12, (25, 12), "black"),
+        (str(score), 15, (17, 30), "white"),
+    ]
+
+    # -- header highlight
+    pg.draw.rect(surface, (80, 80, 80), [10, 20, 50, 20])
+
+    # -- options
+    for txt, fs, pos, fcol in options:
+        font = pg.font.Font(font_name, fs)
+        if txt != CAPTION:
+            font.set_bold(True)
+
+        surf = font.render(txt, True, pg.Color(fcol) if isinstance(fcol, str) else fcol)
+        rect = surf.get_rect()
+        rect.center = pos
+
+        surface.blit(surf, rect)
 
 def add_ground(space):
     w, h = SIZE[0], 20
@@ -233,8 +255,8 @@ class Blocks:
         self.make_block((500, rand_y))
 
     def draw(self, surface):
-        if self.goal:
-            pg.draw.rect(surface, pg.Color("red"), self.goal, 2)
+        # if self.goal:
+        #     pg.draw.rect(surface, pg.Color("red"), self.goal, 2)
         for bblock, tblock in self.blocks:
             p = ((bblock.body.position + tblock.body.position)/2)
             self.draw_block(surface, (p.x, p.y))
