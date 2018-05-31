@@ -43,11 +43,10 @@ def main():
     screen  = pg.display.set_mode(SIZE, 0, 32)
     clock   = pg.time.Clock()
 
-    # Objects
-    board = Board((4, 4))
+    board  = Board((4, 4))
     hscore = load_highscore()
 
-    dt      = 0
+    gameover = False
     while True:
         # Events
         for event in pg.event.get():
@@ -57,6 +56,12 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     sys.exit()
+
+                if gameover:
+                    if event.key == pg.K_SPACE:
+                        board.reset()
+                        gameover = False
+                    continue
 
                 for action in action_map:
                     if event.key in action.get("keys"):
@@ -70,6 +75,9 @@ def main():
         draw_highscore(screen, hscore)
         board.draw(screen)
 
+        if gameover:
+            draw_gameover(screen, board.score)
+
         pg.display.flip()
 
         # Update
@@ -79,8 +87,7 @@ def main():
 
         if board.full:
             set_highscore(hscore)
-            break
-
+            gameover = True
 
 def draw_title(surface):
     font_name   = pg.font.match_font('arial')
@@ -149,6 +156,40 @@ def set_highscore(score):
     else:
         with open(data_file, 'wb') as file:
             pickle.dump({'highscore' : score}, file)
+
+def draw_gameover(surface, score):
+    font_name   = pg.font.match_font('arial')
+    pg.draw.rect(surface, pg.Color("white"), [0, 0, SIZE[0], SIZE[1]])
+
+    # -- Draw Game Over Text
+    font        = pg.font.Font(font_name, 40)
+    font.set_bold(True)
+
+    tsurface    = font.render("GAME OVER", True, pg.Color('black'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, 100)
+    surface.blit(tsurface, text_rect)
+
+
+    # -- Draw score text
+    font        = pg.font.Font(font_name, 20)
+    font.set_bold(True)
+
+    tsurface    = font.render("Your Score " + str(score), True, pg.Color('black'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, 200)
+    surface.blit(tsurface, text_rect)
+
+    # -- Draw instructions
+    font        = pg.font.Font(font_name, 12)
+    font.set_bold(True)
+    font.set_italic(True)
+
+    tsurface    = font.render("Press Escape to QUIT, Space to RESTART", True, pg.Color('black'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, SIZE[1]-20)
+    surface.blit(tsurface, text_rect)
+
 
 class Tile:
     """Tile methods and properties"""
@@ -253,6 +294,17 @@ class Board:
 
             # remove p from empty_positions
             empty_positions.remove(p)
+
+    def reset(self):
+        self.tiles      = self.init_tiles()
+        self.positions  = self.init_positions()
+        self.direction  = (0, 0)
+        self.score      = 0
+        self.full       = False
+        self.movedone   = False
+        self.prev_pos   = []
+
+        self.add_tile(3)
 
     def draw(self, screen):
         """Draw the board"""
