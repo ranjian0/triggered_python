@@ -21,7 +21,8 @@ COLLISION_MAP = {
 putils.positive_y_is_up = False
 
 EVENT_MAP = {
-    "ScoreEvent" : pg.USEREVENT + 1
+    "ScoreEvent"    : pg.USEREVENT + 1,
+    "GameOverEvent" : pg.USEREVENT + 2,
 }
 
 
@@ -39,11 +40,11 @@ def main():
     bird   = Bird(20, (150, 200), space)
     blocks = Blocks(space=space)
 
-    add_ground(space)
-    setup_collisions(space, blocks, bird)
-
     gamestarted = False
     gameover    = False
+
+    add_ground(space)
+    setup_collisions(space, blocks, bird)
 
     while True:
 
@@ -60,21 +61,35 @@ def main():
             if event.type == EVENT_MAP.get("ScoreEvent"):
                 score += 1
 
+            if event.type == EVENT_MAP.get("GameOverEvent"):
+                gameover = True
+
             if not gamestarted:
                 if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                     gamestarted = True
+
+            if gameover:
+                if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                    bird.reset()
+                    blocks.reset()
+                    score = 0
+                    gameover = False
 
             bird.event(event)
 
         # -- Draw
         screen.fill(BACKGROUND)
 
+        if gameover:
+            draw_game_over(screen, score)
+            pg.display.flip()
+            continue
+
         if gamestarted:
             bird.draw(screen)
             blocks.draw(screen)
             draw_score(screen, score)
         else:
-            # bird.draw(screen)
             draw_start_screen(screen)
 
 
@@ -96,6 +111,10 @@ def post_score():
     score_event = pg.event.Event(EVENT_MAP.get("ScoreEvent"))
     pg.event.post(score_event)
 
+def post_gameover():
+    over_event = pg.event.Event(EVENT_MAP.get("GameOverEvent"))
+    pg.event.post(over_event)
+
 def draw_start_screen(surface):
     font_name   = pg.font.match_font('arial')
 
@@ -116,6 +135,38 @@ def draw_start_screen(surface):
     rect = surf.get_rect()
     rect.center = (SIZE[0]//2, SIZE[1]//2)
     surface.blit(surf, rect)
+
+def draw_game_over(surface, score):
+    font_name   = pg.font.match_font('arial')
+
+    # -- Draw Game Over Text
+    font        = pg.font.Font(font_name, 40)
+    font.set_bold(True)
+
+    tsurface    = font.render("GAME OVER", True, pg.Color('red'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, 100)
+    surface.blit(tsurface, text_rect)
+
+
+    # -- Draw score text
+    font        = pg.font.Font(font_name, 20)
+    font.set_bold(True)
+
+    tsurface    = font.render("Your Score " + str(score), True, pg.Color('white'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, 200)
+    surface.blit(tsurface, text_rect)
+
+    # -- Draw instructions
+    font        = pg.font.Font(font_name, 12)
+    font.set_bold(True)
+    font.set_italic(True)
+
+    tsurface    = font.render("Press Escape to QUIT, Space to RESTART", True, pg.Color('white'))
+    text_rect   = tsurface.get_rect()
+    text_rect.center = (SIZE[0]//2, SIZE[1]-20)
+    surface.blit(tsurface, text_rect)
 
 def draw_score(surface, score):
     font_name   = pg.font.match_font('arial')
@@ -151,6 +202,7 @@ def setup_collisions(space, blocks, bird):
     def bird_ground_solve(arbiter, space, data):
         bird.deactivate()
         blocks.deactivate()
+        post_gameover()
         return True
 
     bghandler = space.add_collision_handler(
@@ -162,6 +214,7 @@ def setup_collisions(space, blocks, bird):
     def bird_block_solve(arbiter, space, data):
         bird.deactivate()
         blocks.deactivate()
+        post_gameover()
         return True
 
     bbhandler = space.add_collision_handler(
@@ -193,6 +246,10 @@ class Bird:
 
     def deactivate(self):
         self.flap_strength = 0
+
+    def reset(self):
+        self.body.position = self.pos
+        self.flap_strength = 50
 
     def draw(self, surface):
         r = int(self.shape.radius)
@@ -279,6 +336,18 @@ class Blocks:
         self.active = False
         for shape in [s for block in self.blocks for s in block]:
             shape.body.velocity = (0, 0)
+
+    def reset(self):
+        for shape in [s for b in self.blocks for s in b]:
+            if shape.body in self.space.bodies:
+                self.space.remove(shape.body, shape)
+
+        self.goal = None
+        self.goal_index = 0
+        self.spawn_time = 0
+        self.blocks.clear()
+        self.spawn()
+        self.active = True
 
     def draw_block(self, surface, pos):
         img = self.block_image.copy()
