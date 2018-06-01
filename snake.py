@@ -8,12 +8,10 @@ SIZE        = 500, 500
 CAPTION     = "Snake"
 BACKGROUND  = 100, 100, 100
 
-
 GS          = 25
 keys        = [pg.K_w, pg.K_s, pg.K_a, pg.K_d]
 opt_keys    = [pg.K_UP, pg.K_DOWN, pg.K_LEFT, pg.K_RIGHT]
 directions  = [(0, -1), (0, 1), (-1, 0), (1, 0)]
-
 
 class Snake:
     """ Make definitions for snake properties and behaviour"""
@@ -264,7 +262,6 @@ def main():
 
             if snake.collide_walls() or snake.collide_self():
                 gameover = True
-
 
 if __name__ == '__main__':
     main()

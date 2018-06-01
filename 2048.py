@@ -408,6 +408,5 @@ class Board:
             self.prev_pos = [(x, y) for y, r in enumerate(self.tiles)
                                     for x, t in enumerate(r) if t]
 
-
 if __name__ == '__main__':
     main()

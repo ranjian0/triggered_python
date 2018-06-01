@@ -25,7 +25,6 @@ EVENT_MAP = {
     "GameOverEvent" : pg.USEREVENT + 2,
 }
 
-
 def main():
     pg.init()
     pg.display.set_caption(CAPTION)
@@ -222,7 +221,6 @@ def setup_collisions(space, blocks, bird):
             COLLISION_MAP.get("BlockType")
         )
     bbhandler.begin = bird_block_solve
-
 
 class Bird:
 
