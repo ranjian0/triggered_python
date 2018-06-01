@@ -1,19 +1,24 @@
 import heapq
 import pygame as pg
+import pymunk as pm
+
 from entities import Player
+from pymunk import pygame_util as putils
 
 class Map:
 
     def __init__(self, data,
                     fg        = pg.Color(77,77,77),
                     bg        = pg.Color(120, 95, 50),
-                    node_size = 100):
+                    node_size = 100,
+                    space     = None):
 
         self.data       = data
         self.entities   = []
         self.node_size  = node_size
         self.foreground = fg
         self.background = bg
+        self.physics_space = space
 
         self.walls      = []
         self.surface    = self.make_map()
@@ -54,7 +59,7 @@ class Map:
                     r = pg.draw.rect(surf, self.foreground, [offx, offy, nsx/2, nsy/2])
                     pg.draw.rect(surf, wall_edge_col, [offx, offy, nsx/2, nsy/2], wall_edge_thk)
                     self.walls.append(r)
-                    # add_wall(r.center, (nsx/2, nsy/2))
+                    add_wall(self.physics_space, r.center, (nsx/2, nsy/2))
 
                     # Fill gaps
                     # -- gaps along x-axis
@@ -62,7 +67,7 @@ class Map:
                         r = pg.draw.rect(surf, self.foreground, [offx + nsx/2, offy, nsx/2, nsy/2])
                         pg.draw.rect(surf, wall_edge_col, [offx + nsx/2, offy, nsx/2, nsy/2], wall_edge_thk)
                         self.walls.append(r)
-                        # add_wall(r.center, (nsx/2, nsy/2))
+                        add_wall(self.physics_space, r.center, (nsx/2, nsy/2))
 
 
                     # -- gaps along y-axis
@@ -70,7 +75,7 @@ class Map:
                         r = pg.draw.rect(surf, self.foreground, [offx, offy + nsy/2, nsx/2, nsy/2])
                         pg.draw.rect(surf, wall_edge_col, [offx, offy + nsy/2, nsx/2, nsy/2], wall_edge_thk)
                         self.walls.append(r)
-                        # add_wall(r.center, (nsx/2, nsy/2))
+                        add_wall(self.physics_space, r.center, (nsx/2, nsy/2))
 
         return surf
 
@@ -109,7 +114,7 @@ class Map:
         new_img = self.surface.copy()
 
         # options = putils.DrawOptions(new_img)
-        # SPACE.debug_draw(options)
+        # self.physics_space.debug_draw(options)
 
         for ent in self.entities:
             if hasattr(ent, 'draw'):
@@ -138,6 +143,12 @@ class Map:
         for ent in self.entities:
             if hasattr(ent, 'event'):
                 ent.event(ev)
+
+def add_wall(space, pos, size):
+    shape = pm.Poly.create_box(space.static_body, size=size)
+    shape.body.position = pos
+    space.add(shape)
+
 
 class PathFinder:
 

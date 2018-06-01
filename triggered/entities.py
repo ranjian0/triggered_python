@@ -15,51 +15,15 @@ IMPUT_MAP   = {
     pg.K_d : (1, 0)
 }
 
-class Bullet:
 
-    def __init__(self, pos, angle,
-            color=pg.Color('black')):
-        Sprite.__init__(self)
-
-        size = (5, 5)
-        self.color = color
-        self.image = self.make_image(size)
-        self.rect = self.image.get_rect(center=pos)
-
-        self.true_pos = list(self.rect.center)
-        self.angle = -math.radians(angle - 90)
-        self.speed = 5
-
-    def make_image(self, size):
-        img = pg.Surface(size).convert_alpha()
-        img.fill((0, 0, 0, 0))
-        rect = img.get_rect()
-
-        pg.draw.rect(img, self.color, [0, 0, size[0], size[1]])
-
-        return img
-
-    def update(self, dt):
-        self.true_pos[0] += math.cos(self.angle) * self.speed
-        self.true_pos[1] += math.sin(self.angle) * self.speed
-
-        self.rect.topleft = self.true_pos
-
-        self.collide_map()
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
-    def collide_map(self):
-        pass
-        # walls = LevelManager.instance.get_current().MAP.walls
-        # for wall in walls:
-        #     if self.rect.colliderect(wall):
-        #         self.kill()
+COLLISION_MAP = {
+    "PlayerType" : 1,
+    "EnemyType"  : 2,
+}
 
 class Player:
 
-    def __init__(self, position, size):
+    def __init__(self, position, size, space):
         self.pos    = position
         self.size   = size
         self.turret = None
@@ -83,8 +47,8 @@ class Player:
         self.body = pm.Body(1, 100)
         self.body.position = self.rect.center
         self.shape = pm.Circle(self.body, size[0]/2)
-        # self.shape.collision_type = COLLISION_MAP.get("PlayerType")
-        # SPACE.add(self.body, self.shape)
+        self.shape.collision_type = COLLISION_MAP.get("PlayerType")
+        space.add(self.body, self.shape)
 
         display  = pg.display.get_surface()
         self.viewport = display.get_rect().copy()
@@ -197,7 +161,7 @@ class EnemyState(Enum):
 class Enemy:
 
     def __init__(self, position, size,
-                    waypoints=None):
+                    waypoints=None, space=None):
 
         self.pos   = position
         self.size  = size
@@ -228,8 +192,8 @@ class Enemy:
         self.body = pm.Body(1, 100)
         self.body.position = self.rect.center
         self.shape = pm.Circle(self.body, size[0]/2)
-        # self.shape.collision_type = COLLISION_MAP.get("EnemyType")
-        # SPACE.add(self.body, self.shape)
+        self.shape.collision_type = COLLISION_MAP.get("EnemyType")
+        space.add(self.body, self.shape)
 
 
     def make_image(self):
@@ -337,3 +301,49 @@ class Enemy:
             if player.rect.colliderect(bullet.rect):
                 player.hit()
                 bullet.kill()
+
+
+
+
+class Bullet:
+
+    def __init__(self, pos, angle,
+            color=pg.Color('black')):
+        Sprite.__init__(self)
+
+        size = (5, 5)
+        self.color = color
+        self.image = self.make_image(size)
+        self.rect = self.image.get_rect(center=pos)
+
+        self.true_pos = list(self.rect.center)
+        self.angle = -math.radians(angle - 90)
+        self.speed = 5
+
+    def make_image(self, size):
+        img = pg.Surface(size).convert_alpha()
+        img.fill((0, 0, 0, 0))
+        rect = img.get_rect()
+
+        pg.draw.rect(img, self.color, [0, 0, size[0], size[1]])
+
+        return img
+
+    def update(self, dt):
+        self.true_pos[0] += math.cos(self.angle) * self.speed
+        self.true_pos[1] += math.sin(self.angle) * self.speed
+
+        self.rect.topleft = self.true_pos
+
+        self.collide_map()
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+    def collide_map(self):
+        pass
+        # walls = LevelManager.instance.get_current().MAP.walls
+        # for wall in walls:
+        #     if self.rect.colliderect(wall):
+        #         self.kill()
+

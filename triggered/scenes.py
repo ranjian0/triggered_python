@@ -32,7 +32,8 @@ class Scene:
 
 class SceneManager:
 
-    def __init__(self):
+    def __init__(self, space):
+        self.physics_space = space
 
         self.scenes      = []
         self.start_scene = None
@@ -82,8 +83,9 @@ class GameScene(Scene):
 
     def __init__(self, manager):
         Scene.__init__(self, manager)
+        space = self.manager.physics_space
         self.levels = LevelManager([
-                        LevelOne()
+                        LevelOne(space)
                     ])
 
     def draw(self, surface):
