@@ -679,6 +679,7 @@ class Enemy(Drawable):
         self.check_shot_at(player)
         if self.health <= 0:
             self.kill()
+            SPACE.remove(self.shape, self.body)
             _map = LevelManager.instance.get_current().MAP
             _map.remove(self)
 
