@@ -42,6 +42,9 @@ def main():
     add_ground(space)
     setup_collisions(space, blocks, bird)
 
+    gamestarted = False
+    gameover    = False
+
     while True:
 
         # -- Events
@@ -57,13 +60,23 @@ def main():
             if event.type == EVENT_MAP.get("ScoreEvent"):
                 score += 1
 
+            if not gamestarted:
+                if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                    gamestarted = True
+
             bird.event(event)
 
         # -- Draw
         screen.fill(BACKGROUND)
-        bird.draw(screen)
-        blocks.draw(screen)
-        draw_score(screen, score)
+
+        if gamestarted:
+            bird.draw(screen)
+            blocks.draw(screen)
+            draw_score(screen, score)
+        else:
+            # bird.draw(screen)
+            draw_start_screen(screen)
+
 
         # options = putils.DrawOptions(screen)
         # space.debug_draw(options)
@@ -73,14 +86,36 @@ def main():
         # -- Update
         # print(clock.get_fps())
         dt = clock.tick(FPS) / 1000.0
-        for _ in range(PHYSICS_STEP):
-            space.step(0.1 / PHYSICS_STEP)
-        bird.update(dt)
-        blocks.update(dt, bird)
+        if gamestarted:
+            for _ in range(PHYSICS_STEP):
+                space.step(0.1 / PHYSICS_STEP)
+            bird.update(dt)
+            blocks.update(dt, bird)
 
 def post_score():
     score_event = pg.event.Event(EVENT_MAP.get("ScoreEvent"))
     pg.event.post(score_event)
+
+def draw_start_screen(surface):
+    font_name   = pg.font.match_font('arial')
+
+    # -- title
+    font = pg.font.Font(font_name, 40)
+    font.set_bold(True)
+
+    surf = font.render(CAPTION, True, pg.Color("yellow"))
+    rect = surf.get_rect()
+    rect.center = (SIZE[0]//2, 50)
+    surface.blit(surf, rect)
+
+    # -- instructions
+    font = pg.font.Font(font_name, 25)
+
+    txt = "Space to Start"
+    surf = font.render(txt, True, pg.Color("white"))
+    rect = surf.get_rect()
+    rect.center = (SIZE[0]//2, SIZE[1]//2)
+    surface.blit(surf, rect)
 
 def draw_score(surface, score):
     font_name   = pg.font.match_font('arial')
