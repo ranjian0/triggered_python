@@ -1,7 +1,6 @@
 import sys
 import time
 import math
-import heapq
 import random
 import pygame as pg
 import pymunk as pm
@@ -13,17 +12,19 @@ from pygame.sprite import Sprite, Group
 from pygame.math   import Vector2     as vec2
 from pymunk        import pygame_util as putils
 
+from scenes import (
+    SceneManager,
+    MainScene,
+    GameScene,
+    PauseScene,
+    LevelPassed,
+    LevelFailed,
+    GameOver)
 
 SIZE        = (800, 600)
 CAPTION     = "Triggered"
 BACKGROUND  = (100, 100, 100)
 TRANSPARENT = (0, 0, 0, 0)
-IMPUT_MAP   = {
-    pg.K_w : (0, -1),
-    pg.K_s : (0, 1),
-    pg.K_a : (-1, 0),
-    pg.K_d : (1, 0)
-}
 
 COLLISION_MAP = {
     "PlayerType" : 1,
@@ -130,7 +131,6 @@ def setup_collisions():
             COLLISION_MAP.get("EnemyType")
         )
     handler.begin = enemy_enemy_solve
-
 
 if __name__ == '__main__':
     main()

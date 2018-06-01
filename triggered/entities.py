@@ -1,6 +1,21 @@
+import math
+import pygame as pg
+import pymunk as pm
+import itertools as it
+
+from enum          import Enum
+from pygame.sprite import Sprite, Group
+from pygame.math   import Vector2     as vec2
 
 
-class Bullet(Drawable):
+IMPUT_MAP   = {
+    pg.K_w : (0, -1),
+    pg.K_s : (0, 1),
+    pg.K_a : (-1, 0),
+    pg.K_d : (1, 0)
+}
+
+class Bullet:
 
     def __init__(self, pos, angle,
             color=pg.Color('black')):
@@ -17,7 +32,7 @@ class Bullet(Drawable):
 
     def make_image(self, size):
         img = pg.Surface(size).convert_alpha()
-        img.fill(TRANSPARENT)
+        img.fill((0, 0, 0, 0))
         rect = img.get_rect()
 
         pg.draw.rect(img, self.color, [0, 0, size[0], size[1]])
@@ -36,16 +51,15 @@ class Bullet(Drawable):
         surface.blit(self.image, self.rect)
 
     def collide_map(self):
-        walls = LevelManager.instance.get_current().MAP.walls
-        for wall in walls:
-            if self.rect.colliderect(wall):
-                self.kill()
+        pass
+        # walls = LevelManager.instance.get_current().MAP.walls
+        # for wall in walls:
+        #     if self.rect.colliderect(wall):
+        #         self.kill()
 
-class Player(Drawable):
+class Player:
 
     def __init__(self, position, size):
-        super(Player, self).__init__()
-
         self.pos    = position
         self.size   = size
         self.turret = None
@@ -69,15 +83,15 @@ class Player(Drawable):
         self.body = pm.Body(1, 100)
         self.body.position = self.rect.center
         self.shape = pm.Circle(self.body, size[0]/2)
-        self.shape.collision_type = COLLISION_MAP.get("PlayerType")
-        SPACE.add(self.body, self.shape)
+        # self.shape.collision_type = COLLISION_MAP.get("PlayerType")
+        # SPACE.add(self.body, self.shape)
 
         display  = pg.display.get_surface()
         self.viewport = display.get_rect().copy()
 
     def make_image(self, size):
         img = pg.Surface(size).convert_alpha()
-        img.fill(TRANSPARENT)
+        img.fill((0, 0, 0, 0))
 
         rect = img.get_rect()
 
@@ -109,7 +123,8 @@ class Player(Drawable):
 
     def check_health(self):
         if self.health <= 0:
-            SceneManager.instance.switch(LevelFailed.NAME)
+            pass
+            # SceneManager.instance.switch(LevelFailed.NAME)
             # self.kill()
             # _map = LevelManager.instance.get_current().MAP
             # _map.remove(self)
@@ -133,7 +148,7 @@ class Player(Drawable):
         # self.draw_ammo(surface)
 
     def event(self, event):
-        if not isinstance(SceneManager.instance.current, GameScene): return
+        # if not isinstance(SceneManager.instance.current, GameScene): return
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1:
                 self.shoot()
@@ -179,11 +194,10 @@ class EnemyState(Enum):
     CHASE   = 2
     ATTACK  = 3
 
-class Enemy(Drawable):
+class Enemy:
 
     def __init__(self, position, size,
                     waypoints=None):
-        super(Enemy, self).__init__()
 
         self.pos   = position
         self.size  = size
@@ -214,13 +228,13 @@ class Enemy(Drawable):
         self.body = pm.Body(1, 100)
         self.body.position = self.rect.center
         self.shape = pm.Circle(self.body, size[0]/2)
-        self.shape.collision_type = COLLISION_MAP.get("EnemyType")
-        SPACE.add(self.body, self.shape)
+        # self.shape.collision_type = COLLISION_MAP.get("EnemyType")
+        # SPACE.add(self.body, self.shape)
 
 
     def make_image(self):
         img = pg.Surface(self.size).convert_alpha()
-        img.fill(TRANSPARENT)
+        img.fill((0, 0, 0, 0))
 
         rect = img.get_rect()
         center = rect.center
@@ -235,8 +249,9 @@ class Enemy(Drawable):
         self.bullets.draw(surface)
 
     def update(self, dt):
-        player = LevelManager.instance.get_current().get_player()
-        player_distance = (vec2(self.rect.center) - vec2(player.rect.center)).length_squared()
+        pass
+        # player = LevelManager.instance.get_current().get_player()
+        # player_distance = (vec2(self.rect.center) - vec2(player.rect.center)).length_squared()
 
         # if player_distance < self.chase_radius**2:
         #     self.state = EnemyState.CHASE
@@ -246,26 +261,26 @@ class Enemy(Drawable):
         # if player_distance < self.attack_radius**2:
         #     self.state = EnemyState.ATTACK
 
-        if self.state == EnemyState.IDLE:
-            self.state = EnemyState.PATROL
-        elif self.state == EnemyState.PATROL:
-            self.patrol(dt)
-        elif self.state == EnemyState.CHASE:
-            self.chase(player.rect.center, dt)
-            pass
-        elif self.state == EnemyState.ATTACK:
-            self.attack(player.rect.center)
+        # if self.state == EnemyState.IDLE:
+        #     self.state = EnemyState.PATROL
+        # elif self.state == EnemyState.PATROL:
+        #     self.patrol(dt)
+        # elif self.state == EnemyState.CHASE:
+        #     self.chase(player.rect.center, dt)
+        #     pass
+        # elif self.state == EnemyState.ATTACK:
+        #     self.attack(player.rect.center)
 
-        self.bullets.update(dt)
-        bx, by = self.body.position
-        self.rect.center = (bx, by)
+        # self.bullets.update(dt)
+        # bx, by = self.body.position
+        # self.rect.center = (bx, by)
 
-        self.check_shot_at(player)
-        if self.health <= 0:
-            self.kill()
-            SPACE.remove(self.shape, self.body)
-            _map = LevelManager.instance.get_current().MAP
-            _map.remove(self)
+        # self.check_shot_at(player)
+        # if self.health <= 0:
+        #     self.kill()
+        #     SPACE.remove(self.shape, self.body)
+        #     _map = LevelManager.instance.get_current().MAP
+        #     _map.remove(self)
 
 
     def patrol(self, dt):

@@ -1,6 +1,10 @@
+import random
+from map import Map
+from gui import Timer
+from entities import Player, Enemy
 
 
-class Level(Drawable):
+class Level:
     NAME    = "Level"
     MAP     = None
     PLAYER  = None
@@ -18,12 +22,6 @@ class Level(Drawable):
         if self.COLLECTIBLES:
             for col in self.COLLECTIBLES:
                 self.MAP.add(col)
-
-    def check_complete(self):
-        if not self.ENEMIES:
-            SceneManager.instance.switch(LevelPassed.NAME)
-        else:
-            SceneManager.instance.switch(LevelFailed.NAME)
 
     def get_player(self):
         return self.PLAYER
@@ -51,18 +49,18 @@ class LevelManager:
     def get_current(self):
         return self.levels[self.current]
 
-    def go_next(self):
-        if self.current < len(self.levels)-1:
-            self.current += 1
-            SceneManager.instance.switch(GameScene.NAME)
-        else:
-            # Reinstanciate all levels, incase player goes again
-            types = [type(level) for level in self.levels]
-            self.levels.clear()
-            self.levels  = [typ() for typ in types]
-            self.current = 0
+    # def go_next(self):
+    #     if self.current < len(self.levels)-1:
+    #         self.current += 1
+    #         SceneManager.instance.switch(GameScene.NAME)
+    #     else:
+    #         # Reinstanciate all levels, incase player goes again
+    #         types = [type(level) for level in self.levels]
+    #         self.levels.clear()
+    #         self.levels  = [typ() for typ in types]
+    #         self.current = 0
 
-            SceneManager.instance.switch(GameOver.NAME)
+    #         SceneManager.instance.switch(GameOver.NAME)
 
 class LevelOne(Level):
     NAME    = "Kill Them All"

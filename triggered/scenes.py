@@ -1,33 +1,38 @@
+import sys
+import pygame as pg
 
+from gui import Label, Button
 
-class Scene(object):
+from levels import (
+    LevelManager,
+    LevelOne)
+
+class Scene:
     NAME      = "Scene"
     DRAWABLES = []
 
-    def __init__(self):
+    def __init__(self, manager):
+        self.manager = manager
         assert self.NAME != "Scene", "Scene must have unique name"
-        print("Initialized : ", self)
 
     def draw(self, surface):
         for drawable in self.DRAWABLES:
-            if isinstance(drawable, Drawable):
+            if hasattr(drawable, 'draw'):
                 drawable.draw(surface)
 
     def update(self, dt):
         for drawable in self.DRAWABLES:
-            if isinstance(drawable, Drawable):
+            if hasattr(drawable, 'update'):
                 drawable.update(dt)
 
     def event(self, ev):
         for drawable in self.DRAWABLES:
-            if isinstance(drawable, Drawable):
+            if hasattr(drawable, 'event'):
                 drawable.event(ev)
 
 class SceneManager:
 
-    instance = None
     def __init__(self):
-        SceneManager.instance = self
 
         self.scenes      = []
         self.start_scene = None
@@ -35,13 +40,13 @@ class SceneManager:
 
     def add(self, scene, is_main=False):
         if is_main:
-            self.start_scene = scene()
-            self.current     = scene()
+            self.start_scene = scene(self)
+            self.current     = scene(self)
         self.scenes.append(scene)
 
     def switch(self, name):
         self.current = [scn for scn in self.scenes
-                        if scn.NAME == name][-1]()
+                        if scn.NAME == name][-1](self)
 
     def draw(self, surface):
         if self.current:
@@ -58,13 +63,13 @@ class SceneManager:
 class MainScene(Scene):
     NAME = "MainMenu"
 
-    def __init__(self):
-        Scene.__init__(self)
+    def __init__(self, manager):
+        Scene.__init__(self, manager)
         self.DRAWABLES = [
             Label("TRIGGERED", (400, 50), font_size=60, fg=pg.Color("Red")),
 
             Button("PLAY", (200, 50), (400, 200), font_size=40,
-                    on_clicked=lambda : SceneManager.instance.switch(GameScene.NAME)),
+                    on_clicked=lambda : self.manager.switch(GameScene.NAME)),
 
             Button("EXIT", (200, 50), (400, 270), font_size=40,
                     on_clicked=lambda : sys.exit()),
@@ -75,7 +80,8 @@ class MainScene(Scene):
 class GameScene(Scene):
     NAME = "GAME"
 
-    def __init__(self):
+    def __init__(self, manager):
+        Scene.__init__(self, manager)
         self.levels = LevelManager([
                         LevelOne()
                     ])
@@ -95,57 +101,58 @@ class GameScene(Scene):
 class PauseScene(Scene):
     NAME = "Pause"
 
-    def __init__(self):
-        Scene.__init__(self)
+    def __init__(self, manager):
+        Scene.__init__(self, manager)
         self.DRAWABLES = [
             Label("PAUSED", (400, 300), font_size=60, fg=pg.Color("Red")),
 
             Button("RESUME", (200, 50), (650, 550), font_size=40,
-                    on_clicked=lambda : SceneManager.instance.switch(GameScene.NAME)),
+                    on_clicked=lambda : self.manager.switch(GameScene.NAME)),
 
             Button("QUIT", (200, 50), (150, 550), font_size=40,
-                    on_clicked=lambda : SceneManager.instance.switch(MainScene.NAME)),
+                    on_clicked=lambda : self.manager.switch(MainScene.NAME)),
         ]
 
 class LevelFailed(Scene):
     NAME = "LevelFailed"
 
-    def __init__(self):
-        Scene.__init__(self)
+    def __init__(self, manager):
+        Scene.__init__(self, manager)
         self.DRAWABLES = [
             Label("LEVEL FAILED", (400, 300), font_size=60, fg=pg.Color("Red")),
 
             Button("RETRY", (200, 50), (650, 550), font_size=40,
-                    on_clicked=lambda : SceneManager.instance.switch(GameScene.NAME)),
+                    on_clicked=lambda : self.manager.switch(GameScene.NAME)),
 
             Button("QUIT", (200, 50), (150, 550), font_size=40,
-                    on_clicked=lambda : SceneManager.instance.switch(MainScene.NAME)),
+                    on_clicked=lambda : self.manager.switch(MainScene.NAME)),
         ]
 
 class LevelPassed(Scene):
     NAME = "LevelPassed"
 
-    def __init__(self):
-        Scene.__init__(self)
+    def __init__(self, manager):
+        Scene.__init__(self, manager)
         self.DRAWABLES = [
             Label("LEVEL PASSED", (400, 300), font_size=60, fg=pg.Color("Red")),
 
-            Button("NEXT", (200, 50), (650, 550), font_size=40,
-                    on_clicked=lambda : LevelManager.instance.go_next()),
+            # TODO : reference to LevelManager
+            # Button("NEXT", (200, 50), (650, 550), font_size=40,
+            #         on_clicked=lambda : LevelManager.instance.go_next()),
 
             Button("QUIT", (200, 50), (150, 550), font_size=40,
-                    on_clicked=lambda : SceneManager.instance.switch(MainScene.NAME)),
+                    on_clicked=lambda : self.manager.switch(MainScene.NAME)),
         ]
 
 class GameOver(Scene):
     NAME = "GameOver"
 
-    def __init__(self):
-        Scene.__init__(self)
+    def __init__(self, manager):
+        Scene.__init__(self, manager)
         self.DRAWABLES = [
             Label("GAME OVER", (400, 300), font_size=60, fg=pg.Color("Red")),
 
             Button("QUIT", (200, 50), (150, 550), font_size=40,
-                    on_clicked=lambda : SceneManager.instance.switch(MainScene.NAME)),
+                    on_clicked=lambda : self.manager.switch(MainScene.NAME)),
         ]
 

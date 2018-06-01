@@ -1,34 +1,6 @@
+import pygame as pg
 
-class Drawable():
-    def __init__(self, anchor="center", offset=(0,0)):
-        super(Drawable, self).__init__()
-
-        self.anchor = anchor
-        self.offset = offset
-        self.calc_pos(anchor, offset)
-
-    def calc_pos(self, anchor, off):
-        # -- calculate relative screen position based on anchor and offset
-        display  = pg.display.get_surface()
-        rect = display.get_rect().copy()
-
-        self.pos = (0, 0)
-        if anchor == 'center':
-            px, py = rect.center
-            px += off[0]
-            py += off[1]
-            self.pos = (px, py)
-
-    def draw(self, surface):
-        pass
-
-    def update(self, dt):
-        pass
-
-    def event(self, event):
-        pass
-
-class Label(Drawable):
+class Label:
     """Text rendering widget"""
     def __init__(self, text, position,
                     font_size   = 25,
@@ -51,7 +23,7 @@ class Label(Drawable):
     def draw(self, surface):
         surface.blit(self.surface, self.rect)
 
-class Button(Drawable):
+class Button:
     """Button widget"""
     def __init__(self, text, size, position,
                     fg          = pg.Color("white"),
@@ -99,7 +71,7 @@ class Button(Drawable):
                 if callable(self.on_clicked):
                     self.on_clicked()
 
-class Timer(Drawable):
+class Timer:
     """Timer Widget"""
     def __init__(self, size, position,
                     start_value = 10,

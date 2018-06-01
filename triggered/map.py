@@ -1,14 +1,14 @@
+import heapq
+import pygame as pg
+from entities import Player
 
-
-
-class Map(Drawable):
+class Map:
 
     def __init__(self, data,
                     fg        = pg.Color(77,77,77),
                     bg        = pg.Color(120, 95, 50),
                     node_size = 100):
 
-        super(Map, self).__init__()
         self.data       = data
         self.entities   = []
         self.node_size  = node_size
@@ -54,7 +54,7 @@ class Map(Drawable):
                     r = pg.draw.rect(surf, self.foreground, [offx, offy, nsx/2, nsy/2])
                     pg.draw.rect(surf, wall_edge_col, [offx, offy, nsx/2, nsy/2], wall_edge_thk)
                     self.walls.append(r)
-                    add_wall(r.center, (nsx/2, nsy/2))
+                    # add_wall(r.center, (nsx/2, nsy/2))
 
                     # Fill gaps
                     # -- gaps along x-axis
@@ -62,7 +62,7 @@ class Map(Drawable):
                         r = pg.draw.rect(surf, self.foreground, [offx + nsx/2, offy, nsx/2, nsy/2])
                         pg.draw.rect(surf, wall_edge_col, [offx + nsx/2, offy, nsx/2, nsy/2], wall_edge_thk)
                         self.walls.append(r)
-                        add_wall(r.center, (nsx/2, nsy/2))
+                        # add_wall(r.center, (nsx/2, nsy/2))
 
 
                     # -- gaps along y-axis
@@ -70,7 +70,7 @@ class Map(Drawable):
                         r = pg.draw.rect(surf, self.foreground, [offx, offy + nsy/2, nsx/2, nsy/2])
                         pg.draw.rect(surf, wall_edge_col, [offx, offy + nsy/2, nsx/2, nsy/2], wall_edge_thk)
                         self.walls.append(r)
-                        add_wall(r.center, (nsx/2, nsy/2))
+                        # add_wall(r.center, (nsx/2, nsy/2))
 
         return surf
 
@@ -108,17 +108,19 @@ class Map(Drawable):
     def draw(self, surface):
         new_img = self.surface.copy()
 
-        options = putils.DrawOptions(new_img)
-        SPACE.debug_draw(options)
+        # options = putils.DrawOptions(new_img)
+        # SPACE.debug_draw(options)
 
         for ent in self.entities:
-            ent.draw(new_img)
+            if hasattr(ent, 'draw'):
+                ent.draw(new_img)
 
         surface.blit(new_img, (0, 0), self.viewport)
 
     def update(self, dt):
         for ent in self.entities:
-            ent.update(dt)
+            if hasattr(ent, 'update'):
+                ent.update(dt)
 
         player = [ent for ent in self.entities if isinstance(ent, Player)][-1]
 
@@ -134,7 +136,8 @@ class Map(Drawable):
 
     def event(self, ev):
         for ent in self.entities:
-            ent.event(ev)
+            if hasattr(ent, 'event'):
+                ent.event(ev)
 
 class PathFinder:
 
@@ -219,7 +222,6 @@ def reconstruct_path(came_from, start, goal):
     while current != start:
         current = came_from[current]
         path.append(current)
-    path.append(start) # optional
-    path.reverse() # optional
+    path.append(start)
+    path.reverse()
     return path
-
