@@ -1,15 +1,8 @@
 import sys
 import pygame as pg
 
-from scenes import (
-    SceneManager,
-
-    MainScene,
-    GameScene,
-    PauseScene,
-    PassedScene,
-    FailedScene,
-    GameOverScene)
+from resources import Resources
+from scenes import SceneManager, init_scenes
 
 SIZE        = (800, 600)
 CAPTION     = "Triggered"
@@ -23,13 +16,13 @@ def main():
     screen  = pg.display.set_mode(
         SIZE, pg.RESIZABLE, 32)
 
+    res     = Resources()
     manager = SceneManager()
-    manager.add(MainScene, True)
-    manager.add(GameScene)
-    manager.add(PauseScene)
-    manager.add(PassedScene)
-    manager.add(FailedScene)
-    manager.add(GameOverScene)
+    for scn in init_scenes():
+        if scn.name == "Main":
+            manager.add(scn, True)
+        else:
+            manager.add(scn)
 
     while True:
         # -- events

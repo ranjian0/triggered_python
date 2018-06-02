@@ -11,30 +11,22 @@ class Map:
                     fg        = pg.Color(77,77,77),
                     bg        = pg.Color(120, 95, 50),
                     node_size = 100,
-                    space     = None):
+                    physics   = None):
 
         self.data       = data
-        self.entities   = []
         self.node_size  = node_size
         self.foreground = fg
         self.background = bg
-        self.physics_space = space
+        self.physics    = physics
 
         self.walls      = []
         self.surface    = self.make_map()
         self.rect       = self.surface.get_rect(topleft=(1, 1))
 
-        display  = pg.display.get_surface()
-        self.viewport = display.get_rect().copy()
+        self.viewport   = None
 
         self.pathfinder = PathFinder(data, node_size)
         self.spawn_data = self.parse_spawn_points()
-
-    def add(self, ent):
-        self.entities.append(ent)
-
-    def remove(self, ent):
-        self.entities.remove(ent)
 
     def resize(self):
         display  = pg.display.get_surface()
@@ -59,7 +51,7 @@ class Map:
                     r = pg.draw.rect(surf, self.foreground, [offx, offy, nsx/2, nsy/2])
                     pg.draw.rect(surf, wall_edge_col, [offx, offy, nsx/2, nsy/2], wall_edge_thk)
                     self.walls.append(r)
-                    add_wall(self.physics_space, r.center, (nsx/2, nsy/2))
+                    add_wall(self.physics.space, r.center, (nsx/2, nsy/2))
 
                     # Fill gaps
                     # -- gaps along x-axis
@@ -67,7 +59,7 @@ class Map:
                         r = pg.draw.rect(surf, self.foreground, [offx + nsx/2, offy, nsx/2, nsy/2])
                         pg.draw.rect(surf, wall_edge_col, [offx + nsx/2, offy, nsx/2, nsy/2], wall_edge_thk)
                         self.walls.append(r)
-                        add_wall(self.physics_space, r.center, (nsx/2, nsy/2))
+                        add_wall(self.physics.space, r.center, (nsx/2, nsy/2))
 
 
                     # -- gaps along y-axis
@@ -75,7 +67,7 @@ class Map:
                         r = pg.draw.rect(surf, self.foreground, [offx, offy + nsy/2, nsx/2, nsy/2])
                         pg.draw.rect(surf, wall_edge_col, [offx, offy + nsy/2, nsx/2, nsy/2], wall_edge_thk)
                         self.walls.append(r)
-                        add_wall(self.physics_space, r.center, (nsx/2, nsy/2))
+                        add_wall(self.physics.space, r.center, (nsx/2, nsy/2))
 
         return surf
 
@@ -110,25 +102,32 @@ class Map:
                     spawn_data['patrol_positions'].append(location)
         return spawn_data
 
-    def draw(self, surface):
+    def draw(self, surface, entities):
         new_img = self.surface.copy()
 
-        # options = putils.DrawOptions(new_img)
-        # self.physics_space.debug_draw(options)
-
-        for ent in self.entities:
+        for ent in entities:
             if hasattr(ent, 'draw'):
                 ent.draw(new_img)
 
         surface.blit(new_img, (0, 0), self.viewport)
 
-    def update(self, dt):
-        for ent in self.entities:
+    def update(self, dt, entities):
+        player = None
+        for ent in [e for e in entities if not hasattr(e, 'dead')]:
             if hasattr(ent, 'update'):
                 ent.update(dt)
 
-        player = [ent for ent in self.entities if isinstance(ent, Player)][-1]
+            if hasattr(ent, 'health'):
+                if ent.health <= 0:
+                    ent.kill()
+                    setattr(ent, 'dead', True)
+                    self.physics.remove(ent.shape, ent.body)
 
+            if isinstance(ent, Player):
+                player = ent
+
+
+        if not player: return
         display  = pg.display.get_surface()
         self.viewport = display.get_rect().copy()
 
@@ -139,10 +138,13 @@ class Map:
         # Clamp player to map
         player.rect.clamp_ip(self.rect)
 
-    def event(self, ev):
-        for ent in self.entities:
+    def event(self, ev, entities):
+        for ent in entities:
             if hasattr(ent, 'event'):
                 ent.event(ev)
+
+    def __getitem__(self, val):
+        return self.spawn_data.get(val, None)
 
 def add_wall(space, pos, size):
     shape = pm.Poly.create_box(space.static_body, size=size)

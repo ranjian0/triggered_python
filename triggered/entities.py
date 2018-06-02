@@ -233,12 +233,6 @@ class Enemy:
         self.rect.center = (bx, by)
 
         self.check_shot_at(player)
-        if self.health <= 0:
-            # self.kill()
-            SPACE.remove(self.shape, self.body)
-        #     _map = LevelManager.instance.get_current().MAP
-        #     _map.remove(self)
-
 
     def patrol(self, dt):
         diff     = vec2(self.rect.center) - vec2(self.target)

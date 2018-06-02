@@ -6,6 +6,13 @@ Resource = namedtuple("Resource", "name data")
 
 class Resources:
 
+    # -- singleton
+    instance = None
+    def __new__(cls):
+        if Resources.instance is None:
+            Resources.instance = object.__new__(cls)
+        return Resources.instance
+
     def __init__(self, root_dir="res"):
         self.root = root_dir
 
@@ -39,17 +46,17 @@ class Resources:
 
         # -- load sprites
         for sprite in os.listdir(self._sprites):
-            img = pg.image.load(sprite)
+            img = pg.image.load(os.path.join(self._sprites, sprite))
             fn = os.path.basename(sprite.split('.')[0])
             self._data['sprites'].append(Resource(fn,img))
 
         # -- load sounds
         for sound in os.listdir(self._sounds):
-            snd = pg.mixer.Sound(sound)
+            snd = pg.mixer.Sound(os.path.join(self._sounds, sound))
             fn = os.path.basename(sound.split('.')[0])
-            self._data['sounds'].append(Resource(fn,snd)
+            self._data['sounds'].append(Resource(fn,snd))
 
         # -- load levels
         for level in os.listdir(self._levels):
             fn = os.path.basename(level.split('.')[0])
-            self._data['levels'].append(Resource(fn,level))
+            self._data['levels'].append(Resource(fn,os.path.join(self._levels, level)))
