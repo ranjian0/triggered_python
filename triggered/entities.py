@@ -16,35 +16,75 @@ IMPUT_MAP   = {
     pg.K_d : (1, 0)
 }
 
+class Entity(Sprite):
 
-class Player:
+    def __init__(self, position, size):
+        self.pos  = position
+        self.size = size
+
+        self.original_img = None
+        self.image = None
+        self.rect  = None
+
+        self.health = 100
+        self.damage = 10
+
+        self.angle  = 0
+        self.speed  = 100
+        self.direction = (0, 0)
+
+    def set_health(self, val):
+        self.health = val
+
+    def set_damage(self, val):
+        self.damage = val
+
+    def set_angle(self, val):
+        self.angle = val
+
+    def set_speed(self, val):
+        self.speed = val
+
+    def hit(self):
+        self.health -= self.damage
+
+    def look_at(self, target):
+        offset = (target[1] - self.rect.centery, target[0] - self.rect.centerx)
+        self.angle  = 90 - math.degrees(math.atan2(*offset))
+
+        self.image = pg.transform.rotate(self.original_img, self.angle)
+        self.rect  = self.image.get_rect(center=self.rect.center)
+
+    def draw(self, surface):
+        pass
+
+    def update(self, dt):
+        pass
+
+    def event(self, ev):
+        pass
+
+
+class Player(Entity):
 
     def __init__(self, position, size, space):
-        self.pos    = position
-        self.size   = size
+        Entity.__init__(self, position, size)
+        self.ammo   = 50
         self.turret = None
 
         # Create Player Image
         self.original_img = self.make_image(size)
-        self.surface      = self.original_img.copy()
-        self.rect         = self.surface.get_rect(center=position)
+        self.image        = self.original_img.copy()
+        self.rect         = self.image.get_rect(center=position)
 
-        # Player Variables
-        self.angle    = 0
-        self.speed    = 150
-        self.direction = (0, 0)
         self.bullets   = Group()
-        self.rotate(pg.mouse.get_pos())
-
-        self.ammo    = 50
-        self.health  = 100
-        self.damage  = 10
-
         self.body = pm.Body(1, 100)
         self.body.position = self.rect.center
         self.shape = pm.Circle(self.body, size[0]/2)
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
         space.add(self.body, self.shape)
+
+        self.look_at(pg.mouse.get_pos())
 
         display  = pg.display.get_surface()
         self.viewport = display.get_rect().copy()
@@ -61,13 +101,6 @@ class Player:
 
         return img
 
-    def rotate(self, pos):
-        offset = (pos[1] - self.rect.centery, pos[0] - self.rect.centerx)
-        self.angle = 90 - math.degrees(math.atan2(*offset))
-
-        self.surface = pg.transform.rotate(self.original_img, self.angle)
-        self.rect = self.surface.get_rect(center=self.rect.center)
-
     def shoot(self):
         if self.ammo <= 0:
             return
@@ -81,23 +114,9 @@ class Player:
         gun_pos = vec2(self.rect.center) + (vec * vec2(self.turret.center).length()/2)
         self.bullets.add(Bullet(gun_pos, self.angle))
 
-    def hit(self):
-        """ Called when enemy bullet hits us (see Enemy Class)"""
-        self.health -= self.damage
-
-    def draw_ammo(self, surface):
-        """ Draw ammo on top-right corner of screen"""
-        # - draw one clip for every ten bullets
-        rect = surface.get_rect()
-        for i in range(self.ammo // 10):
-            pg.draw.rect(surface, pg.Color("yellow"),
-                    [500 + (i*15), 5, 10, 25]
-                )
-
     def draw(self, surface):
-        surface.blit(self.surface, self.rect)
+        surface.blit(self.image, self.rect)
         self.bullets.draw(surface)
-        # self.draw_ammo(surface)
 
     def event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -116,7 +135,7 @@ class Player:
         pos = pos[0] + px, pos[1] + py
         vec = vec2(pos[0] - self.rect.centerx, pos[1] - self.rect.centery)
         if vec.length() > 5:
-            self.rotate(pos)
+            self.look_at(pos)
             pass
 
         # -- Move
@@ -143,20 +162,18 @@ class EnemyState(Enum):
     CHASE   = 2
     ATTACK  = 3
 
-class Enemy:
+class Enemy(Entity):
 
     def __init__(self, position, size,
                     waypoints=None, space=None):
+        Entity.__init__(self, position, size)
 
-        self.pos   = position
-        self.size  = size
-        self.state = EnemyState.IDLE
-        self.speed = 75
+        self.state  = EnemyState.IDLE
         self.turret = None
 
         self.original_img = self.make_image()
-        self.surface      = self.original_img.copy()
-        self.rect         = self.surface.get_rect(center=position)
+        self.image        = self.original_img.copy()
+        self.rect         = self.image.get_rect(center=position)
 
         self.waypoints = it.cycle(waypoints)
         self.target    = next(self.waypoints)
@@ -168,12 +185,7 @@ class Enemy:
         self.attack_frequency = 50
         self.current_attack   = 0
 
-        self.angle   = 0
         self.bullets = Group()
-
-        self.health  = 100
-        self.damage  = 15
-
         self.body = pm.Body(1, 100)
         self.body.position = self.rect.center
         self.shape = pm.Circle(self.body, size[0]/2)
@@ -199,7 +211,7 @@ class Enemy:
         self.player_target = player
 
     def draw(self, surface):
-        surface.blit(self.surface, self.rect)
+        surface.blit(self.image, self.rect)
         self.bullets.draw(surface)
 
     def update(self, dt):
@@ -263,13 +275,6 @@ class Enemy:
             bx += dx * self.speed * dt
             by += dy * self.speed * dt
             self.body.position = (bx, by)
-
-    def look_at(self, target):
-        offset = (target[1] - self.rect.centery, target[0] - self.rect.centerx)
-        self.angle  = 90 - math.degrees(math.atan2(*offset))
-
-        self.surface = pg.transform.rotate(self.original_img, self.angle)
-        self.rect    = self.surface.get_rect(center=self.rect.center)
 
     def check_shot_at(self, player):
         # Check if player bullets hit us
