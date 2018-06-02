@@ -94,7 +94,25 @@ class GameScene(Scene):
 
     def update(self, dt):
         super().update(dt)
-        self.levels.get_current().update(dt)
+
+        level = self.levels.get_current()
+        level.update(dt)
+
+        # GLOBAL GAME LOGIC
+        # ```````````````
+        _map = level.get_map()
+        player = level.get_player()
+
+        # -- if levels are completed, signal SceneManager
+        if self.levels.completed:
+            self.manager.switch(GameOver.NAME)
+
+        # -- if player for current level died, send LevelFailed
+        if player.health <= 0:
+            player.kill()
+            _map.remove(player)
+            self.manager.switch(LevelFailed.NAME)
+
 
     def event(self, event):
         super().event(event)

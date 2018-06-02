@@ -5,7 +5,7 @@ import itertools as it
 
 from enum          import Enum
 from pygame.sprite import Sprite, Group
-from pygame.math   import Vector2     as vec2
+from pygame.math   import Vector2 as vec2
 
 
 IMPUT_MAP   = {
@@ -85,14 +85,6 @@ class Player:
         gun_pos = vec2(self.rect.center) + (vec * vec2(self.turret.center).length()/2)
         self.bullets.add(Bullet(gun_pos, self.angle))
 
-    def check_health(self):
-        if self.health <= 0:
-            pass
-            # SceneManager.instance.switch(LevelFailed.NAME)
-            # self.kill()
-            # _map = LevelManager.instance.get_current().MAP
-            # _map.remove(self)
-
     def hit(self):
         """ Called when enemy bullet hits us (see Enemy Class)"""
         self.health -= self.damage
@@ -112,7 +104,6 @@ class Player:
         # self.draw_ammo(surface)
 
     def event(self, event):
-        # if not isinstance(SceneManager.instance.current, GameScene): return
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1:
                 self.shoot()
@@ -149,8 +140,6 @@ class Player:
 
         self.body.position = (bx, by)
         self.rect.center = (bx, by)
-
-        self.check_health()
 
 class EnemyState(Enum):
     IDLE    = 0
@@ -195,6 +184,8 @@ class Enemy:
         self.shape.collision_type = COLLISION_MAP.get("EnemyType")
         space.add(self.body, self.shape)
 
+        self.player_target = None
+
 
     def make_image(self):
         img = pg.Surface(self.size).convert_alpha()
@@ -208,41 +199,43 @@ class Enemy:
         pg.draw.ellipse(img, pg.Color('green'), rect.inflate(-20, -20))
         return img
 
+    def watch_player(self, player):
+        self.player_target = player
+
     def draw(self, surface):
         surface.blit(self.surface, self.rect)
         self.bullets.draw(surface)
 
     def update(self, dt):
-        pass
-        # player = LevelManager.instance.get_current().get_player()
-        # player_distance = (vec2(self.rect.center) - vec2(player.rect.center)).length_squared()
+        player = self.player_target
+        player_distance = (vec2(self.rect.center) - vec2(player.rect.center)).length_squared()
 
-        # if player_distance < self.chase_radius**2:
-        #     self.state = EnemyState.CHASE
-        # else:
-        #     self.state = EnemyState.PATROL
+        if player_distance < self.chase_radius**2:
+            self.state = EnemyState.CHASE
+        else:
+            self.state = EnemyState.PATROL
 
-        # if player_distance < self.attack_radius**2:
-        #     self.state = EnemyState.ATTACK
+        if player_distance < self.attack_radius**2:
+            self.state = EnemyState.ATTACK
 
-        # if self.state == EnemyState.IDLE:
-        #     self.state = EnemyState.PATROL
-        # elif self.state == EnemyState.PATROL:
-        #     self.patrol(dt)
-        # elif self.state == EnemyState.CHASE:
-        #     self.chase(player.rect.center, dt)
-        #     pass
-        # elif self.state == EnemyState.ATTACK:
-        #     self.attack(player.rect.center)
+        if self.state == EnemyState.IDLE:
+            self.state = EnemyState.PATROL
+        elif self.state == EnemyState.PATROL:
+            self.patrol(dt)
+        elif self.state == EnemyState.CHASE:
+            self.chase(player.rect.center, dt)
+            pass
+        elif self.state == EnemyState.ATTACK:
+            self.attack(player.rect.center)
 
-        # self.bullets.update(dt)
-        # bx, by = self.body.position
-        # self.rect.center = (bx, by)
+        self.bullets.update(dt)
+        bx, by = self.body.position
+        self.rect.center = (bx, by)
 
-        # self.check_shot_at(player)
-        # if self.health <= 0:
-        #     self.kill()
-        #     SPACE.remove(self.shape, self.body)
+        self.check_shot_at(player)
+        if self.health <= 0:
+            # self.kill()
+            SPACE.remove(self.shape, self.body)
         #     _map = LevelManager.instance.get_current().MAP
         #     _map.remove(self)
 
@@ -302,10 +295,7 @@ class Enemy:
                 player.hit()
                 bullet.kill()
 
-
-
-
-class Bullet:
+class Bullet(Sprite):
 
     def __init__(self, pos, angle,
             color=pg.Color('black')):

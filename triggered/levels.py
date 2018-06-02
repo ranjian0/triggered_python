@@ -2,7 +2,7 @@ import random
 from map import Map
 from gui import Timer
 from entities import Player, Enemy, COLLISION_MAP
-
+from pygame.math   import Vector2 as vec2
 
 class Level:
     NAME    = "Level"
@@ -20,12 +20,14 @@ class Level:
         for en in self.ENEMIES:
             self.MAP.add(en)
 
-        if self.COLLECTIBLES:
-            for col in self.COLLECTIBLES:
-                self.MAP.add(col)
+        for col in self.COLLECTIBLES:
+            self.MAP.add(col)
 
     def get_player(self):
         return self.PLAYER
+
+    def get_map(self):
+        return self.MAP
 
     def draw(self, surface):
         self.MAP.draw(surface)
@@ -40,28 +42,26 @@ class Level:
 
 class LevelManager:
 
-    instance = None
-    def __init__(self, levels):
-        LevelManager.instance = self
+    # # -- singleton
+    # _instance = None
+    # def __new__(cls):
+    #     if LevelManager._instance is None:
+    #         LevelManager._instance = object.__new__(cls)
+    #     return LevelManager.__instance
 
-        self.levels     = levels
-        self.current    = 0
+    def __init__(self, levels):
+        self.levels  = levels
+        self.current = 0
+
+        self.completed = False
 
     def get_current(self):
         return self.levels[self.current]
 
-    # def go_next(self):
-    #     if self.current < len(self.levels)-1:
-    #         self.current += 1
-    #         SceneManager.instance.switch(GameScene.NAME)
-    #     else:
-    #         # Reinstanciate all levels, incase player goes again
-    #         types = [type(level) for level in self.levels]
-    #         self.levels.clear()
-    #         self.levels  = [typ() for typ in types]
-    #         self.current = 0
-
-    #         SceneManager.instance.switch(GameOver.NAME)
+    def next(self):
+        self.completed = self.current < len(self.levels) - 1
+        if not self.completed:
+            self.current += 1
 
 class LevelOne(Level):
     NAME    = "Kill Them All"
@@ -93,7 +93,8 @@ class LevelOne(Level):
                 random.randint(2, len(data['patrol_positions'])//2))
 
             patrol = self.MAP.pathfinder.calc_patrol_path([point] + patrol_points)
-            e = Enemy(point, (40, 40), patrol, space)
+            e = Enemy(point, (50, 50), patrol, space)
+            e.watch_player(self.PLAYER)
             self.ENEMIES.append(e)
 
         Level.__init__(self, space)
@@ -128,7 +129,12 @@ def setup_collisions(space):
         normal = normal.normalized()
         perp   = vec2(normal.y, -normal.x)
 
-        eshape.body.position = eshape.body.position + (perp * (eshape.radius/2))
+        if normal.x:
+            _dir = 1 if normal.x > 0 else -1
+        else:
+            _dir = 1 if normal.y > 0 else -1
+
+        eshape.body.position = eshape.body.position + ((_dir*perp) * (eshape.radius/2))
         return True
 
     handler = space.add_collision_handler(
