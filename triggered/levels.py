@@ -1,44 +1,32 @@
 import random
 from map import Map
-from gui import Timer
+from physics import Physics
+
 from entities import Player, Enemy, COLLISION_MAP
 from pygame.math   import Vector2 as vec2
 
 class Level:
-    NAME    = "Level"
-    MAP     = None
-    PLAYER  = None
-    ENEMIES = []
-    TIMER   = None
-    COLLECTIBLES = []
 
-    def __init__(self, physics_space=None):
-        self.space = physics_space
-        setup_collisions(self.space)
+    def __init__(self, name):
+        sef.name = name
+        self.physics = Physics()
 
-        self.MAP.add(self.PLAYER)
-        for en in self.ENEMIES:
-            self.MAP.add(en)
+        self.map = None
+        self.player = None
+        self.agents = []
 
-        for col in self.COLLECTIBLES:
-            self.MAP.add(col)
-
-    def get_player(self):
-        return self.PLAYER
-
-    def get_map(self):
-        return self.MAP
+    def load(self, data):
+        pass
 
     def draw(self, surface):
-        self.MAP.draw(surface)
-        self.TIMER.draw(surface)
+        self.map.draw(surface)
 
     def update(self, dt):
-        self.MAP.update(dt)
-        self.TIMER.update(dt)
+        self.physics.update()
+        self.map.update(dt)
 
     def event(self, ev):
-        self.MAP.event(ev)
+        self.map.event(ev)
 
 class LevelManager:
 
@@ -51,12 +39,12 @@ class LevelManager:
 
     def __init__(self, levels):
         self.levels  = levels
-        self.current = 0
+        self.index = 0
 
         self.completed = False
 
-    def get_current(self):
-        return self.levels[self.current]
+    def current(self):
+        return self.levels[self.index]
 
     def next(self):
         self.completed = self.current < len(self.levels) - 1
