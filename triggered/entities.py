@@ -240,8 +240,6 @@ class Enemy(Entity):
         bx, by = self.body.position
         self.rect.center = (bx, by)
 
-        self.check_shot_at(player)
-
     def patrol(self, dt):
         diff     = vec2(self.rect.center) - vec2(self.target)
         distance = diff.length_squared()
@@ -275,19 +273,6 @@ class Enemy(Entity):
             bx += dx * self.speed * dt
             by += dy * self.speed * dt
             self.body.position = (bx, by)
-
-    def check_shot_at(self, player):
-        # Check if player bullets hit us
-        for bullet in player.bullets:
-            if self.rect.colliderect(bullet.rect):
-                self.health -= self.damage
-                bullet.kill()
-
-        # Check if our bullets hit the player
-        for bullet in self.bullets:
-            if player.rect.colliderect(bullet.rect):
-                player.hit()
-                bullet.kill()
 
 class Bullet(Sprite):
 

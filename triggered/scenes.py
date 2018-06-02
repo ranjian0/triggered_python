@@ -3,7 +3,7 @@ import pygame as pg
 
 from gui import Label, Button
 from resources import Resources
-from levels import LevelManager, Level
+from levels import LevelManager, Level, FAILED_EVT, PASSED_EVT
 
 class Scene:
 
@@ -49,6 +49,10 @@ class SceneManager:
         self.scenes  = []
         self.current = None
 
+    def __iter__(self):
+        for scn in self.scenes:
+            yield scn
+
     def add(self, scene, is_main=False):
         if is_main:
             self.current = scene
@@ -74,11 +78,16 @@ class SceneManager:
 
     def event(self, ev):
         if self.current:
+            self.current.event(ev)
             if ev.type == pg.KEYDOWN and ev.key == pg.K_TAB:
                 if self.current.name == "Game":
                     self.current.paused = True
                     self.switch("Pause")
-            self.current.event(ev)
+
+            if ev.type == FAILED_EVT:
+                self.switch("Failed")
+            if ev.type == PASSED_EVT:
+                self.switch("Passed")
 
 def init_scenes():
     MainScene = Scene("Main")
@@ -108,11 +117,32 @@ def init_scenes():
                 on_clicked=lambda : SceneManager.instance.switch("Main")),
     ])
 
+    def quit_main():
+        for scn in SceneManager.instance:
+            if scn.name == "Game":
+                scn.elements[-1].current().reload()
+                break
+        SceneManager.instance.switch("Main")
+
     def retry_level():
-        current = SceneManager.instance.current
-        if current.name == "Game":
-            level = current.elements[0].current()
-            level.reload()
+        for scn in SceneManager.instance:
+            if scn.name == "Game":
+                scn.elements[0].current().reload()
+                break
+        SceneManager.instance.switch("Game")
+
+    def next_level():
+        for scn in SceneManager.instance:
+            if scn.name == "Game":
+                lm = scn.elements[0]
+                for l in lm:
+                    l.reload()
+
+                level = lm.next()
+                if level:
+                    SceneManager.instance.switch("Game")
+                else:
+                    SceneManager.instance.switch("GameOver")
 
     FailedScene = Scene("Failed")
     FailedScene.add([
@@ -121,15 +151,9 @@ def init_scenes():
         Button("RETRY", (200, 50), (650, 550), font_size=40,
                 on_clicked=lambda : retry_level()),
         Button("QUIT", (200, 50), (150, 550), font_size=40,
-                on_clicked=lambda : SceneManager.instance.switch("Main")),
+                on_clicked=lambda : quit_main()),
 
     ])
-
-    def next_level():
-        current = SceneManager.instance.current
-        if current.name == "Game":
-            levels = current.elements[0]
-            levels.next()
 
     PassedScene = Scene("Passed")
     PassedScene.add([
@@ -138,7 +162,7 @@ def init_scenes():
         Button("NEXT", (200, 50), (650, 550), font_size=40,
                 on_clicked=lambda : next_level()),
         Button("QUIT", (200, 50), (150, 550), font_size=40,
-                on_clicked=lambda : SceneManager.instance.switch("Main")),
+                on_clicked=lambda : quit_main()),
 
     ])
 

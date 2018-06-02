@@ -111,29 +111,7 @@ class Map:
 
         surface.blit(new_img, (0, 0), self.viewport)
 
-    def update(self, dt, entities):
-        player = None
-        entities = [e for e in entities if not hasattr(e, 'dead')]
-        for ent in entities:
-            if hasattr(ent, 'update'):
-                ent.update(dt)
-
-            if hasattr(ent, 'health'):
-                if ent.health <= 0:
-                    ent.kill()
-                    setattr(ent, 'dead', True)
-                    self.physics.remove(ent.shape, ent.body)
-
-            if isinstance(ent, Player):
-                player = ent
-
-            if hasattr(ent, 'bullets'):
-                for bullet in ent.bullets:
-                    for wall in self.walls:
-                        if bullet.rect.colliderect(wall):
-                            bullet.kill()
-
-        if not player: return
+    def update(self, dt, player):
         display  = pg.display.get_surface()
         self.viewport = display.get_rect().copy()
 
