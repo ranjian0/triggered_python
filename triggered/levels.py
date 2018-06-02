@@ -1,144 +1,134 @@
 import random
+import pygame as pg
 from map import Map
-from gui import Timer
+from physics import Physics
+
 from entities import Player, Enemy, COLLISION_MAP
-from pygame.math   import Vector2 as vec2
+
+FAILED_EVT = pg.USEREVENT + 1
+PASSED_EVT = pg.USEREVENT + 2
 
 class Level:
-    NAME    = "Level"
-    MAP     = None
-    PLAYER  = None
-    ENEMIES = []
-    TIMER   = None
-    COLLECTIBLES = []
 
-    def __init__(self, physics_space=None):
-        self.space = physics_space
-        setup_collisions(self.space)
+    def __init__(self, name, data):
+        self.name = name
+        self.data = self._parse(data)
+        self.physics = Physics()
 
-        self.MAP.add(self.PLAYER)
-        for en in self.ENEMIES:
-            self.MAP.add(en)
+        self.map = None
+        self.agents = []
+        self.reload()
 
-        for col in self.COLLECTIBLES:
-            self.MAP.add(col)
+    def _parse(self, data):
+        result = []
+        with open(data, 'r') as d:
+            for line in d.readlines():
+                result.append(list(line.strip()))
+        return result
 
-    def get_player(self):
-        return self.PLAYER
+    def reload(self):
+        self.agents.clear()
+        self.map = Map(self.data, physics=self.physics)
 
-    def get_map(self):
-        return self.MAP
+        # -- add player to map position
+        player = Player(self.map['player_position'], (50, 50), self.physics)
+        self.agents.append(player)
+
+        # -- add other agents map positions
+        for point in self.map['enemy_position']:
+            patrol_points = random.sample(self.map['patrol_positions'],
+                random.randint(2, len(self.map['patrol_positions'])//2))
+
+            patrol = self.map.pathfinder.calc_patrol_path([point] + patrol_points)
+            e = Enemy(point, (50, 50), patrol, self.physics)
+            e.watch_player(player)
+            self.agents.append(e)
 
     def draw(self, surface):
-        self.MAP.draw(surface)
-        self.TIMER.draw(surface)
+        self.map.draw(surface, self.agents)
 
     def update(self, dt):
-        self.MAP.update(dt)
-        self.TIMER.update(dt)
+        self.physics.update()
+
+        player = None
+        self.agents = [a for a in self.agents if not hasattr(a, 'dead')]
+        has_player = [a for a in self.agents if isinstance(a, Player)]
+        if has_player:
+            player = has_player[-1]
+            self.map.update(dt, player)
+        else:
+            # -- player died, post level failed
+            failed_event = pg.event.Event(FAILED_EVT)
+            pg.event.post(failed_event)
+            return
+
+
+        for agent in self.agents:
+            if hasattr(agent, 'update'):
+                agent.update(dt)
+
+            if hasattr(agent, 'health'):
+                if agent.health <= 0:
+                    setattr(agent, 'dead', True)
+                    self.physics.remove(agent.shape, agent.body)
+
+            if hasattr(agent, 'bullets'):
+                # -- collide walls
+                for bullet in agent.bullets:
+                    for wall in self.map.walls:
+                        if bullet.rect.colliderect(wall):
+                            bullet.kill()
+
+                # -- player --> enemies
+                if isinstance(agent, Player):
+                    for e in [a for a in self.agents if isinstance(a, Enemy)]:
+                        for b in agent.bullets:
+                            if e.rect.colliderect(b.rect):
+                                e.hit()
+                                b.kill()
+                else:
+                # -- enemy --> player
+                    for bullet in agent.bullets:
+                        if player.rect.colliderect(bullet.rect):
+                            player.hit()
+                            bullet.kill()
 
     def event(self, ev):
-        self.MAP.event(ev)
+        self.map.event(ev, self.agents)
 
 class LevelManager:
 
-    # # -- singleton
-    # _instance = None
-    # def __new__(cls):
-    #     if LevelManager._instance is None:
-    #         LevelManager._instance = object.__new__(cls)
-    #     return LevelManager.__instance
-
-    def __init__(self, levels):
-        self.levels  = levels
-        self.current = 0
+    def __init__(self):
+        self.levels = []
+        self.index = 0
 
         self.completed = False
 
-    def get_current(self):
-        return self.levels[self.current]
+    def add(self, levels):
+        if isinstance(levels, list):
+            self.levels.extend(levels)
+        else:
+            self.levels.append(levels)
+
+    def current(self):
+        return self.levels[self.index]
 
     def next(self):
-        self.completed = self.current < len(self.levels) - 1
+        self.completed = self.index == len(self.levels) - 1
         if not self.completed:
-            self.current += 1
+            self.index += 1
+            return self.current()
+        return None
 
-class LevelOne(Level):
-    NAME    = "Kill Them All"
+    def __iter__(self):
+        for l in self.levels:
+            yield l
 
-    def __init__(self, space):
+    def draw(self, surface):
+        self.current().draw(surface)
 
-        self.MAP     = Map(
-        [['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
-         ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
-         ['#', ' ', '#', '#', '#', '#', '#', ' ', '#', ' ', '#'],
-         ['#', ' ', ' ', ' ', ' ', ' ', '#', ' ', '#', ' ', '#'],
-         ['#', ' ', '#', '#', '#', '#', '#', 'e', '#', 'e', '#'],
-         ['#', 'e', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', '#'],
-         ['#', ' ', '#', 'e', '#', '#', '#', '#', '#', ' ', '#'],
-         ['#', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', '#'],
-         ['#', ' ', '#', '#', '#', '#', '#', '#', '#', ' ', '#'],
-         ['#', 'p', ' ', 'e', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
-         ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#']],
-         space = space)
+    def update(self, dt):
+        self.current().update(dt)
 
-        self.TIMER    = Timer((150, 30), (80, 20), 500,
-            on_complete=lambda : LevelManager.instance.get_current().check_complete())
-
-        data = self.MAP.spawn_data
-        self.PLAYER   = Player(data.get('player_position'), (50, 50), space)
-        self.ENEMIES  = []
-        for point in data['enemy_position']:
-            patrol_points = random.sample(data['patrol_positions'],
-                random.randint(2, len(data['patrol_positions'])//2))
-
-            patrol = self.MAP.pathfinder.calc_patrol_path([point] + patrol_points)
-            e = Enemy(point, (50, 50), patrol, space)
-            e.watch_player(self.PLAYER)
-            self.ENEMIES.append(e)
-
-        Level.__init__(self, space)
-
-
-def setup_collisions(space):
-
-    # Player-Enemy Collision
-    def player_enemy_solve(arbiter, space, data):
-        """ Keep the two bodies from intersecting"""
-        pshape = arbiter.shapes[0]
-        eshape  = arbiter.shapes[1]
-
-        normal = pshape.body.position - eshape.body.position
-        normal = normal.normalized()
-        pshape.body.position = eshape.body.position + (normal * (pshape.radius*2))
-        return True
-
-    handler = space.add_collision_handler(
-            COLLISION_MAP.get("PlayerType"),
-            COLLISION_MAP.get("EnemyType")
-        )
-    handler.begin = player_enemy_solve
-
-    # Enemy-Enemy Collision
-    def enemy_enemy_solve(arbiter, space, data):
-        """ Keep the two bodies from intersecting"""
-        eshape  = arbiter.shapes[0]
-        eshape1 = arbiter.shapes[1]
-
-        normal = eshape.body.position - eshape1.body.position
-        normal = normal.normalized()
-        perp   = vec2(normal.y, -normal.x)
-
-        if normal.x:
-            _dir = 1 if normal.x > 0 else -1
-        else:
-            _dir = 1 if normal.y > 0 else -1
-
-        eshape.body.position = eshape.body.position + ((_dir*perp) * (eshape.radius/2))
-        return True
-
-    handler = space.add_collision_handler(
-            COLLISION_MAP.get("EnemyType"),
-            COLLISION_MAP.get("EnemyType")
-        )
-    handler.begin = enemy_enemy_solve
+    def event(self, ev):
+        self.current().event(ev)

@@ -1,42 +1,28 @@
 import sys
 import pygame as pg
-import pymunk as pm
 
-from pymunk import pygame_util as putils
-
-from scenes import (
-    SceneManager,
-    MainScene,
-    GameScene,
-    PauseScene,
-    LevelPassed,
-    LevelFailed,
-    GameOver)
+from resources import Resources
+from scenes import SceneManager, init_scenes
 
 SIZE        = (800, 600)
 CAPTION     = "Triggered"
 BACKGROUND  = (100, 100, 100)
 
-SPACE        = pm.Space()
-PHYSICS_STEP = 50
-putils.positive_y_is_up = False
-
-
 def main():
     pg.init()
     pg.display.set_caption(CAPTION)
+
+    clock   = pg.time.Clock()
     screen  = pg.display.set_mode(
         SIZE, pg.RESIZABLE, 32)
 
-    clock   = pg.time.Clock()
-
-    manager = SceneManager(SPACE)
-    manager.add(MainScene, True)
-    manager.add(GameScene)
-    manager.add(PauseScene)
-    manager.add(LevelPassed)
-    manager.add(LevelFailed)
-    manager.add(GameOver)
+    res     = Resources()
+    manager = SceneManager()
+    for scn in init_scenes():
+        if scn.name == "Main":
+            manager.add(scn, True)
+        else:
+            manager.add(scn)
 
     while True:
         # -- events
@@ -47,15 +33,12 @@ def main():
                 sys.exit()
 
             if event.type == pg.VIDEORESIZE:
-                resize(event, screen)
+                screen = pg.display.set_mode(
+                    event.size, pg.RESIZABLE, 32)
 
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     sys.exit()
-
-                if event.key == pg.K_TAB:
-                    if isinstance(manager.current, GameScene):
-                        manager.switch(PauseScene.NAME)
 
         # -- draw
         screen.fill(BACKGROUND)
@@ -64,13 +47,7 @@ def main():
 
         # -- update
         dt = clock.tick(60) / 1000
-        for _ in range(PHYSICS_STEP):
-            SPACE.step(0.1 / PHYSICS_STEP)
         manager.update(dt)
-
-def resize(ev, screen):
-    screen = pg.display.set_mode(
-        ev.size, pg.RESIZABLE, 32)
 
 if __name__ == '__main__':
     main()
