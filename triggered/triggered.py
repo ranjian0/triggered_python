@@ -51,6 +51,9 @@ def main():
 
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
+                    sys.exit()
+
+                if event.key == pg.K_TAB:
                     if isinstance(manager.current, GameScene):
                         manager.switch(PauseScene.NAME)
 
