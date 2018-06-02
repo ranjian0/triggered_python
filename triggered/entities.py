@@ -64,7 +64,6 @@ class Entity(Sprite):
     def event(self, ev):
         pass
 
-
 class Player(Entity):
 
     def __init__(self, position, size, space):

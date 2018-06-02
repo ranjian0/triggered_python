@@ -33,7 +33,6 @@ class Physics:
         options = putils.DrawOptions(surf)
         self.physics_space.debug_draw(options)
 
-# -- collision handlers
 def setup_collisions(space):
 
     # Player-Enemy Collision

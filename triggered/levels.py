@@ -93,7 +93,6 @@ class Level:
                             player.hit()
                             bullet.kill()
 
-
     def event(self, ev):
         self.map.event(ev, self.agents)
 
