@@ -3,12 +3,13 @@ import pygame as pg
 
 from scenes import (
     SceneManager,
+
     MainScene,
     GameScene,
     PauseScene,
-    LevelPassed,
-    LevelFailed,
-    GameOver)
+    PassedScene,
+    FailedScene,
+    GameOverScene)
 
 SIZE        = (800, 600)
 CAPTION     = "Triggered"
@@ -26,9 +27,9 @@ def main():
     manager.add(MainScene, True)
     manager.add(GameScene)
     manager.add(PauseScene)
-    manager.add(LevelPassed)
-    manager.add(LevelFailed)
-    manager.add(GameOver)
+    manager.add(PassedScene)
+    manager.add(FailedScene)
+    manager.add(GameOverScene)
 
     while True:
         # -- events
