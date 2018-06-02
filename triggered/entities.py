@@ -302,8 +302,6 @@ class Bullet(Sprite):
     def make_image(self, size):
         img = pg.Surface(size).convert_alpha()
         img.fill((0, 0, 0, 0))
-        rect = img.get_rect()
-
         pg.draw.rect(img, self.color, [0, 0, size[0], size[1]])
 
         return img
@@ -311,18 +309,7 @@ class Bullet(Sprite):
     def update(self, dt):
         self.true_pos[0] += math.cos(self.angle) * self.speed
         self.true_pos[1] += math.sin(self.angle) * self.speed
-
         self.rect.topleft = self.true_pos
-
-        self.collide_map()
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-
-    def collide_map(self):
-        pass
-        # walls = LevelManager.instance.get_current().MAP.walls
-        # for wall in walls:
-        #     if self.rect.colliderect(wall):
-        #         self.kill()
-

@@ -113,7 +113,8 @@ class Map:
 
     def update(self, dt, entities):
         player = None
-        for ent in [e for e in entities if not hasattr(e, 'dead')]:
+        entities = [e for e in entities if not hasattr(e, 'dead')]
+        for ent in entities:
             if hasattr(ent, 'update'):
                 ent.update(dt)
 
@@ -126,6 +127,11 @@ class Map:
             if isinstance(ent, Player):
                 player = ent
 
+            if hasattr(ent, 'bullets'):
+                for bullet in ent.bullets:
+                    for wall in self.walls:
+                        if bullet.rect.colliderect(wall):
+                            bullet.kill()
 
         if not player: return
         display  = pg.display.get_surface()

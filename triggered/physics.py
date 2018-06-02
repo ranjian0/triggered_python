@@ -2,8 +2,6 @@ import pymunk as pm
 import itertools as it
 from pymunk import pygame_util as putils
 from pygame.math   import Vector2 as vec2
-from entities import COLLISION_MAP
-
 
 putils.positive_y_is_up = False
 
