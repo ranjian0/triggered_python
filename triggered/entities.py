@@ -3,6 +3,7 @@ import pygame as pg
 import pymunk as pm
 import itertools as it
 
+from physics       import COLLISION_MAP
 from enum          import Enum
 from pygame.sprite import Sprite, Group
 from pygame.math   import Vector2 as vec2
@@ -15,11 +16,6 @@ IMPUT_MAP   = {
     pg.K_d : (1, 0)
 }
 
-
-COLLISION_MAP = {
-    "PlayerType" : 1,
-    "EnemyType"  : 2,
-}
 
 class Player:
 
@@ -276,7 +272,6 @@ class Enemy:
         self.rect    = self.surface.get_rect(center=self.rect.center)
 
     def check_shot_at(self, player):
-
         # Check if player bullets hit us
         for bullet in player.bullets:
             if self.rect.colliderect(bullet.rect):

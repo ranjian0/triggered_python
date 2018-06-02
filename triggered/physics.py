@@ -7,6 +7,12 @@ from entities import COLLISION_MAP
 
 putils.positive_y_is_up = False
 
+COLLISION_MAP = {
+    "PlayerType" : 1,
+    "EnemyType"  : 2,
+    "WallType"   : 3,
+}
+
 class Physics:
 
     def __init__(self, steps=50):
@@ -15,7 +21,6 @@ class Physics:
 
         setup_collisions(self.space)
 
-    # -- PUBLIC API
     def add(self, *args):
         self.space.add(*args)
 
