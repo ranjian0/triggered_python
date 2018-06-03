@@ -146,7 +146,7 @@ class Player(Entity):
         # -- running
         speed = self.speed
         if keys[pg.K_RSHIFT] or keys[pg.K_LSHIFT]:
-            speed *= 1.5
+            speed *= 2.5
 
         bx, by = self.body.position
         bx += dx * speed * dt
