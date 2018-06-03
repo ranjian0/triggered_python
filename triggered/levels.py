@@ -1,9 +1,10 @@
 import random
 import pygame as pg
+
 from map import Map
 from physics import Physics
-
-from entities import Player, Enemy, COLLISION_MAP
+from entities import (
+    Player, Enemy, COLLISION_MAP)
 
 FAILED_EVT = pg.USEREVENT + 1
 PASSED_EVT = pg.USEREVENT + 2

@@ -2,7 +2,9 @@ import sys
 import pygame as pg
 
 from resources import Resources
-from scenes import SceneManager, init_scenes
+from scenes import (
+    SceneManager, init_scenes)
+
 
 SIZE        = (800, 600)
 CAPTION     = "Triggered"

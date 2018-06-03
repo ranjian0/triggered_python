@@ -1,9 +1,10 @@
 import sys
 import pygame as pg
 
-from gui import Label, Button
 from resources import Resources
-from levels import LevelManager, Level, FAILED_EVT, PASSED_EVT
+from gui       import Label, Button
+from levels    import (
+    LevelManager, Level, FAILED_EVT, PASSED_EVT)
 
 class Scene:
 

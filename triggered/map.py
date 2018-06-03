@@ -1,8 +1,6 @@
 import heapq
 import pygame as pg
 import pymunk as pm
-
-from entities import Player
 from pymunk import pygame_util as putils
 
 class Map:
