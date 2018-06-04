@@ -13,6 +13,7 @@ BACKGROUND  = (100, 100, 100)
 def main():
     window = pg.window.Window(*SIZE, resizable=True)
     window.set_minimum_size(*SIZE)
+    window.set_caption(CAPTION)
 
     @window.event
     def on_draw():
