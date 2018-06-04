@@ -1,5 +1,5 @@
 import sys
-import pygame as pg
+import pyglet as pg
 
 from resources import Resources
 from scenes import (
@@ -11,42 +11,49 @@ CAPTION     = "Triggered"
 BACKGROUND  = (100, 100, 100)
 
 def main():
-    pg.init()
-    pg.display.set_caption(CAPTION)
+    window = pg.window.Window()
 
-    clock   = pg.time.Clock()
-    screen  = pg.display.set_mode(
-        SIZE, pg.RESIZABLE)
+    @window.event
+    def on_draw():
+        window.clear()
 
-    res     = Resources()
-    manager = SceneManager()
-    for scn in init_scenes():
-        manager.add(scn, scn.name == "Main")
+    pg.app.run()
+    # pg.init()
+    # pg.display.set_caption(CAPTION)
 
-    while True:
-        # -- events
-        for event in pg.event.get():
-            manager.event(event)
+    # clock   = pg.time.Clock()
+    # screen  = pg.display.set_mode(
+    #     SIZE, pg.RESIZABLE)
 
-            if event.type == pg.QUIT:
-                sys.exit()
+    # res     = Resources()
+    # manager = SceneManager()
+    # for scn in init_scenes():
+    #     manager.add(scn, scn.name == "Main")
 
-            if event.type == pg.VIDEORESIZE:
-                screen = pg.display.set_mode(
-                    event.size, pg.RESIZABLE)
+    # while True:
+    #     # -- events
+    #     for event in pg.event.get():
+    #         manager.event(event)
 
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    sys.exit()
+    #         if event.type == pg.QUIT:
+    #             sys.exit()
 
-        # -- draw
-        screen.fill(BACKGROUND)
-        manager.draw(screen)
-        pg.display.flip()
+    #         if event.type == pg.VIDEORESIZE:
+    #             screen = pg.display.set_mode(
+    #                 event.size, pg.RESIZABLE)
 
-        # -- update
-        dt = clock.tick(60) / 1000
-        manager.update(dt)
+    #         if event.type == pg.KEYDOWN:
+    #             if event.key == pg.K_ESCAPE:
+    #                 sys.exit()
+
+    #     # -- draw
+    #     screen.fill(BACKGROUND)
+    #     manager.draw(screen)
+    #     pg.display.flip()
+
+    #     # -- update
+    #     dt = clock.tick(60) / 1000
+    #     manager.update(dt)
 
 if __name__ == '__main__':
     main()
