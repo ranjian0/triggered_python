@@ -40,6 +40,26 @@ def on_resize(w, h):
     background.width = w
     background.height = h
 
+@window.event
+def on_key_press(key, modifiers):
+    manager.key_press(key, modifiers)
+
+@window.event
+def on_key_release(key, modifiers):
+    manager.key_release(key, modifiers)
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    manager.mouse_press(x, y, button. modifiers)
+
+@window.event
+def on_mouse_release(x, y, button, modifiers):
+    manager.mouse_release(x, y, button, modifiers)
+
+@window.event
+def on_mouse_motion(x, y, dx, dy):
+    manager.mouse_motion(x, y, dx, dy)
+
 def on_update(dt):
     manager.update(dt)
 

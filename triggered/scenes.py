@@ -1,5 +1,6 @@
 import sys
-import pygame as pg
+import glooey
+import pyglet as pg
 
 from resources import Resources
 # from levels    import (
@@ -76,11 +77,31 @@ class SceneManager:
         if self.current:
             self.current.update(dt)
 
-    def event(self, ev):
+    def key_press(self, key, modifiers):
         pass
+
+    def key_release(self, key, modifiers):
+        pass
+
+    def mouse_press(self, x, y, button, modifiers):
+        pass
+
+    def mouse_release(self, x, y, button, modifiers):
+        pass
+
+    def mouse_motion(self, x, y, dx, dy):
+        pass
+
 
 def init_scenes():
     MainScene = Scene("Main")
+    MainScene.add([
+        pg.text.Label('TRIGGERED',
+                          font_name='Times New Roman',
+                          font_size=40,
+                          x=100, y=100,
+                          anchor_x='center', anchor_y='center'),
+    ])
 
     return [MainScene]
 
