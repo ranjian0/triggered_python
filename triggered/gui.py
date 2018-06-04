@@ -7,7 +7,6 @@ class Label:
                     fg          = pg.Color("white"),
                     bg          = None):
 
-        super(Label, self).__init__()
         pg.font.init()
 
         self.fg   = fg
@@ -32,7 +31,6 @@ class Button:
                     font_size   = 25,
                     hover_color = pg.Color("yellow")):
 
-        super(Button, self).__init__()
         self.text = text
         self.size = size
         self.pos  = position
@@ -78,8 +76,6 @@ class Timer:
                     fg          = pg.Color("green"),
                     bg          = pg.Color("black"),
                     on_complete = lambda : print("Timer Complete")):
-
-        super(Timer, self).__init__()
 
         self.size  = size
         self.pos   = position
