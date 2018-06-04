@@ -16,13 +16,12 @@ def main():
 
     clock   = pg.time.Clock()
     screen  = pg.display.set_mode(
-        SIZE, pg.RESIZABLE, 32)
+        SIZE, pg.RESIZABLE)
 
     res     = Resources()
     manager = SceneManager()
     for scn in init_scenes():
-        args = (scn, True) if scn.name == "Main" else (scn, False)
-        manager.add(*args)
+        manager.add(scn, scn.name == "Main")
 
     while True:
         # -- events
@@ -34,7 +33,7 @@ def main():
 
             if event.type == pg.VIDEORESIZE:
                 screen = pg.display.set_mode(
-                    event.size, pg.RESIZABLE, 32)
+                    event.size, pg.RESIZABLE)
 
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
