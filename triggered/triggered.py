@@ -3,8 +3,8 @@ import pyglet as pg
 from pyglet.gl import *
 
 from resources import Resources
-# from scenes import (
-#     SceneManager, init_scenes)
+from scenes import (
+    SceneManager, init_scenes)
 
 FPS        = 60
 SIZE       = (800, 600)
@@ -19,19 +19,20 @@ window.set_caption(CAPTION)
 
 # -- create manager and resources
 res = Resources()
-# manager = SceneManager()
-# for scn in init_scenes():
-#     manager.add(scn, scn.name == "Main")
+manager = SceneManager()
+for scn in init_scenes():
+    manager.add(scn, scn.name == "Main")
 
 background = res.sprite('world_background')
 
 @window.event
 def on_draw():
+    window.clear()
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-    window.clear()
     background.blit(0, 0)
+    manager.draw()
 
 @window.event
 def on_resize(w, h):
@@ -40,7 +41,7 @@ def on_resize(w, h):
     background.height = h
 
 def on_update(dt):
-    pass
+    manager.update(dt)
 
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)

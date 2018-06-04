@@ -2,9 +2,8 @@ import sys
 import pygame as pg
 
 from resources import Resources
-from gui       import Label, Button
-from levels    import (
-    LevelManager, Level, FAILED_EVT, PASSED_EVT)
+# from levels    import (
+#     LevelManager, Level, FAILED_EVT, PASSED_EVT)
 
 class Scene:
 
@@ -20,10 +19,10 @@ class Scene:
         else:
             self.elements.append(items)
 
-    def draw(self, surface):
+    def draw(self):
         for elem in self.elements:
             if hasattr(elem, 'draw'):
-                elem.draw(surface)
+                elem.draw()
 
     def update(self, dt):
         if self.paused: return
@@ -69,110 +68,94 @@ class SceneManager:
         self.current.paused = False
         self.switch("Game")
 
-    def draw(self, surface):
+    def draw(self):
         if self.current:
-            self.current.draw(surface)
+            self.current.draw()
 
     def update(self, dt):
         if self.current:
             self.current.update(dt)
 
     def event(self, ev):
-        if self.current:
-            self.current.event(ev)
-            if ev.type == pg.KEYDOWN and ev.key == pg.K_TAB:
-                if self.current.name == "Game":
-                    self.current.paused = True
-                    self.switch("Pause")
-
-            if ev.type == FAILED_EVT:
-                self.switch("Failed")
-            if ev.type == PASSED_EVT:
-                self.switch("Passed")
+        pass
 
 def init_scenes():
     MainScene = Scene("Main")
-    MainScene.add([
-        Label("TRIGGERED", (400, 50), font_size=60, fg=pg.Color("Red")),
-        Button("PLAY", (200, 50), (400, 200), font_size=40,
-                on_clicked=lambda : SceneManager.instance.switch("Game")),
-        Button("EXIT", (200, 50), (400, 270), font_size=40,
-                on_clicked=lambda : sys.exit()),
-        Label("Created by Ian Karanja", (700, 580), font_size=20, fg=pg.Color("White")),
-    ])
 
-    GameScene = Scene("Game")
-    levels = LevelManager()
-    levels.add([
-        Level("Test", Resources.instance.level("test"))
-    ])
-    GameScene.add(levels)
+    return [MainScene]
 
-    PauseScene = Scene("Pause")
-    PauseScene.add([
-        Label("PAUSED", (400, 300), font_size=60, fg=pg.Color("Red")),
+    # GameScene = Scene("Game")
+    # levels = LevelManager()
+    # levels.add([
+    #     Level("Test", Resources.instance.level("test"))
+    # ])
+    # GameScene.add(levels)
 
-        Button("RESUME", (200, 50), (650, 550), font_size=40,
-                on_clicked=lambda : SceneManager.instance.resume()),
-        Button("QUIT", (200, 50), (150, 550), font_size=40,
-                on_clicked=lambda : SceneManager.instance.switch("Main")),
-    ])
+    # PauseScene = Scene("Pause")
+    # PauseScene.add([
+    #     Label("PAUSED", (400, 300), font_size=60, fg=pg.Color("Red")),
 
-    def quit_main():
-        for scn in SceneManager.instance:
-            if scn.name == "Game":
-                scn.elements[-1].current().reload()
-                break
-        SceneManager.instance.switch("Main")
+    #     Button("RESUME", (200, 50), (650, 550), font_size=40,
+    #             on_clicked=lambda : SceneManager.instance.resume()),
+    #     Button("QUIT", (200, 50), (150, 550), font_size=40,
+    #             on_clicked=lambda : SceneManager.instance.switch("Main")),
+    # ])
 
-    def retry_level():
-        for scn in SceneManager.instance:
-            if scn.name == "Game":
-                scn.elements[0].current().reload()
-                break
-        SceneManager.instance.switch("Game")
+    # def quit_main():
+    #     for scn in SceneManager.instance:
+    #         if scn.name == "Game":
+    #             scn.elements[-1].current().reload()
+    #             break
+    #     SceneManager.instance.switch("Main")
 
-    def next_level():
-        for scn in SceneManager.instance:
-            if scn.name == "Game":
-                lm = scn.elements[0]
-                for l in lm:
-                    l.reload()
+    # def retry_level():
+    #     for scn in SceneManager.instance:
+    #         if scn.name == "Game":
+    #             scn.elements[0].current().reload()
+    #             break
+    #     SceneManager.instance.switch("Game")
 
-                level = lm.next()
-                if level:
-                    SceneManager.instance.switch("Game")
-                else:
-                    SceneManager.instance.switch("GameOver")
+    # def next_level():
+    #     for scn in SceneManager.instance:
+    #         if scn.name == "Game":
+    #             lm = scn.elements[0]
+    #             for l in lm:
+    #                 l.reload()
 
-    FailedScene = Scene("Failed")
-    FailedScene.add([
-        Label("FAILED", (400, 300), font_size=60, fg=pg.Color("Red")),
+    #             level = lm.next()
+    #             if level:
+    #                 SceneManager.instance.switch("Game")
+    #             else:
+    #                 SceneManager.instance.switch("GameOver")
 
-        Button("RETRY", (200, 50), (650, 550), font_size=40,
-                on_clicked=lambda : retry_level()),
-        Button("QUIT", (200, 50), (150, 550), font_size=40,
-                on_clicked=lambda : quit_main()),
+    # FailedScene = Scene("Failed")
+    # FailedScene.add([
+    #     Label("FAILED", (400, 300), font_size=60, fg=pg.Color("Red")),
 
-    ])
+    #     Button("RETRY", (200, 50), (650, 550), font_size=40,
+    #             on_clicked=lambda : retry_level()),
+    #     Button("QUIT", (200, 50), (150, 550), font_size=40,
+    #             on_clicked=lambda : quit_main()),
 
-    PassedScene = Scene("Passed")
-    PassedScene.add([
-        Label("PASSED", (400, 300), font_size=60, fg=pg.Color("Red")),
+    # ])
 
-        Button("NEXT", (200, 50), (650, 550), font_size=40,
-                on_clicked=lambda : next_level()),
-        Button("QUIT", (200, 50), (150, 550), font_size=40,
-                on_clicked=lambda : quit_main()),
+    # PassedScene = Scene("Passed")
+    # PassedScene.add([
+    #     Label("PASSED", (400, 300), font_size=60, fg=pg.Color("Red")),
 
-    ])
+    #     Button("NEXT", (200, 50), (650, 550), font_size=40,
+    #             on_clicked=lambda : next_level()),
+    #     Button("QUIT", (200, 50), (150, 550), font_size=40,
+    #             on_clicked=lambda : quit_main()),
 
-    GameOverScene = Scene("GameOver")
-    GameOverScene.add([
-        Label("GAME OVER", (400, 300), font_size=60, fg=pg.Color("Red")),
+    # ])
 
-        Button("QUIT", (200, 50), (150, 550), font_size=40,
-                on_clicked=lambda : SceneManager.instance.switch("Main")),
-    ])
+    # GameOverScene = Scene("GameOver")
+    # GameOverScene.add([
+    #     Label("GAME OVER", (400, 300), font_size=60, fg=pg.Color("Red")),
 
-    return [MainScene, GameScene, PauseScene, PassedScene, FailedScene, GameOverScene]
+    #     Button("QUIT", (200, 50), (150, 550), font_size=40,
+    #             on_clicked=lambda : SceneManager.instance.switch("Main")),
+    # ])
+
+    # return [MainScene, GameScene, PauseScene, PassedScene, FailedScene, GameOverScene]
