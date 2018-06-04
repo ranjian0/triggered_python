@@ -31,6 +31,7 @@ def on_draw():
 
 @window.event
 def on_resize(w, h):
+    # -- resize background
     background.width = w
     background.height = h
 
