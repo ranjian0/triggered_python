@@ -1,3 +1,52 @@
+import glooey
+
+class Label(glooey.Label):
+    custom_color     = '#babdb6'
+    custom_font_size = 20
+    custom_alignment = 'center'
+
+
+class Title(glooey.Label):
+    custom_color     = '#eeeeec'
+    custom_font_size = 40
+    custom_alignment = 'center'
+    custom_bold = True
+
+
+class Button(glooey.Button):
+    Label = Label
+    custom_alignment = 'fill'
+
+    class Base(glooey.Background):
+        custom_color = '#204a87'
+
+    class Over(glooey.Background):
+        custom_color = '#3465a4'
+
+    class Down(glooey.Background):
+        custom_color = '#729fcff'
+
+    def __init__(self, text, callback):
+        super().__init__(text)
+        self.callback = callback
+
+    def on_click(self, widget):
+        if callable(self.callback):
+            self.callback()
+
+
+
+
+
+
+
+'''
+============================================================
+---   DETRECATED
+============================================================
+'''
+
+'''
 import pygame as pg
 
 class Label:
@@ -115,3 +164,4 @@ class Timer:
             self.value     = self.start
             if callable(self.on_complete):
                 self.on_complete()
+'''

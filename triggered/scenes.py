@@ -3,6 +3,7 @@ import glooey
 import pyglet as pg
 
 from resources import Resources
+from gui import Label, Title, Button
 # from levels    import (
 #     LevelManager, Level, FAILED_EVT, PASSED_EVT)
 
