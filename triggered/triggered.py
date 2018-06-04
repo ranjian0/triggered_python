@@ -35,32 +35,6 @@ def on_update(dt):
     print(dt)
 
 
-
-    # while True:
-    #     # -- events
-    #     for event in pg.event.get():
-    #         manager.event(event)
-
-    #         if event.type == pg.QUIT:
-    #             sys.exit()
-
-    #         if event.type == pg.VIDEORESIZE:
-    #             screen = pg.display.set_mode(
-    #                 event.size, pg.RESIZABLE)
-
-    #         if event.type == pg.KEYDOWN:
-    #             if event.key == pg.K_ESCAPE:
-    #                 sys.exit()
-
-    #     # -- draw
-    #     screen.fill(BACKGROUND)
-    #     manager.draw(screen)
-    #     pg.display.flip()
-
-    #     # -- update
-    #     dt = clock.tick(60) / 1000
-    #     manager.update(dt)
-
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)
     pg.app.run()
