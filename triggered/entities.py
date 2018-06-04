@@ -1,11 +1,11 @@
 import math
-import pygame as pg
+import pyglet as pg
 import pymunk as pm
 import itertools as it
 
+from resources import Resources
 from physics       import COLLISION_MAP
 from enum          import Enum
-from pygame.sprite import Sprite, Group
 from pygame.math   import Vector2 as vec2
 
 
@@ -16,7 +16,7 @@ IMPUT_MAP   = {
     pg.K_d : (1, 0)
 }
 
-class Entity(Sprite):
+class Entity:
 
     def __init__(self, position, size):
         self.pos  = position
@@ -72,11 +72,9 @@ class Player(Entity):
         self.turret = None
 
         # Create Player Image
-        self.original_img = self.make_image(size)
-        self.image        = self.original_img.copy()
-        self.rect         = self.image.get_rect(center=position)
+        self.image = Resources.instance.sprite("hitman_gun")
 
-        self.bullets   = Group()
+        # self.bullets   = Group()
         self.body = pm.Body(1, 100)
         self.body.position = self.rect.center
         self.shape = pm.Circle(self.body, size[0]/2)
@@ -85,20 +83,6 @@ class Player(Entity):
 
         self.look_at(pg.mouse.get_pos())
 
-        display  = pg.display.get_surface()
-        self.viewport = display.get_rect().copy()
-
-    def make_image(self, size):
-        img = pg.Surface(size).convert_alpha()
-        img.fill((0, 0, 0, 0))
-
-        rect = img.get_rect()
-
-        self.turret = pg.draw.rect(img, pg.Color('black'), [rect.center[0] - 5, 25, 10, 50])
-        pg.draw.ellipse(img, pg.Color('black'), rect.inflate(-10, -10))
-        pg.draw.ellipse(img, pg.Color('tomato'), rect.inflate(-20, -20))
-
-        return img
 
     def shoot(self):
         if self.ammo <= 0:
@@ -111,19 +95,19 @@ class Player(Entity):
 
         vec = vec2(pos[0] - self.rect.centerx, pos[1] - self.rect.centery).normalize()
         gun_pos = vec2(self.rect.center) + (vec * vec2(self.turret.center).length()/2)
-        self.bullets.add(Bullet(gun_pos, self.angle))
+        # self.bullets.add(Bullet(gun_pos, self.angle))
 
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-        self.bullets.draw(surface)
+    def draw(self):
+        self.image.blit(*self.pos)
 
     def event(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                self.shoot()
+        pass
+        # if event.type == pg.MOUSEBUTTONDOWN:
+        #     if event.button == 1:
+        #         self.shoot()
 
     def update(self, dt):
-        self.bullets.update(dt)
+        # self.bullets.update(dt)
 
         # Keys and mouse
         pos = pg.mouse.get_pos()

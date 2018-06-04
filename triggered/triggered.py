@@ -1,9 +1,10 @@
 import sys
 import pyglet as pg
+from pyglet.gl import *
 
 from resources import Resources
-from scenes import (
-    SceneManager, init_scenes)
+# from scenes import (
+#     SceneManager, init_scenes)
 
 FPS        = 60
 SIZE       = (800, 600)
@@ -26,6 +27,9 @@ background = res.sprite('world_background')
 
 @window.event
 def on_draw():
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
     window.clear()
     background.blit(0, 0)
 
