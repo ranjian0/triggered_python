@@ -10,26 +10,22 @@ SIZE        = (800, 600)
 CAPTION     = "Triggered"
 BACKGROUND  = (100, 100, 100)
 
-def main():
-    window = pg.window.Window(*SIZE, resizable=True)
-    window.set_minimum_size(*SIZE)
-    window.set_caption(CAPTION)
 
-    @window.event
-    def on_draw():
-        window.clear()
+window = pg.window.Window(*SIZE, resizable=True)
+window.set_minimum_size(*SIZE)
+window.set_caption(CAPTION)
 
-    @window.event
-    def on_resize(w, h):
-        print(f"resized {w}, {h}")
+@window.event
+def on_draw():
+    window.clear()
 
-    pg.app.run()
-    # pg.init()
-    # pg.display.set_caption(CAPTION)
+@window.event
+def on_resize(w, h):
+    print(f"resized {w}, {h}")
 
-    # clock   = pg.time.Clock()
-    # screen  = pg.display.set_mode(
-    #     SIZE, pg.RESIZABLE)
+def on_update(dt):
+    print(dt)
+
 
     # res     = Resources()
     # manager = SceneManager()
@@ -62,4 +58,5 @@ def main():
     #     manager.update(dt)
 
 if __name__ == '__main__':
-    main()
+    pg.clock.schedule_interval(on_update, 0.01)
+    pg.app.run()
