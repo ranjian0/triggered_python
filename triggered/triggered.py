@@ -21,10 +21,8 @@ def main():
     res     = Resources()
     manager = SceneManager()
     for scn in init_scenes():
-        if scn.name == "Main":
-            manager.add(scn, True)
-        else:
-            manager.add(scn)
+        args = (scn, True) if scn.name == "Main" else (scn, False)
+        manager.add(*args)
 
     while True:
         # -- events
