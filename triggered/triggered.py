@@ -17,7 +17,7 @@ window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 
 # -- create manager and resources
-# res     = Resources()
+res = Resources()
 # manager = SceneManager()
 # for scn in init_scenes():
 #     manager.add(scn, scn.name == "Main")
