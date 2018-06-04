@@ -22,18 +22,20 @@ res = Resources()
 # for scn in init_scenes():
 #     manager.add(scn, scn.name == "Main")
 
+background = res.sprite('world_background')
 
 @window.event
 def on_draw():
     window.clear()
+    background.blit(0, 0)
 
 @window.event
 def on_resize(w, h):
-    print(f"resized {w}, {h}")
+    background.width = w
+    background.height = h
 
 def on_update(dt):
-    print(dt)
-
+    pass
 
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)
