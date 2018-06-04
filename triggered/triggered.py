@@ -11,11 +11,15 @@ CAPTION     = "Triggered"
 BACKGROUND  = (100, 100, 100)
 
 def main():
-    window = pg.window.Window()
+    window = pg.window.Window(*SIZE, resizable=True)
 
     @window.event
     def on_draw():
         window.clear()
+
+    @window.event
+    def on_resize(w, h):
+        print(f"resized {w}, {h}")
 
     pg.app.run()
     # pg.init()
