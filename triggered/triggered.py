@@ -10,6 +10,13 @@ SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
 
+SCENES = [
+    "Main",
+    "Game",
+    "Pause",
+    "GameOver"
+]
+
 
 '''
 ============================================================
@@ -83,14 +90,60 @@ class Resources:
 
 class SceneManager:
 
-    def __init__(self):
+    def __init__(self, window):
+        self.window = window
+        self.current = "Main"
+        self.data = defaultdict(list)
+
+        self.init_main()
+
+    def switch(self, name):
+        if name in SCENES:
+            self.current = name
+
+
+    # -- methods for main scene
+    def init_main(self):
+        win = self.window
+
+        main_scene = self.data[self.current]
+        main_scene.extend([
+            pyglet.text.Label('TRIGGERED', font_name='Times New Roman', color=(255, 0, 0, 255),
+                          font_size=40, x=win.width//2, y=500,
+                          anchor_x='center', anchor_y='center'),
+
+            pyglet.text.Label('PLAY', font_name='Times New Roman',
+                          font_size=36, x=win.width//2, y=400,
+                          anchor_x='center', anchor_y='center'),
+
+            pyglet.text.Label('QUIT', font_name='Times New Roman',
+                          font_size=36, x=win.width//2, y=325,
+                          anchor_x='center', anchor_y='center')
+
+        ])
+
+    def draw_main(self):
+        for item in self.data['Main']:
+            item.draw()
+
+    def update_main(self, dt):
         pass
 
     def draw(self):
-        pass
+        if self.current == "Main":
+            self.draw_main()
+        elif self.current == "Pause":
+            pass
+        elif self.current == "Game":
+            pass
 
     def update(self, dt):
-        pass
+        if self.current == "Main":
+            self.update_main(dt)
+        elif self.current == "Pause":
+            pass
+        elif self.current == "Game":
+            pass
 
     def key_press(self, key, modifiers):
         pass
@@ -121,7 +174,7 @@ window.set_caption(CAPTION)
 
 # -- create manager and resources
 res     = Resources()
-manager = SceneManager()
+manager = SceneManager(window)
 
 background = res.sprite('world_background')
 
