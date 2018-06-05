@@ -1,7 +1,9 @@
 import os
 import sys
 import pyglet as pg
+
 from pyglet.gl import *
+from pyglet.window import key
 
 from collections import defaultdict, namedtuple
 
@@ -129,13 +131,23 @@ class SceneManager:
     def update_main(self, dt):
         pass
 
+    # -- methods for game scene
+    def init_game(self):
+        pass
+
+    def draw_game(self):
+        pass
+
+    def update_game(self, dt):
+        pass
+
     def draw(self):
         if self.current == "Main":
             self.draw_main()
         elif self.current == "Pause":
             pass
         elif self.current == "Game":
-            pass
+            self.draw_game()
 
     def update(self, dt):
         if self.current == "Main":
@@ -143,10 +155,13 @@ class SceneManager:
         elif self.current == "Pause":
             pass
         elif self.current == "Game":
-            pass
+            self.update_game(dt)
 
-    def key_press(self, key, modifiers):
-        pass
+    def key_press(self, symbol, modifiers):
+        if self.current == "Main":
+            if symbol == key.SPACE:
+                self.switch("Game")
+
 
     def key_release(self, key, modifiers):
         pass
