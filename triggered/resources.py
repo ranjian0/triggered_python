@@ -43,7 +43,7 @@ class Resources:
     def level(self, name):
         for res in self._data['levels']:
             if res.name == name:
-                return res.data
+                return self._parse_level(res.data)
         return None
 
     def _load(self):

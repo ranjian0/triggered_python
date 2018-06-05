@@ -9,12 +9,12 @@ from enum          import Enum
 from pygame.math   import Vector2 as vec2
 
 
-IMPUT_MAP   = {
-    pg.K_w : (0, -1),
-    pg.K_s : (0, 1),
-    pg.K_a : (-1, 0),
-    pg.K_d : (1, 0)
-}
+# IMPUT_MAP   = {
+#     pg.K_w : (0, -1),
+#     pg.K_s : (0, 1),
+#     pg.K_a : (-1, 0),
+#     pg.K_d : (1, 0)
+# }
 
 class Entity:
 
@@ -55,50 +55,52 @@ class Entity:
         self.image = pg.transform.rotate(self.original_img, self.angle)
         self.rect  = self.image.get_rect(center=self.rect.center)
 
-    def draw(self, surface):
+    def draw(self):
         pass
 
     def update(self, dt):
         pass
 
-    def event(self, ev):
-        pass
-
 class Player(Entity):
 
-    def __init__(self, position, size, space):
+    def __init__(self, position, size, image):
         Entity.__init__(self, position, size)
         self.ammo   = 50
         self.turret = None
 
         # Create Player Image
-        self.image = Resources.instance.sprite("hitman_gun")
-
-        # self.bullets   = Group()
-        self.body = pm.Body(1, 100)
-        self.body.position = self.rect.center
-        self.shape = pm.Circle(self.body, size[0]/2)
-        self.shape.collision_type = COLLISION_MAP.get("PlayerType")
-        space.add(self.body, self.shape)
-
-        self.look_at(pg.mouse.get_pos())
+        self.image = image
+        self.image.width = size[0]
+        self.image.height = size[1]
+        print(position)
+        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=100) #position[1])
 
 
-    def shoot(self):
-        if self.ammo <= 0:
-            return
-        self.ammo -= 1
+        # # self.bullets   = Group()
+        # self.body = pm.Body(1, 100)
+        # self.body.position = self.rect.center
+        # self.shape = pm.Circle(self.body, size[0]/2)
+        # self.shape.collision_type = COLLISION_MAP.get("PlayerType")
+        # space.add(self.body, self.shape)
 
-        pos = pg.mouse.get_pos()
-        px, py, *_ = self.viewport
-        pos = pos[0] + px, pos[1] + py
+        # self.look_at(pg.mouse.get_pos())
 
-        vec = vec2(pos[0] - self.rect.centerx, pos[1] - self.rect.centery).normalize()
-        gun_pos = vec2(self.rect.center) + (vec * vec2(self.turret.center).length()/2)
-        # self.bullets.add(Bullet(gun_pos, self.angle))
+
+    # def shoot(self):
+    #     if self.ammo <= 0:
+    #         return
+    #     self.ammo -= 1
+
+    #     pos = pg.mouse.get_pos()
+    #     px, py, *_ = self.viewport
+    #     pos = pos[0] + px, pos[1] + py
+
+    #     vec = vec2(pos[0] - self.rect.centerx, pos[1] - self.rect.centery).normalize()
+    #     gun_pos = vec2(self.rect.center) + (vec * vec2(self.turret.center).length()/2)
+    #     # self.bullets.add(Bullet(gun_pos, self.angle))
 
     def draw(self):
-        self.image.blit(*self.pos)
+        self.sprite.draw()
 
     def event(self, event):
         pass
@@ -107,38 +109,40 @@ class Player(Entity):
         #         self.shoot()
 
     def update(self, dt):
+        pass
         # self.bullets.update(dt)
 
-        # Keys and mouse
-        pos = pg.mouse.get_pos()
-        keys = pg.key.get_pressed()
+        # # Keys and mouse
+        # pos = pg.mouse.get_pos()
+        # keys = pg.key.get_pressed()
 
-        # -- Rotate
-        px, py, *_ = self.viewport
-        pos = pos[0] + px, pos[1] + py
-        vec = vec2(pos[0] - self.rect.centerx, pos[1] - self.rect.centery)
-        if vec.length() > 5:
-            self.look_at(pos)
-            pass
+        # # -- Rotate
+        # px, py, *_ = self.viewport
+        # pos = pos[0] + px, pos[1] + py
+        # vec = vec2(pos[0] - self.rect.centerx, pos[1] - self.rect.centery)
+        # if vec.length() > 5:
+        #     self.look_at(pos)
+        #     pass
 
-        # -- Move
-        dx, dy = 0, 0
-        for key, _dir in IMPUT_MAP.items():
-            if keys[key]:
-                dx, dy = _dir
+        # # -- Move
+        # dx, dy = 0, 0
+        # for key, _dir in IMPUT_MAP.items():
+        #     if keys[key]:
+        #         dx, dy = _dir
 
-        # -- running
-        speed = self.speed
-        if keys[pg.K_RSHIFT] or keys[pg.K_LSHIFT]:
-            speed *= 2.5
+        # # -- running
+        # speed = self.speed
+        # if keys[pg.K_RSHIFT] or keys[pg.K_LSHIFT]:
+        #     speed *= 2.5
 
-        bx, by = self.body.position
-        bx += dx * speed * dt
-        by += dy * speed * dt
+        # bx, by = self.body.position
+        # bx += dx * speed * dt
+        # by += dy * speed * dt
 
-        self.body.position = (bx, by)
-        self.rect.center = (bx, by)
+        # self.body.position = (bx, by)
+        # self.rect.center = (bx, by)
 
+'''
 class EnemyState(Enum):
     IDLE    = 0
     PATROL  = 1
@@ -286,3 +290,4 @@ class Bullet(Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+'''

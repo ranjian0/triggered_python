@@ -1,73 +1,53 @@
 import heapq
-import pygame as pg
+import pyglet as pg
 import pymunk as pm
 from pymunk import pygame_util as putils
 
 class Map:
 
     def __init__(self, data,
-                    fg        = pg.Color(77,77,77),
-                    bg        = pg.Color(120, 95, 50),
-                    node_size = 100,
-                    physics   = None):
+                    wall_img  = None,
+                    node_size = 100):
+                    #physics   = None):
 
         self.data       = data
         self.node_size  = node_size
-        self.foreground = fg
-        self.background = bg
-        self.physics    = physics
+        self.wall_img   = wall_img
+        self.wall_img.width = node_size//2
+        self.wall_img.height = node_size//2
+        # self.physics    = physics
 
-        self.walls      = []
-        self.surface    = self.make_map()
-        self.rect       = self.surface.get_rect(topleft=(1, 1))
-
-        self.viewport   = None
+        self.sprites    = []
+        self.batch      = pg.graphics.Batch()
+        self.make_map()
 
         self.pathfinder = PathFinder(data, node_size)
         self.spawn_data = self.parse_spawn_points()
-
-    def resize(self):
-        display  = pg.display.get_surface()
-        self.viewport = display.get_rect().copy()
 
     def make_map(self):
         nsx, nsy = (self.node_size,)*2
         sx = (len(self.data[0]) * nsx) - nsx/2
         sy = (len(self.data) * nsy) - nsy/2
 
-        surf = pg.Surface((sx, sy)) #.convert_alpha()
-        surf.fill(self.background)
-
-
-        wall_edge_col = pg.Color(26, 26, 26)
-        wall_edge_thk = 3
 
         for y, row in enumerate(self.data):
             for x, data in enumerate(row):
                 if data == "#":
                     offx, offy = x * nsx, y * nsy
-                    r = pg.draw.rect(surf, self.foreground, [offx, offy, nsx/2, nsy/2])
-                    pg.draw.rect(surf, wall_edge_col, [offx, offy, nsx/2, nsy/2], wall_edge_thk)
-                    self.walls.append(r)
-                    add_wall(self.physics.space, r.center, (nsx/2, nsy/2))
+                    sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch)
+                    self.sprites.append(sp)
 
                     # Fill gaps
                     # -- gaps along x-axis
                     if x < len(row) - 1 and self.data[y][x + 1] == "#":
-                        r = pg.draw.rect(surf, self.foreground, [offx + nsx/2, offy, nsx/2, nsy/2])
-                        pg.draw.rect(surf, wall_edge_col, [offx + nsx/2, offy, nsx/2, nsy/2], wall_edge_thk)
-                        self.walls.append(r)
-                        add_wall(self.physics.space, r.center, (nsx/2, nsy/2))
+                        sp = pg.sprite.Sprite(self.wall_img, x=offx + nsx/2, y=offy, batch=self.batch)
+                        self.sprites.append(sp)
 
 
                     # -- gaps along y-axis
                     if y < len(self.data) - 1 and self.data[y + 1][x] == "#":
-                        r = pg.draw.rect(surf, self.foreground, [offx, offy + nsy/2, nsx/2, nsy/2])
-                        pg.draw.rect(surf, wall_edge_col, [offx, offy + nsy/2, nsx/2, nsy/2], wall_edge_thk)
-                        self.walls.append(r)
-                        add_wall(self.physics.space, r.center, (nsx/2, nsy/2))
-
-        return surf
+                        sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy + nsy/2, batch=self.batch)
+                        self.sprites.append(sp)
 
     def parse_spawn_points(self):
         spawn_data = {
@@ -100,30 +80,32 @@ class Map:
                     spawn_data['patrol_positions'].append(location)
         return spawn_data
 
-    def draw(self, surface, entities):
-        new_img = self.surface.copy()
+    def draw(self):
+        self.batch.draw()
+        # new_img = self.surface.copy()
 
-        for ent in entities:
-            if hasattr(ent, 'draw'):
-                ent.draw(new_img)
+        # for ent in entities:
+        #     if hasattr(ent, 'draw'):
+        #         ent.draw(new_img)
 
-        surface.blit(new_img, (0, 0), self.viewport)
+        # surface.blit(new_img, (0, 0), self.viewport)
 
     def update(self, dt, player):
-        display  = pg.display.get_surface()
-        self.viewport = display.get_rect().copy()
+        pass
+        # display  = pg.display.get_surface()
+        # self.viewport = display.get_rect().copy()
 
-        self.viewport.center = player.rect.center
-        self.viewport.clamp_ip(self.rect)
-        player.viewport = self.viewport
+        # self.viewport.center = player.rect.center
+        # self.viewport.clamp_ip(self.rect)
+        # player.viewport = self.viewport
 
-        # Clamp player to map
-        player.rect.clamp_ip(self.rect)
+        # # Clamp player to map
+        # player.rect.clamp_ip(self.rect)
 
-    def event(self, ev, entities):
-        for ent in entities:
-            if hasattr(ent, 'event'):
-                ent.event(ev)
+    # def event(self, ev, entities):
+    #     for ent in entities:
+    #         if hasattr(ent, 'event'):
+    #             ent.event(ev)
 
     def __getitem__(self, val):
         return self.spawn_data.get(val, None)

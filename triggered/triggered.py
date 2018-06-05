@@ -4,8 +4,10 @@ import pyglet as pg
 
 from pyglet.gl import *
 from pyglet.window import key
-
 from collections import defaultdict, namedtuple
+
+from map import Map
+from entities import Player
 
 FPS        = 60
 SIZE       = (800, 600)
@@ -67,7 +69,7 @@ class Resources:
     def level(self, name):
         for res in self._data['levels']:
             if res.name == name:
-                return res.data
+                return self._parse_level(res.data)
         return None
 
     def _load(self):
@@ -86,14 +88,22 @@ class Resources:
 
         # -- load levels
         for level in os.listdir(self._levels):
-            lvl = pg.resource.file('levels/' + level)
+            lvl = pg.resource.file('levels/' + level, 'r')
             fn = os.path.basename(level.split('.')[0])
             self._data['levels'].append(Resource(fn,lvl))
 
+    def _parse_level(self, file):
+        result = []
+        for line in file.readlines():
+            result.append(list(line.strip()))
+        return result
+
+
 class SceneManager:
 
-    def __init__(self, window):
+    def __init__(self, window, resources):
         self.window = window
+        self.resource = resources
         self.current = "Main"
         self.data = defaultdict(list)
 
@@ -133,10 +143,17 @@ class SceneManager:
 
     # -- methods for game scene
     def init_game(self):
-        pass
+        _map = Map(self.resource.level('test'), self.resource.sprite('wall_image'))
+        player = Player(_map['player_position'], (50, 50),
+            self.resource.sprite('hitman1_gun'))
+
+        game_scene = self.data['Game']
+        game_scene.append(_map)
+        game_scene.append(player)
 
     def draw_game(self):
-        pass
+        for item in self.data['Game']:
+            item.draw()
 
     def update_game(self, dt):
         pass
@@ -160,6 +177,7 @@ class SceneManager:
     def key_press(self, symbol, modifiers):
         if self.current == "Main":
             if symbol == key.SPACE:
+                self.init_game()
                 self.switch("Game")
 
 
@@ -189,7 +207,7 @@ window.set_caption(CAPTION)
 
 # -- create manager and resources
 res     = Resources()
-manager = SceneManager(window)
+manager = SceneManager(window, res)
 
 background = res.sprite('world_background')
 
