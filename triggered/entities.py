@@ -72,7 +72,6 @@ class Player(Entity):
         self.image = image
         self.image.width = size[0]
         self.image.height = size[1]
-        print(position)
         self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=100) #position[1])
 
 
