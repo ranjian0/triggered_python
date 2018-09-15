@@ -68,8 +68,10 @@ class Game:
 
     def draw(self):
         self.background.blit(*self.background_offset)
-        self.physics.debug_draw()
         self.level.draw()
+
+
+        self.physics.debug_draw()
         self.player.draw()
 
     def event(self, *args, **kwargs):
@@ -318,6 +320,8 @@ class Map:
         sx = (len(self.data[0]) * nsx) - nsx/2
         sy = (len(self.data) * nsy) - nsy/2
 
+        # physics options
+        wsx, wsy = (nsx//2, nsy//2)
 
         for y, row in enumerate(self.data):
             for x, data in enumerate(row):
@@ -325,18 +329,21 @@ class Map:
                     offx, offy = x * nsx, y * nsy
                     sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch)
                     self.sprites.append(sp)
+                    add_wall((offx + wsx/2, offy + wsy/2), (wsx, wsy))
 
                     # Fill gaps
                     # -- gaps along x-axis
                     if x < len(row) - 1 and self.data[y][x + 1] == "#":
                         sp = pg.sprite.Sprite(self.wall_img, x=offx + nsx/2, y=offy, batch=self.batch)
                         self.sprites.append(sp)
+                        add_wall((offx + wsx/2 + nsx/2, offy + wsy/2), (wsx, wsy))
 
 
                     # -- gaps along y-axis
                     if y < len(self.data) - 1 and self.data[y + 1][x] == "#":
                         sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy + nsy/2, batch=self.batch)
                         self.sprites.append(sp)
+                        add_wall((offx + wsx/2, offy + wsy/2 + nsy/2), (wsx, wsy))
 
     def parse_spawn_points(self):
         spawn_data = {
@@ -426,7 +433,9 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
-def add_wall(space, pos, size):
+def add_wall(pos, size):
+    space = Physics.instance.space
+
     shape = pm.Poly.create_box(space.static_body, size=size)
     shape.body.position = pos
     space.add(shape)
