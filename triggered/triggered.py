@@ -14,6 +14,7 @@ from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
 FPS        = 60
+DEBUG      = False
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -69,9 +70,9 @@ class Game:
     def draw(self):
         self.background.blit(*self.background_offset)
         self.level.draw()
+        if DEBUG:
+            self.physics.debug_draw()
 
-
-        self.physics.debug_draw()
         self.player.draw()
 
     def event(self, *args, **kwargs):
