@@ -218,14 +218,17 @@ class Player:
             pass
 
     def update(self, dt):
+        self.sprite.update(rotation=self.angle)
         if self.moving:
             dx, dy = self.direction
-            self.sprite.x += dx * dt * self.speed
-            self.sprite.y += dy * dt * self.speed
-            self.pos = self.sprite.position
 
-            self.body.position = self.pos
-        self.sprite.update(rotation=self.angle)
+            bx, by = self.body.position
+            bx += dx * dt * self.speed
+            by += dy * dt * self.speed
+            self.body.position = (bx, by)
+
+            self.sprite.position = (bx, by)
+            self.pos = (bx, by)
 
 class Physics:
 
