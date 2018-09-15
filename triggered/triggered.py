@@ -79,14 +79,6 @@ class Game:
         self.physics.update()
         self.level.update(dt)
 
-        # scroll viewport
-        offx, offy = self.level.get_player().offset()
-
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glTranslatef(offx, offy, 0)
-        self.background_offset = (-offx, -offy)
-
 class Resources:
 
     # -- singleton
@@ -213,7 +205,6 @@ class Player:
 
         # -- movements
         dx, dy = 0, 0
-        print(KEYS)
         for _key, _dir in KEYMAP.items():
             if KEYS[_key]:
                 dx, dy = _dir
@@ -303,7 +294,7 @@ class Map:
 
     def __init__(self, data,
                     wall_img  = None,
-                    node_size = 100,
+                    node_size = 200,
                     physics   = None):
 
         self.data       = data
@@ -380,6 +371,26 @@ class Map:
                 if data != '#':
                     spawn_data['patrol_positions'].append(location)
         return spawn_data
+
+    def clamp_player(self, player):
+        # -- keep player within map bounds
+        ns = self.node_size
+
+        offx, offy = player.offset()
+        winw, winh = window.get_size()
+        msx, msy = (ns * len(self.data[0]))-ns//2, (ns * len(self.data))-ns//2
+
+        clamp_X = msx - winw
+        clamp_Y = msy - winh
+
+        offx = 0 if offx > 0 else offx
+        offx = -clamp_X if offx < -clamp_X else offx
+        offy = 0 if offy > 0 else offy
+        offy = -clamp_Y if offy < -clamp_Y else offy
+
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        glTranslatef(offx, offy, 0)
 
     def draw(self):
         self.batch.draw()
@@ -525,7 +536,7 @@ class Level:
             agent.draw()
 
     def update(self, dt):
-        self.map.update(dt)
+        self.map.clamp_player(self.get_player())
         for agent in self.agents:
             agent.update(dt)
 
@@ -553,6 +564,7 @@ game = Game(window, res, phy)
 @window.event
 def on_draw():
     window.clear()
+    glClearColor(.39, .39, .39, 1)
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     game.draw()
