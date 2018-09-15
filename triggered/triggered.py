@@ -19,6 +19,7 @@ SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
 
+KEYS = key.KeyStateHandler()
 KEYMAP = {
     key.W : (0, 1),
     key.S : (0, -1),
@@ -58,8 +59,6 @@ class Game:
 
         self.background = res.sprite('world_background')
         self.background_offset = (0, 0)
-        self.player = Player((200, 300), (50, 50),
-            self.resource.sprite('hitman1_gun'))
 
         self.level = Level("Level One", self.resource.level("test"))
 
@@ -73,18 +72,15 @@ class Game:
         if DEBUG:
             self.physics.debug_draw()
 
-        self.player.draw()
-
     def event(self, *args, **kwargs):
-        self.player.event(*args, **kwargs)
+        self.level.event(*args, **kwargs)
 
     def update(self, dt):
         self.physics.update()
-        self.player.update(dt)
         self.level.update(dt)
 
         # scroll viewport
-        offx, offy = self.player.offset()
+        offx, offy = self.level.get_player().offset()
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -173,10 +169,6 @@ class Player:
         self.ammo   = 50
         self.moving = False
 
-        # - add key map for movement
-        self.keys = key.KeyStateHandler()
-        window.push_handlers(self.keys)
-
         # Create Player Image
         self.image = image
         self.image.width = size[0]
@@ -191,6 +183,10 @@ class Player:
         self.shape = pm.Circle(self.body, size[0]/2)
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
         Physics.instance.add(self.body, self.shape)
+
+        # -- weird bug - have to push twice
+        window.push_handlers(KEYS)
+        window.push_handlers(KEYS)
 
     def offset(self):
         px, py = self.pos
@@ -217,13 +213,14 @@ class Player:
 
         # -- movements
         dx, dy = 0, 0
+        print(KEYS)
         for _key, _dir in KEYMAP.items():
-            if self.keys[_key]:
+            if KEYS[_key]:
                 dx, dy = _dir
 
         # -- running
         speed = self.speed
-        if self.keys[key.RSHIFT] or self.keys[key.LSHIFT]:
+        if KEYS[key.RSHIFT] or KEYS[key.LSHIFT]:
             speed *= 2.5
 
         bx, by = self.body.position
@@ -516,56 +513,25 @@ class Level:
             # e.watch_player(player)
             # self.agents.append(e)
 
+    def get_player(self):
+        for ag in self.agents:
+            if isinstance(ag, Player):
+                return ag
+        return None
+
     def draw(self):
         self.map.draw()
+        for agent in self.agents:
+            agent.draw()
 
     def update(self, dt):
-        player = None
-        self.agents = [a for a in self.agents if not hasattr(a, 'dead')]
-        has_player = [a for a in self.agents if isinstance(a, Player)]
-        if has_player:
-            player = has_player[-1]
-            self.map.update(dt)
-        else:
-            # -- player died, post level failed
-            # failed_event = pg.event.Event(FAILED_EVT)
-            # pg.event.post(failed_event)
-            return
-
-
+        self.map.update(dt)
         for agent in self.agents:
-            if hasattr(agent, 'update'):
-                agent.update(dt)
+            agent.update(dt)
 
-            if hasattr(agent, 'health'):
-                if agent.health <= 0:
-                    setattr(agent, 'dead', True)
-                    self.physics.remove(agent.shape, agent.body)
-
-            if hasattr(agent, 'bullets'):
-                pass
-                # # -- collide walls
-                # for bullet in agent.bullets:
-                #     for wall in self.map.walls:
-                #         if bullet.rect.colliderect(wall):
-                #             bullet.kill()
-
-                # # -- player --> enemies
-                # if isinstance(agent, Player):
-                #     for e in [a for a in self.agents if isinstance(a, Enemy)]:
-                #         for b in agent.bullets:
-                #             if e.rect.colliderect(b.rect):
-                #                 e.hit()
-                #                 b.kill()
-                # else:
-                # # -- enemy --> player
-                #     for bullet in agent.bullets:
-                #         if player.rect.colliderect(bullet.rect):
-                #             player.hit()
-                #             bullet.kill()
-
-    def event(self, ev):
-        self.map.event(ev, self.agents)
+    def event(self, *args, **kwargs):
+        for agent in self.agents:
+            agent.event(*args, **kwargs)
 
 
 
