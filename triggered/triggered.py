@@ -169,9 +169,12 @@ class Player:
         self.angle  = 0
         self.speed  = 100
 
-        self.direction = (0, 0)
         self.ammo   = 50
         self.moving = False
+
+        # - add key map for movement
+        self.keys = key.KeyStateHandler()
+        window.push_handlers(self.keys)
 
         # Create Player Image
         self.image = image
@@ -191,27 +194,13 @@ class Player:
     def offset(self):
         px, py = self.pos
         w, h = window.get_size()
-        offx, offy = -px + w/2, -py + h/2
-
-        return (offx, offy)
+        return -px + w/2, -py + h/2
 
     def draw(self):
         self.sprite.draw()
 
     def event(self, type, *args, **kwargs):
-        if type == EventType.KEY_DOWN:
-            symbol, mod = args
-            if symbol in [key.W, key.A, key.S, key.D]:
-                self.moving = True
-                self.direction = KEYMAP[symbol]
-
-        elif type == EventType.KEY_UP:
-            symbol, mod = args
-            if symbol in [key.W, key.A, key.S, key.D]:
-                self.moving = False
-                self.direction = (0, 0)
-
-        elif type == EventType.MOUSE_MOTION:
+        if type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
             ox, oy = self.offset()
 
@@ -224,16 +213,26 @@ class Player:
 
     def update(self, dt):
         self.sprite.update(rotation=self.angle)
-        if self.moving:
-            dx, dy = self.direction
 
-            bx, by = self.body.position
-            bx += dx * dt * self.speed
-            by += dy * dt * self.speed
-            self.body.position = (bx, by)
+        # -- movements
+        dx, dy = 0, 0
+        for _key, _dir in KEYMAP.items():
+            if self.keys[_key]:
+                dx, dy = _dir
 
-            self.sprite.position = (bx, by)
-            self.pos = (bx, by)
+        # -- running
+        speed = self.speed
+        if self.keys[key.RSHIFT] or self.keys[key.LSHIFT]:
+            speed *= 2.5
+
+        bx, by = self.body.position
+        bx += dx * dt * speed
+        by += dy * dt * speed
+        self.body.position = (bx, by)
+
+        self.sprite.position = (bx, by)
+        self.pos = (bx, by)
+
 
 class Physics:
 
