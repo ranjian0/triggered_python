@@ -57,17 +57,9 @@ class Game:
         self.resource = res
         self.physics = physics
 
-        self.background = res.sprite('world_background')
-        self.background_offset = (0, 0)
-
         self.level = Level("Level One", self.resource.level("test"))
 
-    def resize(self, w, h):
-        self.background.width = w
-        self.background.height = h
-
     def draw(self):
-        self.background.blit(*self.background_offset)
         self.level.draw()
         if DEBUG:
             self.physics.debug_draw()
@@ -571,7 +563,7 @@ def on_draw():
 
 @window.event
 def on_resize(w, h):
-    game.resize(w, h)
+    pass
 
 @window.event
 def on_key_press(key, modifiers):
