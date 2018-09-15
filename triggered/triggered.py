@@ -10,7 +10,7 @@ import itertools as it
 from enum import Enum
 from pyglet.gl import *
 from pyglet.window import key
-from pygame.math import Vector2 as vec2
+from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
 FPS        = 60
@@ -50,9 +50,10 @@ Resource = namedtuple("Resource", "name data")
 
 class Game:
 
-    def __init__(self, win, res):
+    def __init__(self, win, res, physics):
         self.window = win
         self.resource = res
+        self.physics = physics
 
         self.background = res.sprite('world_background')
         self.background_offset = (0, 0)
@@ -67,6 +68,7 @@ class Game:
 
     def draw(self):
         self.background.blit(*self.background_offset)
+        self.physics.debug_draw()
         self.level.draw()
         self.player.draw()
 
@@ -74,6 +76,7 @@ class Game:
         self.player.event(*args, **kwargs)
 
     def update(self, dt):
+        self.physics.update()
         self.player.update(dt)
         self.level.update(dt)
 
@@ -178,6 +181,13 @@ class Player:
         self.image.anchor_y = size[1]/2
         self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1])
 
+        # player physics
+        self.body = pm.Body(1, 100)
+        self.body.position = self.pos
+        self.shape = pm.Circle(self.body, size[0]/2)
+        self.shape.collision_type = COLLISION_MAP.get("PlayerType")
+        Physics.instance.add(self.body, self.shape)
+
     def draw(self):
         self.sprite.draw()
 
@@ -192,27 +202,38 @@ class Player:
             symbol, mod = args
             if symbol in [key.W, key.A, key.S, key.D]:
                 self.moving = False
+                self.direction = (0, 0)
 
         elif type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
             # - calc rotation
             px, py = self.pos
             ax, ay = x - px, y - py
-            self.angle = -math.degrees(math.atan2(ay, ax))
+            self.angle = math.degrees(math.atan2(ay, ax))
+            print(self.angle)
 
         elif type == EventType.MOUSE_UP:
             pass
 
     def update(self, dt):
-        self.sprite.update(rotation=self.angle)
         if self.moving:
             dx, dy = self.direction
             self.sprite.x += dx * dt * self.speed
             self.sprite.y += dy * dt * self.speed
             self.pos = self.sprite.position
 
+            self.body.position = self.pos
+        self.sprite.update(rotation=self.angle)
 
 class Physics:
+
+    # -- singleton
+    instance = None
+    def __new__(cls):
+        if Physics.instance is None:
+            Physics.instance = object.__new__(cls)
+        return Physics.instance
+
 
     def __init__(self, steps=50):
         self.space = pm.Space()
@@ -230,9 +251,9 @@ class Physics:
         for _ in it.repeat(None, self.steps):
             self.space.step(0.1 / self.steps)
 
-    def debug_draw(self, surf):
-        options = putils.DrawOptions(surf)
-        self.physics_space.debug_draw(options)
+    def debug_draw(self):
+        options = putils.DrawOptions()
+        self.space.debug_draw(options)
 
 def setup_collisions(space):
 
@@ -455,7 +476,6 @@ class Level:
     def __init__(self, name, data):
         self.name = name
         self.data = data
-        self.physics = Physics()
 
         self.map = None
         self.agents = []
@@ -463,7 +483,7 @@ class Level:
 
     def reload(self):
         self.agents.clear()
-        self.map = Map(self.data, physics=self.physics)
+        self.map = Map(self.data, physics=Physics.instance)
 
         # -- add player to map position
         player = Player(self.map['player_position'], (50, 50), Resources.instance.sprite("hitman1_gun"))
@@ -483,8 +503,6 @@ class Level:
         self.map.draw()
 
     def update(self, dt):
-        self.physics.update()
-
         player = None
         self.agents = [a for a in self.agents if not hasattr(a, 'dead')]
         has_player = [a for a in self.agents if isinstance(a, Player)]
@@ -546,7 +564,8 @@ window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 
 res  = Resources()
-game = Game(window, res)
+phy  = Physics()
+game = Game(window, res, phy)
 
 @window.event
 def on_draw():
