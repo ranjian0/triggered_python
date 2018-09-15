@@ -190,6 +190,15 @@ class Player:
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
         Physics.instance.add(self.body, self.shape)
 
+    def offset(self):
+        # global window
+
+        px, py = self.pos
+        w, h = window.get_size()
+        offx, offy = -px + w/2, -py + h/2
+
+        return (offx, offy)
+
     def draw(self):
         self.sprite.draw()
 
@@ -208,11 +217,11 @@ class Player:
 
         elif type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
-            # - calc rotation
-            px, py = self.pos
-            ax, ay = x - px, y - py
-            self.angle = math.degrees(math.atan2(ay, ax))
-            print(self.angle)
+            ox, oy = self.offset()
+
+            mx, my = x - ox, y - oy     # - mouse position with screen offset
+            px, py = self.pos           # - player position
+            self.angle = math.degrees(-math.atan2(my - py, mx - px))
 
         elif type == EventType.MOUSE_UP:
             pass
