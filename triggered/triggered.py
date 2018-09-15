@@ -55,6 +55,7 @@ class Game:
         self.resource = res
 
         self.background = res.sprite('world_background')
+        self.background_offset = (0, 0)
         self.player = Player((200, 300), (50, 50),
             self.resource.sprite('hitman1_gun'))
 
@@ -65,7 +66,7 @@ class Game:
         self.background.height = h
 
     def draw(self):
-        self.background.blit(0, 0)
+        self.background.blit(*self.background_offset)
         self.level.draw()
         self.player.draw()
 
@@ -79,9 +80,12 @@ class Game:
         # scroll viewport
         px, py = self.player.pos
         w, h = self.window.get_size()
-        # glMatrixMode(GL_MODELVIEW)
-        # glLoadIdentity()
-        # glTranslatef(-px + w/2, -py + h/2, 0)
+        offx, offy = -px + w/2, -py + h/2
+
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        glTranslatef(offx, offy, 0)
+        self.background_offset = (-offx, -offy)
 
 class Resources:
 
