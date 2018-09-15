@@ -248,6 +248,7 @@ class Bird:
     def reset(self):
         self.body.position = self.pos
         self.flap_strength = 50
+        self.body.velocity = (0, 0)
 
     def draw(self, surface):
         r = int(self.shape.radius)
