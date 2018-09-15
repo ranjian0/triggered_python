@@ -83,9 +83,7 @@ class Game:
         self.level.update(dt)
 
         # scroll viewport
-        px, py = self.player.pos
-        w, h = self.window.get_size()
-        offx, offy = -px + w/2, -py + h/2
+        offx, offy = self.player.offset()
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -191,8 +189,6 @@ class Player:
         Physics.instance.add(self.body, self.shape)
 
     def offset(self):
-        # global window
-
         px, py = self.pos
         w, h = window.get_size()
         offx, offy = -px + w/2, -py + h/2
