@@ -151,7 +151,6 @@ class Player:
         self.speed  = 100
 
         self.ammo   = 50
-        self.moving = False
 
         # Create Player Image
         self.image = image
@@ -213,6 +212,62 @@ class Player:
 
         self.sprite.position = (bx, by)
         self.pos = (bx, by)
+
+class EnemyState(Enum):
+    IDLE    = 0
+    PATROL  = 1
+    CHASE   = 2
+    ATTACK  = 3
+
+class Enemy:
+
+    def __init__(self, position, size, image, waypoints):
+        # -- properties
+        self.pos    = position
+        self.size   = size
+        self.health = 100
+        self.damage = 10
+        self.angle  = 0
+        self.speed  = 100
+
+        self.ammo   = 50
+
+        # -- patrol properties
+        self.state = EnemyState.IDLE
+
+        self.waypoints = it.cycle(waypoints)
+        self.target = next(self.waypoints)
+        self.patrol_eps = 2
+        self.chase_radius = 300
+        self.attack_radius = 100
+        self.attack_frequency = 50
+        self.current_attack = 0
+
+        # Create enemy Image
+        self.image = image
+        self.image.width = size[0]
+        self.image.height = size[1]
+        self.image.anchor_x = size[0]/2
+        self.image.anchor_y = size[1]/2
+        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1])
+
+        # player physics
+        self.body = pm.Body(1, 100)
+        self.body.position = self.pos
+        self.shape = pm.Circle(self.body, size[0]/2)
+        self.shape.collision_type = COLLISION_MAP.get("PlayerType")
+        Physics.instance.add(self.body, self.shape)
+
+        self.player_target = None
+
+    def watch(self, player):
+        self.player_target = player
+
+    def draw(self):
+        self.sprite.draw()
+
+    def update(self, dt):
+        pass
 
 
 class Physics:
@@ -511,10 +566,10 @@ class Level:
             patrol_points = random.sample(self.map['patrol_positions'],
                 random.randint(2, len(self.map['patrol_positions'])//2))
 
-            # patrol = self.map.pathfinder.calc_patrol_path([point] + patrol_points)
-            # e = Enemy(point, (50, 50), patrol, self.physics)
-            # e.watch_player(player)
-            # self.agents.append(e)
+            patrol = self.map.pathfinder.calc_patrol_path([point] + patrol_points)
+            e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"), patrol)
+            e.watch(player)
+            self.agents.append(e)
 
     def get_player(self):
         for ag in self.agents:
@@ -534,8 +589,8 @@ class Level:
 
     def event(self, *args, **kwargs):
         for agent in self.agents:
-            agent.event(*args, **kwargs)
-
+            if hasattr(agent, 'event'):
+                agent.event(*args, **kwargs)
 
 
 '''
