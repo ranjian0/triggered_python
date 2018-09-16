@@ -3,6 +3,7 @@ import sys
 import math
 import heapq
 import random
+import pprint as pp
 import pyglet as pg
 import pymunk as pm
 import itertools as it
@@ -14,7 +15,7 @@ from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
 FPS        = 60
-DEBUG      = False
+DEBUG      = 0
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -237,7 +238,7 @@ class Enemy:
 
         self.waypoints = it.cycle(waypoints)
         self.target = next(self.waypoints)
-        self.patrol_eps = 2
+        self.patrol_eps = 10
         self.chase_radius = 300
         self.attack_radius = 100
         self.attack_frequency = 50
@@ -255,19 +256,87 @@ class Enemy:
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
         self.shape = pm.Circle(self.body, size[0]/2)
-        self.shape.collision_type = COLLISION_MAP.get("PlayerType")
+        self.shape.collision_type = COLLISION_MAP.get("EnemyType")
         Physics.instance.add(self.body, self.shape)
 
+        self.map = None
         self.player_target = None
 
     def watch(self, player):
         self.player_target = player
 
+    def set_map(self, _map):
+        self.map = _map
+
+    def look_at(self, target):
+        tx, ty = target
+        px, py = self.pos
+        angle = math.degrees(-math.atan2(ty - py, tx - px))
+        self.sprite.update(rotation=self.angle)
+
     def draw(self):
         self.sprite.draw()
 
     def update(self, dt):
+        player = self.player_target
+        player_distance = distance_sqr(player.pos, self.pos)
+        #print(self.pos, self.target)
+
+        if player_distance < self.chase_radius**2:
+            self.state = EnemyState.CHASE
+        else:
+            self.state = EnemyState.PATROL
+
+        if player_distance < self.attack_radius**2:
+            self.state = EnemyState.ATTACK
+
+        if self.state == EnemyState.IDLE:
+            self.state = EnemyState.PATROL
+        elif self.state == EnemyState.PATROL:
+            self.patrol(dt)
+        elif self.state == EnemyState.CHASE:
+            self.chase(player.pos, dt)
+        elif self.state == EnemyState.ATTACK:
+            self.attack(player.pos)
+
+    def chase(self, target, dt):
+        self.look_at(target)
+        self.move_to_target(target, dt)
+
+    def patrol(self, dt):
+        distance = distance_sqr(self.pos, self.target)
+        print(distance)
+        if distance < self.patrol_eps:
+            self.target = next(self.waypoints)
+
+        self.look_at(self.target)
+        self.move_to_target(self.target, dt)
+
+    def attack(self, player):
+        self.look_at(player)
+        self.current_attack += 1
         pass
+
+        # if self.current_attack == self.attack_frequency:
+        #     vec = normalize()
+        #     vec = vec2(player[0] - self.rect.centerx, player[1] - self.rect.centery).normalize()
+        #     gun_pos = vec2(self.rect.center) + (vec * vec2(self.turret.center).length()/2)
+        #     self.bullets.add(Bullet(gun_pos, self.angle))
+
+        #     self.current_attack = 0
+
+    def move_to_target(self, target, dt):
+        diff = self.target[0] - self.pos[0], self.target[1] - self.pos[1]
+        if distance_sqr((0, 0), diff):
+            dx, dy = normalize(diff)
+
+            bx, by = self.body.position
+            bx += dx * self.speed * dt
+            by += dy * self.speed * dt
+            self.body.position = (bx, by)
+
+            self.sprite.position = (bx, by)
+            self.pos = (bx, by)
 
 
 class Physics:
@@ -481,10 +550,9 @@ class Level:
 
         # -- add other agents map positions
         for point in self.map['enemy_position']:
-            patrol_points = random.sample(self.map['patrol_positions'],
-                random.randint(2, len(self.map['patrol_positions'])//2))
+            patrol_point = random.choice(self.map['patrol_positions'])
 
-            patrol = self.map.pathfinder.calc_patrol_path([point] + patrol_points)
+            patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
             e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"), patrol)
             e.watch(player)
             self.agents.append(e)
@@ -516,6 +584,14 @@ class Level:
 ---   FUNCTIONS
 ============================================================
 '''
+
+def normalize(p):
+    mag = math.sqrt(distance_sqr((0, 0), p))
+    if mag:
+        x = p[0] / mag
+        y = p[1] / mag
+        return (x, y)
+    return p
 
 def distance_sqr(p1, p2):
     dx = p2[0] - p1[0]
