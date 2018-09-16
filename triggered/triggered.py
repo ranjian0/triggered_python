@@ -300,42 +300,6 @@ class Physics:
         options = putils.DrawOptions()
         self.space.debug_draw(options)
 
-def setup_collisions(space):
-
-    # Player-Enemy Collision
-    def player_enemy_solve(arbiter, space, data):
-        """ Keep the two bodies from intersecting"""
-        pshape = arbiter.shapes[0]
-        eshape  = arbiter.shapes[1]
-
-        normal = pshape.body.position - eshape.body.position
-        normal = normal.normalized()
-        pshape.body.position = eshape.body.position + (normal * (pshape.radius*2))
-        return True
-
-    handler = space.add_collision_handler(
-            COLLISION_MAP.get("PlayerType"),
-            COLLISION_MAP.get("EnemyType")
-        )
-    handler.begin = player_enemy_solve
-
-    # Enemy-Enemy Collision
-    def enemy_enemy_solve(arbiter, space, data):
-        """ Keep the two bodies from intersecting"""
-        eshape  = arbiter.shapes[0]
-        eshape1 = arbiter.shapes[1]
-
-        normal = eshape.body.position - eshape1.body.position
-        normal = normal.normalized()
-        eshape.body.position = eshape1.body.position + (normal * (eshape.radius*2))
-        return True
-
-    handler = space.add_collision_handler(
-            COLLISION_MAP.get("EnemyType"),
-            COLLISION_MAP.get("EnemyType")
-        )
-    handler.begin = enemy_enemy_solve
-
 
 class Map:
 
@@ -496,52 +460,6 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
-def add_wall(pos, size):
-    space = Physics.instance.space
-
-    shape = pm.Poly.create_box(space.static_body, size=size)
-    shape.body.position = pos
-    space.add(shape)
-
-def heuristic(a, b):
-    (x1, y1) = a
-    (x2, y2) = b
-    return abs(x1 - x2) + abs(y1 - y2)
-
-def a_star_search(graph, start, goal):
-    frontier = PriorityQueue()
-    frontier.put(start, 0)
-    came_from = {}
-    cost_so_far = {}
-    came_from[start] = None
-    cost_so_far[start] = 0
-
-    while not frontier.empty():
-        current = frontier.get()
-
-        if current == goal:
-            break
-
-        for next in graph.neighbours(current):
-            new_cost = cost_so_far[current] + graph.cost(current, next)
-            if next not in cost_so_far or new_cost < cost_so_far[next]:
-                cost_so_far[next] = new_cost
-                priority = new_cost + heuristic(goal, next)
-                frontier.put(next, priority)
-                came_from[next] = current
-
-    return came_from, cost_so_far
-
-def reconstruct_path(came_from, start, goal):
-    current = goal
-    path = [current]
-    while current != start:
-        current = came_from[current]
-        path.append(current)
-    path.append(start)
-    path.reverse()
-    return path
-
 
 class Level:
 
@@ -591,6 +509,100 @@ class Level:
         for agent in self.agents:
             if hasattr(agent, 'event'):
                 agent.event(*args, **kwargs)
+
+
+'''
+============================================================
+---   FUNCTIONS
+============================================================
+'''
+
+def distance_sqr(p1, p2):
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+    return dx**2 + dy**2
+
+def add_wall(pos, size):
+    space = Physics.instance.space
+
+    shape = pm.Poly.create_box(space.static_body, size=size)
+    shape.body.position = pos
+    space.add(shape)
+
+def heuristic(a, b):
+    (x1, y1) = a
+    (x2, y2) = b
+    return abs(x1 - x2) + abs(y1 - y2)
+
+def a_star_search(graph, start, goal):
+    frontier = PriorityQueue()
+    frontier.put(start, 0)
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
+
+    while not frontier.empty():
+        current = frontier.get()
+
+        if current == goal:
+            break
+
+        for next in graph.neighbours(current):
+            new_cost = cost_so_far[current] + graph.cost(current, next)
+            if next not in cost_so_far or new_cost < cost_so_far[next]:
+                cost_so_far[next] = new_cost
+                priority = new_cost + heuristic(goal, next)
+                frontier.put(next, priority)
+                came_from[next] = current
+
+    return came_from, cost_so_far
+
+def reconstruct_path(came_from, start, goal):
+    current = goal
+    path = [current]
+    while current != start:
+        current = came_from[current]
+        path.append(current)
+    path.append(start)
+    path.reverse()
+    return path
+
+def setup_collisions(space):
+
+    # Player-Enemy Collision
+    def player_enemy_solve(arbiter, space, data):
+        """ Keep the two bodies from intersecting"""
+        pshape = arbiter.shapes[0]
+        eshape  = arbiter.shapes[1]
+
+        normal = pshape.body.position - eshape.body.position
+        normal = normal.normalized()
+        pshape.body.position = eshape.body.position + (normal * (pshape.radius*2))
+        return True
+
+    handler = space.add_collision_handler(
+            COLLISION_MAP.get("PlayerType"),
+            COLLISION_MAP.get("EnemyType")
+        )
+    handler.begin = player_enemy_solve
+
+    # Enemy-Enemy Collision
+    def enemy_enemy_solve(arbiter, space, data):
+        """ Keep the two bodies from intersecting"""
+        eshape  = arbiter.shapes[0]
+        eshape1 = arbiter.shapes[1]
+
+        normal = eshape.body.position - eshape1.body.position
+        normal = normal.normalized()
+        eshape.body.position = eshape1.body.position + (normal * (eshape.radius*2))
+        return True
+
+    handler = space.add_collision_handler(
+            COLLISION_MAP.get("EnemyType"),
+            COLLISION_MAP.get("EnemyType")
+        )
+    handler.begin = enemy_enemy_solve
 
 
 '''
