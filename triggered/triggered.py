@@ -133,6 +133,37 @@ class Resources:
             result.append(list(line.strip()))
         return result
 
+class Physics:
+
+    # -- singleton
+    instance = None
+    def __new__(cls):
+        if Physics.instance is None:
+            Physics.instance = object.__new__(cls)
+        return Physics.instance
+
+
+    def __init__(self, steps=50):
+        self.space = pm.Space()
+        self.steps = steps
+
+        setup_collisions(self.space)
+
+    def add(self, *args):
+        self.space.add(*args)
+
+    def remove(self, *args):
+        self.space.remove(*args)
+
+    def update(self):
+        for _ in it.repeat(None, self.steps):
+            self.space.step(0.1 / self.steps)
+
+    def debug_draw(self):
+        options = putils.DrawOptions()
+        self.space.debug_draw(options)
+
+
 class Player:
 
     def __init__(self, position, size, image):
@@ -330,37 +361,6 @@ class Enemy:
 
             self.sprite.position = (bx, by)
             self.pos = (bx, by)
-
-
-class Physics:
-
-    # -- singleton
-    instance = None
-    def __new__(cls):
-        if Physics.instance is None:
-            Physics.instance = object.__new__(cls)
-        return Physics.instance
-
-
-    def __init__(self, steps=50):
-        self.space = pm.Space()
-        self.steps = steps
-
-        setup_collisions(self.space)
-
-    def add(self, *args):
-        self.space.add(*args)
-
-    def remove(self, *args):
-        self.space.remove(*args)
-
-    def update(self):
-        for _ in it.repeat(None, self.steps):
-            self.space.step(0.1 / self.steps)
-
-    def debug_draw(self):
-        options = putils.DrawOptions()
-        self.space.debug_draw(options)
 
 
 class Map:
