@@ -28,6 +28,8 @@ KEYMAP = {
     key.D : (1, 0)
 }
 
+RAYCAST_FILTER = 0x1
+RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
 COLLISION_MAP = {
     "PlayerType" : 1,
     "EnemyType"  : 2,
@@ -159,6 +161,10 @@ class Physics:
         for _ in it.repeat(None, self.steps):
             self.space.step(0.1 / self.steps)
 
+    def raycast(self, start, end, radius, filter):
+        res = self.space.segment_query_first(start, end, radius, filter)
+        return res
+
     def debug_draw(self):
         options = putils.DrawOptions()
         self.space.debug_draw(options)
@@ -190,6 +196,7 @@ class Player:
         self.body.position = self.pos
         self.shape = pm.Circle(self.body, size[0]/2)
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
+        self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
 
         # -- weird bug - have to push twice
@@ -252,7 +259,6 @@ class Enemy:
         self.size   = size
         self.health = 100
         self.damage = 10
-        self.angle  = 0
         self.speed  = 100
 
         self.ammo   = 50
@@ -262,9 +268,9 @@ class Enemy:
 
         self.waypoints = it.cycle(waypoints)
         self.target = next(self.waypoints)
-        self.patrol_eps = 10
+        self.epsilon = 10
         self.chase_radius = 300
-        self.attack_radius = 100
+        self.attack_radius = 200
         self.attack_frequency = 50
         self.current_attack = 0
 
@@ -281,6 +287,7 @@ class Enemy:
         self.body.position = self.pos
         self.shape = pm.Circle(self.body, size[0]/2)
         self.shape.collision_type = COLLISION_MAP.get("EnemyType")
+        self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
 
         self.map = None
@@ -296,7 +303,7 @@ class Enemy:
         tx, ty = target
         px, py = self.pos
         angle = math.degrees(-math.atan2(ty - py, tx - px))
-        self.sprite.update(rotation=self.angle)
+        self.sprite.update(rotation=angle)
 
     def draw(self):
         self.sprite.draw()
@@ -304,10 +311,12 @@ class Enemy:
     def update(self, dt):
         player = self.player_target
         player_distance = distance_sqr(player.pos, self.pos)
-        #print(self.pos, self.target)
 
         if player_distance < self.chase_radius**2:
-            self.state = EnemyState.CHASE
+            # if player is within radius and not behind a wall
+            hit = Physics.instance.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
+            if not hit:
+                self.state = EnemyState.CHASE
         else:
             self.state = EnemyState.PATROL
 
@@ -325,12 +334,13 @@ class Enemy:
 
     def chase(self, target, dt):
         self.look_at(target)
-        self.move_to_target(target, dt)
+        distance = distance_sqr(self.pos, self.target)
+        if distance < self.epsilon:
+            self.move_to_target(target, dt)
 
     def patrol(self, dt):
         distance = distance_sqr(self.pos, self.target)
-        print(distance)
-        if distance < self.patrol_eps:
+        if distance < self.epsilon:
             self.target = next(self.waypoints)
 
         self.look_at(self.target)
