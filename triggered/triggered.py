@@ -15,7 +15,7 @@ from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
 FPS        = 60
-DEBUG      = 0
+DEBUG      = 1
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -267,11 +267,13 @@ class Enemy:
         self.state = EnemyState.IDLE
 
         self.waypoints = it.cycle(waypoints)
-        self.target = next(self.waypoints)
+        self.return_path = None
+        self.return_target = None
+        self.patrol_target = next(self.waypoints)
         self.epsilon = 10
         self.chase_radius = 300
-        self.attack_radius = 200
-        self.attack_frequency = 50
+        self.attack_radius = 150
+        self.attack_frequency = 10
         self.current_attack = 0
 
         # Create enemy Image
@@ -316,57 +318,86 @@ class Enemy:
     def update(self, dt):
         player = self.player_target
         player_distance = distance_sqr(player.pos, self.pos)
+        previous_state = self.state
 
         if player_distance < self.chase_radius**2:
-            # if player is within radius and not behind a wall
             hit = Physics.instance.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
-            if not hit:
+            if hit:
+                self.state = EnemyState.PATROL
+            else:
                 self.state = EnemyState.CHASE
         else:
-            self.state = EnemyState.PATROL
+            #self.state = EnemyState.PATROL
+            if previous_state == EnemyState.CHASE:
+                hit = Physics.instance.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
+                if hit:
+                    self.state = EnemyState.PATROL
+                    # -- renavigate to current patrol target
+                    if Physics.instance.raycast(self.pos, self.patrol_target, 1, RAYCAST_MASK):
+                        pathfinder = self.map.pathfinder
+                        pos = pathfinder.closest_point(self.pos)
+                        target = pathfinder.closest_point(self.patrol_target)
 
-        if player_distance < self.attack_radius**2:
-            self.state = EnemyState.ATTACK
+                        self.return_path = iter(pathfinder.calculate_path(pos, target))
+                        self.return_target = next(self.return_path)
+
+                else:
+                    # if player in line of sight, keep chasing
+                    self.state = EnemyState.CHASE
 
         if self.state == EnemyState.IDLE:
             self.state = EnemyState.PATROL
         elif self.state == EnemyState.PATROL:
-            self.patrol(dt)
+            if self.return_path:
+                self.return_path = self.return_to_patrol(dt, self.return_path)
+            else:
+                self.patrol(dt)
         elif self.state == EnemyState.CHASE:
             self.chase(player.pos, dt)
-        elif self.state == EnemyState.ATTACK:
-            self.attack(player.pos)
+
 
     def chase(self, target, dt):
         self.look_at(target)
-        distance = distance_sqr(self.pos, self.target)
-        if distance < self.epsilon:
+        if distance_sqr(self.pos, target) > self.attack_radius**2:
             self.move_to_target(target, dt)
+        else:
+            self.attack(target)
 
     def patrol(self, dt):
-        distance = distance_sqr(self.pos, self.target)
+        distance = distance_sqr(self.pos, self.patrol_target)
         if distance < self.epsilon:
-            self.target = next(iter(self.waypoints))
+            self.patrol_target = next(self.waypoints)
 
+        self.look_at(self.patrol_target)
+        self.move_to_target(self.patrol_target, dt)
 
-        self.look_at(self.target)
-        self.move_to_target(self.target, dt)
+    def return_to_patrol(self, dt, path):
+        # -- get enemy back to waypoints after chasing player
 
-    def attack(self, player):
-        self.look_at(player)
+        distance = distance_sqr(self.pos, self.return_target)
+        if distance < self.epsilon:
+            try:
+                self.return_target = next(path)
+            except StopIteration:
+                return None
+
+        self.look_at(self.return_target)
+        self.move_to_target(self.return_target, dt)
+        return path
+
+    def attack(self, target):
+        self.look_at(target)
         self.current_attack += 1
-        pass
 
-        # if self.current_attack == self.attack_frequency:
-        #     vec = normalize()
-        #     vec = vec2(player[0] - self.rect.centerx, player[1] - self.rect.centery).normalize()
-        #     gun_pos = vec2(self.rect.center) + (vec * vec2(self.turret.center).length()/2)
-        #     self.bullets.add(Bullet(gun_pos, self.angle))
 
-        #     self.current_attack = 0
+        if self.current_attack == self.attack_frequency:
+            diff = target[0] - self.pos[0], target[1] - self.pos[1]
+            _dir = normalize(diff)
+
+            self.current_attack = 0
 
     def move_to_target(self, target, dt):
-        diff = self.target[0] - self.pos[0], self.target[1] - self.pos[1]
+        diff = target[0] - self.pos[0], target[1] - self.pos[1]
         if distance_sqr((0, 0), diff):
             dx, dy = normalize(diff)
 
@@ -377,7 +408,6 @@ class Enemy:
 
             self.sprite.position = (bx, by)
             self.pos = (bx, by)
-
 
 class Map:
 
@@ -496,6 +526,14 @@ class PathFinder:
         self.data = map_data
         self.node_size = (node_size,)*2
 
+    def walkable(self):
+        # -- find all walkable nodes
+        mul = lambda p1, p2 : (p1[0]*p2[0], p1[1]*p2[1])
+
+        walkable = [mul((x, y), self.node_size) for y, data in enumerate(self.data)
+            for x, d in enumerate(data) if d != '#']
+        return walkable
+
     def calculate_path(self, p1, p2):
         cf, cost = a_star_search(self, p1, p2)
         return reconstruct_path(cf, p1, p2)
@@ -513,14 +551,14 @@ class PathFinder:
         add = lambda p1, p2 : (p1[0]+p2[0], p1[1]+p2[1])
         mul = lambda p1, p2 : (p1[0]*p2[0], p1[1]*p2[1])
 
-        # -- find all walkable nodes
-        walkable = [mul((x, y), self.node_size) for y, data in enumerate(self.data)
-            for x, d in enumerate(data) if d != '#']
-
         # -- find neighbours that are walkable
         directions      = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         neigh_positions = [add(p, mul(d, self.node_size)) for d in directions]
-        return [n for n in neigh_positions if n in walkable]
+        return [n for n in neigh_positions if n in self.walkable()]
+
+    def closest_point(self, p):
+        data = [(distance_sqr(p, point), point) for point in self.walkable()]
+        return min(data, key=lambda d:d[0])[1]
 
     def cost(self, *ignored):
         return 1
@@ -567,6 +605,7 @@ class Level:
             if DEBUG:
                 e.debug_data = (patrol, random_color())
             e.watch(player)
+            e.set_map(self.map)
             self.agents.append(e)
 
     def get_player(self):
@@ -590,7 +629,15 @@ class Level:
                     debug_draw_path(path, color)
 
     def update(self, dt):
-        self.map.clamp_player(self.get_enemies()[0])
+        # self.map.clamp_player(self.get_player())
+        if DEBUG:
+            if hasattr(self, 'switch_view'):
+                if self.switch_view:
+                    self.map.clamp_player(self.get_enemies()[0])
+                else:
+                    self.map.clamp_player(self.get_player())
+        else:
+            self.map.clamp_player(self.get_player())
         for agent in self.agents:
             agent.update(dt)
 
@@ -599,6 +646,16 @@ class Level:
             if hasattr(agent, 'event'):
                 agent.event(*args, **kwargs)
 
+        if DEBUG:
+            _type = args[0]
+
+            if _type == EventType.KEY_DOWN:
+                k = args[1]
+                if k == key.TAB:
+                    if hasattr(self, 'switch_view'):
+                        self.switch_view = not self.switch_view
+                    else:
+                        self.switch_view = True
 
 '''
 ============================================================
