@@ -53,23 +53,16 @@ Resource = namedtuple("Resource", "name data")
 
 class Game:
 
-    def __init__(self, win, res, physics):
-        self.window = win
-        self.resource = res
-        self.physics = physics
-
-        self.level = Level("Level One", self.resource.level("test"))
+    def __init__(self):
+        self.level = Level("Level One", Resources.instance.level("test"))
 
     def draw(self):
         self.level.draw()
-        if DEBUG:
-            self.physics.debug_draw()
 
     def event(self, *args, **kwargs):
         self.level.event(*args, **kwargs)
 
     def update(self, dt):
-        self.physics.update()
         self.level.update(dt)
 
 class Resources:
@@ -694,7 +687,7 @@ window.set_caption(CAPTION)
 
 res  = Resources()
 phy  = Physics()
-game = Game(window, res, phy)
+game = Game()
 
 @window.event
 def on_draw():
@@ -703,6 +696,10 @@ def on_draw():
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     game.draw()
+
+    if DEBUG:
+        phy.debug_draw()
+
 
 @window.event
 def on_resize(w, h):
@@ -729,6 +726,7 @@ def on_mouse_motion(x, y, dx, dy):
     game.event(EventType.MOUSE_MOTION, x, y, dx, dy)
 
 def on_update(dt):
+    phy.update()
     game.update(dt)
 
 if __name__ == '__main__':
