@@ -299,6 +299,11 @@ class Enemy:
     def set_map(self, _map):
         self.map = _map
 
+    def offset(self):
+        px, py = self.pos
+        w, h = window.get_size()
+        return -px + w/2, -py + h/2
+
     def look_at(self, target):
         tx, ty = target
         px, py = self.pos
@@ -341,7 +346,8 @@ class Enemy:
     def patrol(self, dt):
         distance = distance_sqr(self.pos, self.target)
         if distance < self.epsilon:
-            self.target = next(self.waypoints)
+            self.target = next(iter(self.waypoints))
+
 
         self.look_at(self.target)
         self.move_to_target(self.target, dt)
@@ -556,7 +562,10 @@ class Level:
             patrol_point = random.choice(self.map['patrol_positions'])
 
             patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
-            e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"), patrol)
+            path = patrol + list(reversed(patrol[1:-1]))
+            e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"), path)
+            if DEBUG:
+                e.debug_data = (patrol, random_color())
             e.watch(player)
             self.agents.append(e)
 
@@ -566,13 +575,22 @@ class Level:
                 return ag
         return None
 
+    def get_enemies(self):
+        return [e for e in self.agents if isinstance(e, Enemy)]
+
     def draw(self):
         self.map.draw()
         for agent in self.agents:
             agent.draw()
 
+            if DEBUG:
+                if isinstance(agent, Enemy):
+                    path, color = agent.debug_data
+                    debug_draw_point(agent.pos, color, 10)
+                    debug_draw_path(path, color)
+
     def update(self, dt):
-        self.map.clamp_player(self.get_player())
+        self.map.clamp_player(self.get_enemies()[0])
         for agent in self.agents:
             agent.update(dt)
 
@@ -612,6 +630,12 @@ def heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
+
+def random_color():
+    r = random.random()
+    g = random.random()
+    b = random.random()
+    return (r, g, b, 1)
 
 def a_star_search(graph, start, goal):
     frontier = PriorityQueue()
@@ -683,6 +707,31 @@ def setup_collisions(space):
         )
     handler.begin = enemy_enemy_solve
 
+def debug_draw_point(pos, color=(1, 0, 0, 1), size=5):
+    glColor4f(*color)
+    glPointSize(size)
+
+    glBegin(GL_POINTS)
+    glVertex2f(*pos)
+    glEnd()
+
+def debug_draw_line(start, end, color=(1, 1, 0, 1), width=2):
+    glColor4f(*color)
+    glLineWidth(width)
+
+    glBegin(GL_LINES)
+    glVertex2f(*start)
+    glVertex2f(*end)
+    glEnd()
+
+def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
+    glColor4f(*color)
+    glLineWidth(width)
+
+    glBegin(GL_LINE_STRIP)
+    for point in points:
+        glVertex2f(*point)
+    glEnd()
 
 '''
 ============================================================
