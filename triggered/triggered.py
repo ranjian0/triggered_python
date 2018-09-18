@@ -195,15 +195,17 @@ class Physics:
 class Player:
 
     def __init__(self, position, size, image):
-        # -- properties
+        # -- movement properties
         self.pos    = position
         self.size   = size
-        self.health = 100
-        self.damage = 10
         self.angle  = 0
         self.speed  = 100
-
-        self.ammo   = 50
+        # -- health properties
+        self.dead = False
+        self.health = 100
+        self.damage = 5
+        # -- weapon properties
+        self.ammo   = 300
         self.bullets = []
 
         # Create Player Image
@@ -226,7 +228,7 @@ class Player:
         window.push_handlers(KEYS)
         window.push_handlers(KEYS)
 
-        # setup collision handlers
+        # -- collision handlers
         Physics.instance.add_collision_handler(
                 COLLISION_MAP.get("PlayerType"),
                 COLLISION_MAP.get("EnemyBulletType"),
@@ -240,7 +242,9 @@ class Player:
         return False
 
     def do_damage(self):
-        pass
+        self.health -= self.damage
+        if self.health <= 0:
+            self.dead = True
 
     def offset(self):
         px, py = self.pos
@@ -317,13 +321,15 @@ class EnemyState(Enum):
 class Enemy:
 
     def __init__(self, position, size, image, waypoints):
-        # -- properties
-        self.pos    = position
-        self.size   = size
+        # -- movement properties
+        self.pos   = position
+        self.size  = size
+        self.speed = 100
+        # --health properties
         self.health = 100
         self.damage = 10
-        self.speed  = 100
-
+        self.dead = False
+        # -- weapon properties
         self.ammo   = 50
         self.bullets = []
 
@@ -331,9 +337,9 @@ class Enemy:
         self.state = EnemyState.IDLE
 
         self.waypoints = it.cycle(waypoints)
+        self.patrol_target = next(self.waypoints)
         self.return_path = None
         self.return_target = None
-        self.patrol_target = next(self.waypoints)
         self.epsilon = 10
         self.chase_radius = 300
         self.attack_radius = 150
@@ -348,7 +354,7 @@ class Enemy:
         self.image.anchor_y = size[1]/2
         self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1])
 
-        # player physics
+        # enemy physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
         self.shape = pm.Circle(self.body, size[0]/2)
@@ -359,7 +365,7 @@ class Enemy:
         self.map = None
         self.player_target = None
 
-        # setup collision handlers
+        # collision handlers
         Physics.instance.add_collision_handler(
                 COLLISION_MAP.get("EnemyType"),
                 COLLISION_MAP.get("PlayerBulletType"),
@@ -373,7 +379,9 @@ class Enemy:
         return False
 
     def do_damage(self):
-        pass
+        self.health -= self.damage
+        if self.health <= 0:
+            self.dead = True
 
     def watch(self, player):
         self.player_target = player
@@ -707,6 +715,10 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
+class LevelStatus(Enum):
+    RUNNING = 1
+    FAILED  = 2
+    PASSED  = 3
 
 class Level:
 
@@ -717,6 +729,8 @@ class Level:
         self.map = None
         self.agents = []
         self.reload()
+
+        self.status = LevelStatus.RUNNING
 
     def reload(self):
         self.agents.clear()
@@ -760,17 +774,28 @@ class Level:
                     debug_draw_path(path, color)
 
     def update(self, dt):
-        # self.map.clamp_player(self.get_player())
         if DEBUG:
-            if hasattr(self, 'switch_view'):
-                if self.switch_view:
-                    self.map.clamp_player(self.get_enemies()[0])
-                else:
-                    self.map.clamp_player(self.get_player())
+            if hasattr(self, 'switch_view') and self.switch_view:
+                self.map.clamp_player(self.get_enemies()[0])
+            else:
+                self.map.clamp_player(self.get_player())
         else:
             self.map.clamp_player(self.get_player())
+
+        # -- remove dead enemies
+        for agent in self.agents:
+            if isinstance(agent, Enemy) and agent.dead:
+                self.agents.remove(agent)
+
         for agent in self.agents:
             agent.update(dt)
+
+        # -- change level status
+        if self.get_player().dead:
+            self.status = LevelStatus.FAILED
+
+        if len(self.get_enemies()) == 0:
+            self.status = LevelStatus.PASSED
 
     def event(self, *args, **kwargs):
         for agent in self.agents:
