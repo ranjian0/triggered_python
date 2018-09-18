@@ -205,7 +205,7 @@ class Player:
         self.health = 100
         self.damage = 5
         # -- weapon properties
-        self.ammo   = 300
+        self.ammo   = 150
         self.bullets = []
 
         # Create Player Image
@@ -252,6 +252,11 @@ class Player:
         return -px + w/2, -py + h/2
 
     def shoot(self, mx, my):
+        # -- reduce ammo
+        if self.ammo <= 0: return
+        self.ammo -= 1
+
+        # -- eject bullet
         px, py = self.pos
         _dir = mx - px, my - py
         _dir = normalize(_dir)
@@ -330,7 +335,6 @@ class Enemy:
         self.damage = 10
         self.dead = False
         # -- weapon properties
-        self.ammo   = 50
         self.bullets = []
 
         # -- patrol properties
@@ -449,7 +453,6 @@ class Enemy:
         self.bullets = [b for b in self.bullets if not b.destroyed]
         for bullet in self.bullets:
             bullet.update(dt)
-
 
     def chase(self, target, dt):
         self.look_at(target)
