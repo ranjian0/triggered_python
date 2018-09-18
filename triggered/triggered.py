@@ -204,6 +204,7 @@ class Player:
         self.dead = False
         self.health = 100
         self.damage = 5
+        self.healthbar = HealthBar((600, 2000))
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
@@ -274,6 +275,8 @@ class Player:
         for bullet in self.bullets:
             bullet.draw()
 
+        self.healthbar.draw()
+
     def event(self, type, *args, **kwargs):
         if type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
@@ -317,6 +320,10 @@ class Player:
         self.bullets = [b for b in self.bullets if not b.destroyed]
         for bullet in self.bullets:
             bullet.update(dt)
+
+        # -- update health bar
+        if self.health > 0:
+            self.healthbar.set_value(self.health / 100)
 
 class EnemyState(Enum):
     IDLE    = 0
@@ -863,6 +870,28 @@ class LevelManager:
 
     def event(self, *args, **kwargs):
         self.current().event(*args, **kwargs)
+
+
+class HealthBar:
+
+    def __init__(self, position):
+        self.pos = position
+
+        border = Resources.instance.sprite("health_bar_border")
+        self.border = pg.sprite.Sprite(border, x=position[0], y=position[1])
+
+        self.bar_image = Resources.instance.sprite("health_bar")
+        self.bar_width = self.bar_image.width
+        self.bar_height = self.bar_image.height
+        self.bar = pg.sprite.Sprite(self.bar_image, x=position[0], y=position[1])
+
+    def draw(self):
+        self.bar.draw()
+        self.border.draw()
+
+    def set_value(self, percent):
+        self.bar.image = self.bar_image.get_region(0, 0,
+            self.bar_width*percent, self.bar_height)
 
 '''
 ============================================================
