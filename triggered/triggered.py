@@ -207,7 +207,7 @@ class Player:
         self.dead = False
         self.health = 100
         self.damage = 5
-        self.healthbar = HealthBar((0, 0))
+        self.healthbar = HealthBar((0, window.height - 56))
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
@@ -747,6 +747,7 @@ class Level:
         self.agents = []
         self.agent_batch = pg.graphics.Batch()
 
+        self.hud = HUD()
         self.reload()
 
         self.status = LevelStatus.RUNNING
@@ -759,6 +760,7 @@ class Level:
         player = Player(self.map['player_position'], (50, 50),
             Resources.instance.sprite("hitman1_gun"), self.agent_batch)
         self.agents.append(player)
+        self.hud.add(player.healthbar)
 
         # -- add other agents map positions
         for point in self.map['enemy_position']:
@@ -785,6 +787,7 @@ class Level:
     def draw(self):
         self.map.draw()
         self.agent_batch.draw()
+        self.hud.draw()
 
         if DEBUG:
             for agent in self.agents:
@@ -871,6 +874,33 @@ class LevelManager:
         self.current().event(*args, **kwargs)
 
 
+class HUD:
+
+    def __init__(self):
+        self.items = []
+
+    def add(self, item):
+        self.items.append(item)
+
+    def draw(self):
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        glOrtho(0, window.width, 0, window.height, -1, 1)
+
+        for item in self.items:
+            item.draw()
+
+        glPopMatrix()
+
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix()
+
+
 class HealthBar:
 
     def __init__(self, position):
@@ -886,21 +916,7 @@ class HealthBar:
         self.bar = pg.sprite.Sprite(self.bar_image, x=position[0], y=position[1], batch=self.batch)
 
     def draw(self):
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
-
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        glOrtho(0, window.width, 0, window.height, -1, 1)
-
         self.batch.draw()
-
-        glPopMatrix()
-
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
 
     def set_value(self, percent):
         self.bar.image = self.bar_image.get_region(0, 0,
