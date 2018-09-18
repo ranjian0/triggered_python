@@ -207,7 +207,7 @@ class Player:
         self.dead = False
         self.health = 100
         self.damage = 5
-        self.healthbar = HealthBar((0, window.height - 56))
+        self.healthbar = HealthBar((0, window.height))
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
@@ -321,6 +321,7 @@ class Player:
             bullet.update(dt)
 
         # -- update health bar
+        self.healthbar.set_pos((0, window.height))
         if self.health > 0:
             self.healthbar.set_value(self.health / 100)
 
@@ -915,19 +916,25 @@ class HealthBar:
         self.batch = pg.graphics.Batch()
 
         border = Resources.instance.sprite("health_bar_border")
+        border.anchor_y = border.height
         self.border = pg.sprite.Sprite(border, x=position[0], y=position[1], batch=self.batch)
 
-        self.bar_image = Resources.instance.sprite("health_bar")
-        self.bar_width = self.bar_image.width
-        self.bar_height = self.bar_image.height
-        self.bar = pg.sprite.Sprite(self.bar_image, x=position[0], y=position[1], batch=self.batch)
+        bar = Resources.instance.sprite("health_bar")
+        bar.anchor_y = bar.height
+        self.bar = pg.sprite.Sprite(bar, x=position[0], y=position[1], batch=self.batch)
 
     def draw(self):
         self.batch.draw()
 
     def set_value(self, percent):
-        self.bar.image = self.bar_image.get_region(0, 0,
-            self.bar_width*percent, self.bar_height)
+        pass
+        # self.bar.image = self.bar_image.get_region(self.pos[0], 0,
+        #     self.bar_width*percent, self.bar_height)
+
+    def set_pos(self, pos):
+        self.pos = pos
+        self.border.update(x=pos[0], y=pos[1])
+        self.bar.update(x=pos[0], y=pos[1])
 
 '''
 ============================================================
