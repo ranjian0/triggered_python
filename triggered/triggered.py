@@ -244,6 +244,7 @@ class Player:
     def do_damage(self):
         self.health -= self.damage
         if self.health <= 0:
+            Physics.instance.remove(self.body, self.shape)
             self.dead = True
 
     def offset(self):
@@ -385,6 +386,7 @@ class Enemy:
     def do_damage(self):
         self.health -= self.damage
         if self.health <= 0:
+            Physics.instance.remove(self.body, self.shape)
             self.dead = True
 
     def watch(self, player):
