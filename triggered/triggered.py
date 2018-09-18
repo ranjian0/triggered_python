@@ -261,8 +261,8 @@ class Player:
         _dir = mx - px, my - py
         _dir = normalize(_dir)
 
-        px += _dir[0] * self.size[0]
-        py += _dir[1] * self.size[1]
+        px += _dir[0] * self.size[0]*.75
+        py += _dir[1] * self.size[1]*.75
 
         b = Bullet((px, py), _dir)
         b.set_col_type(COLLISION_MAP.get("PlayerBulletType"))
