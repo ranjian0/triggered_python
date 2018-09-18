@@ -207,7 +207,7 @@ class Player:
         self.dead = False
         self.health = 100
         self.damage = 5
-        self.healthbar = HealthBar((0, 0), self.batch)
+        self.healthbar = HealthBar((0, 0))
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
