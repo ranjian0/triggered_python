@@ -787,6 +787,43 @@ class Level:
                     else:
                         self.switch_view = True
 
+class LevelManager:
+
+    def __init__(self):
+        self.levels = []
+        self.index = 0
+
+        self.completed = False
+
+    def add(self, levels):
+        if isinstance(levels, list):
+            self.levels.extend(levels)
+        else:
+            self.levels.append(levels)
+
+    def current(self):
+        return self.levels[self.index]
+
+    def next(self):
+        self.completed = self.index == len(self.levels) - 1
+        if not self.completed:
+            self.index += 1
+            return self.current()
+        return None
+
+    def __iter__(self):
+        for l in self.levels:
+            yield l
+
+    def draw(self, surface):
+        self.current().draw(surface)
+
+    def update(self, dt):
+        self.current().update(dt)
+
+    def event(self, ev):
+        self.current().event(ev)
+
 '''
 ============================================================
 ---   FUNCTIONS
@@ -914,7 +951,6 @@ def setup_collisions(space):
             COLLISION_MAP.get("WallType")
         )
     handler2.begin = bullet_wall_solve
-
 
 def debug_draw_point(pos, color=(1, 0, 0, 1), size=5):
     glColor4f(*color)
