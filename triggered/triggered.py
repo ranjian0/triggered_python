@@ -250,6 +250,8 @@ class Player:
         self.health -= self.damage
         if self.health <= 0:
             Physics.instance.remove(self.body, self.shape)
+            self.bullets.clear()
+            self.sprite.batch = None
             self.dead = True
 
     def offset(self):
@@ -394,6 +396,8 @@ class Enemy:
         self.health -= self.damage
         if self.health <= 0:
             Physics.instance.remove(self.body, self.shape)
+            self.bullets.clear()
+            self.sprite.batch = None
             self.dead = True
 
     def watch(self, player):
@@ -415,33 +419,37 @@ class Enemy:
 
     def update(self, dt):
         player = self.player_target
-        player_distance = distance_sqr(player.pos, self.pos)
-        previous_state = self.state
 
-        if player_distance < self.chase_radius**2:
-            hit = Physics.instance.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
-            if hit:
-                self.state = EnemyState.PATROL
-            else:
-                self.state = EnemyState.CHASE
-        else:
-            #self.state = EnemyState.PATROL
-            if previous_state == EnemyState.CHASE:
+        if not player.dead:
+            player_distance = distance_sqr(player.pos, self.pos)
+            previous_state = self.state
+
+            if player_distance < self.chase_radius**2:
                 hit = Physics.instance.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
                 if hit:
                     self.state = EnemyState.PATROL
-                    # -- renavigate to current patrol target if its not in our line of sight
-                    if Physics.instance.raycast(self.pos, self.patrol_target, 1, RAYCAST_MASK):
-                        pathfinder = self.map.pathfinder
-                        pos = pathfinder.closest_point(self.pos)
-                        target = pathfinder.closest_point(self.patrol_target)
-
-                        self.return_path = iter(pathfinder.calculate_path(pos, target))
-                        self.return_target = next(self.return_path)
-
                 else:
-                    # if player in line of sight, keep chasing
                     self.state = EnemyState.CHASE
+            else:
+                #self.state = EnemyState.PATROL
+                if previous_state == EnemyState.CHASE:
+                    hit = Physics.instance.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
+                    if hit:
+                        self.state = EnemyState.PATROL
+                        # -- renavigate to current patrol target if its not in our line of sight
+                        if Physics.instance.raycast(self.pos, self.patrol_target, 1, RAYCAST_MASK):
+                            pathfinder = self.map.pathfinder
+                            pos = pathfinder.closest_point(self.pos)
+                            target = pathfinder.closest_point(self.patrol_target)
+
+                            self.return_path = iter(pathfinder.calculate_path(pos, target))
+                            self.return_target = next(self.return_path)
+
+                    else:
+                        # if player in line of sight, keep chasing
+                        self.state = EnemyState.CHASE
+        else:
+            self.state = EnemyState.PATROL
 
         if self.state == EnemyState.IDLE:
             self.state = EnemyState.PATROL
@@ -899,7 +907,6 @@ class HUD:
 
         glMatrixMode(GL_MODELVIEW)
         glPopMatrix()
-
 
 class HealthBar:
 
