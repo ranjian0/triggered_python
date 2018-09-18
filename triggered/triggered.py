@@ -204,7 +204,7 @@ class Player:
         self.dead = False
         self.health = 100
         self.damage = 5
-        self.healthbar = HealthBar((600, 2000))
+        self.healthbar = HealthBar((0, 0))
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
@@ -886,8 +886,22 @@ class HealthBar:
         self.bar = pg.sprite.Sprite(self.bar_image, x=position[0], y=position[1])
 
     def draw(self):
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        glOrtho(0, window.width, 0, window.height, -1, 1)
+
         self.bar.draw()
         self.border.draw()
+
+        glPopMatrix()
+
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix()
 
     def set_value(self, percent):
         self.bar.image = self.bar_image.get_region(0, 0,
@@ -1058,6 +1072,7 @@ window = pg.window.Window(*SIZE, resizable=True)
 window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 
+fps  = pg.window.FPSDisplay(window)
 res  = Resources()
 phy  = Physics()
 game = Game()
@@ -1071,6 +1086,7 @@ def on_draw():
     game.draw()
 
     if DEBUG:
+        fps.draw()
         phy.debug_draw()
 
 
