@@ -520,6 +520,18 @@ class Bullet:
 
         self.destroyed = False
 
+        # image
+        sz = 12
+        self.image = Resources.instance.sprite("bullet")
+        self.image.width = sz
+        self.image.height = sz
+        self.image.anchor_x = sz/2
+        self.image.anchor_y = sz/2
+        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1])
+
+        angle = math.degrees(-math.atan2(direction[1], direction[0]))
+        self.sprite.update(rotation=angle)
+
         # Bullet physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
@@ -531,12 +543,7 @@ class Bullet:
         self.shape.collision_type = _type
 
     def draw(self):
-        glColor4f(1, 0, 0, 1)
-        glPointSize(4)
-
-        glBegin(GL_POINTS)
-        glVertex2f(*self.pos)
-        glEnd()
+        self.sprite.draw()
 
     def update(self, dt):
         bx, by = self.body.position
@@ -546,6 +553,7 @@ class Bullet:
         by += dy * dt * self.speed
 
         self.body.position = (bx, by)
+        self.sprite.position = (bx, by)
         self.pos = (bx, by)
 
         if not self.body in Physics.instance.space.bodies:
