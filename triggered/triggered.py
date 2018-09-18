@@ -58,16 +58,19 @@ Resource = namedtuple("Resource", "name data")
 class Game:
 
     def __init__(self):
-        self.level = Level("Level One", Resources.instance.level("test"))
+        self.manager = LevelManager()
+        self.manager.add([
+                Level("Kill them all", Resources.instance.level("test"))
+            ])
 
     def draw(self):
-        self.level.draw()
+        self.manager.draw()
 
     def event(self, *args, **kwargs):
-        self.level.event(*args, **kwargs)
+        self.manager.event(*args, **kwargs)
 
     def update(self, dt):
-        self.level.update(dt)
+        self.manager.update(dt)
 
 class Resources:
 
@@ -815,14 +818,14 @@ class LevelManager:
         for l in self.levels:
             yield l
 
-    def draw(self, surface):
-        self.current().draw(surface)
+    def draw(self):
+        self.current().draw()
 
     def update(self, dt):
         self.current().update(dt)
 
-    def event(self, ev):
-        self.current().event(ev)
+    def event(self, *args, **kwargs):
+        self.current().event(*args, **kwargs)
 
 '''
 ============================================================
