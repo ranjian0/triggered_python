@@ -448,9 +448,6 @@ class Enemy:
         if distance_sqr(self.pos, target) > self.attack_radius**2:
             self.move_to_target(target, dt)
         self.attack(target)
-        # else:
-        #     self.attack(target)
-        #     print("attacking")
 
     def patrol(self, dt):
         distance = distance_sqr(self.pos, self.patrol_target)
@@ -515,7 +512,8 @@ class Bullet:
         # Bullet physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
-        self.shape = pm.Circle(self.body, 4)
+        self.shape = pm.Circle(self.body, 10)
+        self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
 
     def set_col_type(self, _type):
