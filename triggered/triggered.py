@@ -194,7 +194,10 @@ class Physics:
 
 class Player:
 
-    def __init__(self, position, size, image):
+    def __init__(self, position, size, image, batch):
+        # --
+        self.batch = batch
+
         # -- movement properties
         self.pos    = position
         self.size   = size
@@ -204,7 +207,7 @@ class Player:
         self.dead = False
         self.health = 100
         self.damage = 5
-        self.healthbar = HealthBar((0, 0))
+        self.healthbar = HealthBar((0, 0), self.batch)
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
@@ -215,7 +218,8 @@ class Player:
         self.image.height = size[1]
         self.image.anchor_x = size[0]/2
         self.image.anchor_y = size[1]/2
-        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1])
+        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1],
+            batch=self.batch)
 
         # player physics
         self.body = pm.Body(1, 100)
@@ -266,16 +270,9 @@ class Player:
         px += _dir[0] * self.size[0]*.75
         py += _dir[1] * self.size[1]*.75
 
-        b = Bullet((px, py), _dir)
+        b = Bullet((px, py), _dir, self.batch)
         b.set_col_type(COLLISION_MAP.get("PlayerBulletType"))
         self.bullets.append(b)
-
-    def draw(self):
-        self.sprite.draw()
-        for bullet in self.bullets:
-            bullet.draw()
-
-        self.healthbar.draw()
 
     def event(self, type, *args, **kwargs):
         if type == EventType.MOUSE_MOTION:
@@ -333,7 +330,7 @@ class EnemyState(Enum):
 
 class Enemy:
 
-    def __init__(self, position, size, image, waypoints):
+    def __init__(self, position, size, image, waypoints, batch):
         # -- movement properties
         self.pos   = position
         self.size  = size
@@ -344,6 +341,8 @@ class Enemy:
         self.dead = False
         # -- weapon properties
         self.bullets = []
+        # --
+        self.batch = batch
 
         # -- patrol properties
         self.state = EnemyState.IDLE
@@ -364,7 +363,8 @@ class Enemy:
         self.image.height = size[1]
         self.image.anchor_x = size[0]/2
         self.image.anchor_y = size[1]/2
-        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1])
+        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1],
+            batch=self.batch)
 
         # enemy physics
         self.body = pm.Body(1, 100)
@@ -412,11 +412,6 @@ class Enemy:
         px, py = self.pos
         angle = math.degrees(-math.atan2(ty - py, tx - px))
         self.sprite.update(rotation=angle)
-
-    def draw(self):
-        self.sprite.draw()
-        for bullet in self.bullets:
-            bullet.draw()
 
     def update(self, dt):
         player = self.player_target
@@ -501,7 +496,7 @@ class Enemy:
             px += _dir[0] * self.size[0]
             py += _dir[1] * self.size[1]
 
-            b = Bullet((px, py), _dir)
+            b = Bullet((px, py), _dir, self.batch)
             b.set_col_type(COLLISION_MAP.get("EnemyBulletType"))
             self.bullets.append(b)
 
@@ -522,11 +517,11 @@ class Enemy:
 
 class Bullet:
 
-    def __init__(self, position, direction, speed=500):
+    def __init__(self, position, direction, batch, speed=500):
         self.pos = position
         self.dir = direction
         self.speed = speed
-
+        self.batch = batch
         self.destroyed = False
 
         # image
@@ -536,7 +531,8 @@ class Bullet:
         self.image.height = sz
         self.image.anchor_x = sz/2
         self.image.anchor_y = sz/2
-        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1])
+        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1],
+            batch=self.batch)
 
         angle = math.degrees(-math.atan2(direction[1], direction[0]))
         self.sprite.update(rotation=angle)
@@ -551,8 +547,8 @@ class Bullet:
     def set_col_type(self, _type):
         self.shape.collision_type = _type
 
-    def draw(self):
-        self.sprite.draw()
+    # def draw(self):
+    #     self.sprite.draw()
 
     def update(self, dt):
         bx, by = self.body.position
@@ -749,6 +745,8 @@ class Level:
 
         self.map = None
         self.agents = []
+        self.agent_batch = pg.graphics.Batch()
+
         self.reload()
 
         self.status = LevelStatus.RUNNING
@@ -758,7 +756,8 @@ class Level:
         self.map = Map(self.data, physics=Physics.instance)
 
         # -- add player to map position
-        player = Player(self.map['player_position'], (50, 50), Resources.instance.sprite("hitman1_gun"))
+        player = Player(self.map['player_position'], (50, 50),
+            Resources.instance.sprite("hitman1_gun"), self.agent_batch)
         self.agents.append(player)
 
         # -- add other agents map positions
@@ -767,7 +766,7 @@ class Level:
 
             patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
             path = patrol + list(reversed(patrol[1:-1]))
-            e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"), path)
+            e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"), path, self.agent_batch)
             if DEBUG:
                 e.debug_data = (patrol, random_color())
             e.watch(player)
@@ -785,10 +784,10 @@ class Level:
 
     def draw(self):
         self.map.draw()
-        for agent in self.agents:
-            agent.draw()
+        self.agent_batch.draw()
 
-            if DEBUG:
+        if DEBUG:
+            for agent in self.agents:
                 if isinstance(agent, Enemy):
                     path, color = agent.debug_data
                     debug_draw_point(agent.pos, color, 10)
