@@ -876,14 +876,15 @@ class HealthBar:
 
     def __init__(self, position):
         self.pos = position
+        self.batch = pg.graphics.Batch()
 
         border = Resources.instance.sprite("health_bar_border")
-        self.border = pg.sprite.Sprite(border, x=position[0], y=position[1])
+        self.border = pg.sprite.Sprite(border, x=position[0], y=position[1], batch=self.batch)
 
         self.bar_image = Resources.instance.sprite("health_bar")
         self.bar_width = self.bar_image.width
         self.bar_height = self.bar_image.height
-        self.bar = pg.sprite.Sprite(self.bar_image, x=position[0], y=position[1])
+        self.bar = pg.sprite.Sprite(self.bar_image, x=position[0], y=position[1], batch=self.batch)
 
     def draw(self):
         glMatrixMode(GL_MODELVIEW)
@@ -895,8 +896,7 @@ class HealthBar:
         glLoadIdentity()
         glOrtho(0, window.width, 0, window.height, -1, 1)
 
-        self.bar.draw()
-        self.border.draw()
+        self.batch.draw()
 
         glPopMatrix()
 
