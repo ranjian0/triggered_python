@@ -590,6 +590,10 @@ class Map:
         self.wall_img.width = node_size//2
         self.wall_img.height = node_size//2
 
+        self.floor_img   = Resources.instance.sprite("floor")
+        self.floor_img.width = node_size//2
+        self.floor_img.height = node_size//2
+
         self.sprites    = []
         self.batch      = pg.graphics.Batch()
         self.make_map()
@@ -607,8 +611,26 @@ class Map:
 
         for y, row in enumerate(self.data):
             for x, data in enumerate(row):
+                offx, offy = x * nsx, y * nsy
+
+                # -- create floor tiles
+                sp = pg.sprite.Sprite(self.floor_img, x=offx, y=offy, batch=self.batch)
+                self.sprites.append(sp)
+
+                directions = [(1, 0), (0, 1), (1,1)]
+                for dx, dy in directions:
+                    px = offx + (dx * nsx/2)
+                    py = offy + (dy * nsx/2)
+                    s = pg.sprite.Sprite(self.floor_img, x=px, y=py, batch=self.batch)
+
+                    if dx:
+                        s.anchor_x = self.floor_img.width/2
+                        s.anchor_y = self.floor_img.height/2
+                        s.update(rotation=90)
+                    self.sprites.append(s)
+
+                # -- create walls
                 if data == "#":
-                    offx, offy = x * nsx, y * nsy
                     sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch)
                     self.sprites.append(sp)
                     add_wall((offx + wsx/2, offy + wsy/2), (wsx, wsy))
