@@ -194,9 +194,10 @@ class Physics:
 
 class Player:
 
-    def __init__(self, position, size, image, batch):
+    def __init__(self, position, size, image, batch, _map):
         # --
         self.batch = batch
+        self.map = _map
 
         # -- movement properties
         self.pos    = position
@@ -257,18 +258,27 @@ class Player:
             self.dead = True
 
     def offset(self):
+        # -- calculate distance of player from window center
+        # -- usefull for screen scrolling to keep player at center of view
         px, py = self.pos
         w, h = window.get_size()
         return -px + w/2, -py + h/2
 
-    def shoot(self, mx, my):
+    def screen_coords(self):
+        # -- convert player coordinates into screen coordinates
+        ox, oy = self.map.clamped_offset(*self.offset())
+        px, py = self.pos
+
+        cx, cy = px + ox, py + oy
+        return cx, cy
+
+    def shoot(self, _dir):
         # -- reduce ammo
         if self.ammo <= 0: return
         self.ammo -= 1
 
         # -- eject bullet
         px, py = self.pos
-        _dir = mx - px, my - py
         _dir = normalize(_dir)
 
         px += _dir[0] * self.size[0]*.75
@@ -281,19 +291,16 @@ class Player:
     def event(self, type, *args, **kwargs):
         if type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
-            ox, oy = self.offset()
-
-            mx, my = x - ox, y - oy     # - mouse position with screen offset
-            px, py = self.pos           # - player position
-            self.angle = math.degrees(-math.atan2(my - py, mx - px))
+            px, py = self.screen_coords()
+            self.angle = math.degrees(-math.atan2(y - py, x - px))
 
         elif type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
-            ox, oy = self.offset()
 
             if btn == mouse.LEFT:
-                mx, my = x - ox, y - oy
-                self.shoot(mx, my)
+                px, py = self.screen_coords()
+                direction = x - px, y - py
+                self.shoot(direction)
 
     def update(self, dt):
         self.sprite.update(rotation=self.angle)
@@ -657,11 +664,15 @@ class Map:
 
     def clamp_player(self, player):
         # -- keep player within map bounds
-        ns = self.node_size
+        offx, offy = self.clamped_offset(*player.offset())
 
-        offx, offy = player.offset()
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        glTranslatef(offx, offy, 0)
+
+    def clamped_offset(self, offx, offy):
         winw, winh = window.get_size()
-        msx, msy = (ns * len(self.data[0]))-ns//2, (ns * len(self.data))-ns//2
+        msx, msy = self.size()
 
         clamp_X = msx - winw
         clamp_Y = msy - winh
@@ -671,15 +682,17 @@ class Map:
         offy = 0 if offy > 0 else offy
         offy = -clamp_Y if offy < -clamp_Y else offy
 
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glTranslatef(offx, offy, 0)
+        return offx, offy
 
     def draw(self):
         self.batch.draw()
 
     def update(self, dt):
         pass
+
+    def size(self):
+        ns = self.node_size
+        return (ns * len(self.data[0]))-ns//2, (ns * len(self.data))-ns//2
 
     def __getitem__(self, val):
         return self.spawn_data.get(val, None)
@@ -767,7 +780,7 @@ class Level:
 
         # -- add player to map position
         player = Player(self.map['player_position'], (50, 50),
-            Resources.instance.sprite("hitman1_gun"), self.agent_batch)
+            Resources.instance.sprite("hitman1_gun"), self.agent_batch, self.map)
         self.agents.append(player)
         self.hud.add(player.healthbar)
 
@@ -1117,7 +1130,6 @@ def on_draw():
     if DEBUG:
         fps.draw()
         phy.debug_draw()
-
 
 @window.event
 def on_resize(w, h):
