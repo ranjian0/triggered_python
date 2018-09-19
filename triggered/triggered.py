@@ -671,6 +671,7 @@ class Map:
         glTranslatef(offx, offy, 0)
 
     def clamped_offset(self, offx, offy):
+        # -- clamp offset so that viewport doesnt go beyond map bounds
         winw, winh = window.get_size()
         msx, msy = self.size()
 
@@ -686,9 +687,6 @@ class Map:
 
     def draw(self):
         self.batch.draw()
-
-    def update(self, dt):
-        pass
 
     def size(self):
         ns = self.node_size
