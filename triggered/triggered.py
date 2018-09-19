@@ -208,7 +208,7 @@ class Player:
         self.dead = False
         self.health = 100
         self.damage = 5
-        self.healthbar = HealthBar((0, window.height))
+        self.healthbar = HealthBar((10, window.height))
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
@@ -225,7 +225,7 @@ class Player:
         # player physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
-        self.shape = pm.Circle(self.body, size[0]/2)
+        self.shape = pm.Circle(self.body, size[0]*.45)
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
@@ -330,7 +330,7 @@ class Player:
             bullet.update(dt)
 
         # -- update health bar
-        self.healthbar.set_pos((0, window.height))
+        self.healthbar.set_pos((10, window.height))
 
 class EnemyState(Enum):
     IDLE    = 0
@@ -379,7 +379,7 @@ class Enemy:
         # enemy physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
-        self.shape = pm.Circle(self.body, size[0]/2)
+        self.shape = pm.Circle(self.body, size[0]*.45)
         self.shape.collision_type = COLLISION_MAP.get("EnemyType")
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
@@ -556,15 +556,12 @@ class Bullet:
         # Bullet physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
-        self.shape = pm.Circle(self.body, 10)
+        self.shape = pm.Circle(self.body, 10) #pm.Poly.create_box(self.body, size=(sz, sz)) -- no rotation
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
 
     def set_col_type(self, _type):
         self.shape.collision_type = _type
-
-    # def draw(self):
-    #     self.sprite.draw()
 
     def update(self, dt):
         bx, by = self.body.position
@@ -592,7 +589,6 @@ class Map:
         self.wall_img   = Resources.instance.sprite("wall_image")
         self.wall_img.width = node_size//2
         self.wall_img.height = node_size//2
-        # self.physics    = physics
 
         self.sprites    = []
         self.batch      = pg.graphics.Batch()
