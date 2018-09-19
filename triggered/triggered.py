@@ -248,6 +248,8 @@ class Player:
 
     def do_damage(self):
         self.health -= self.damage
+        if self.health > 0:
+            self.healthbar.set_value(self.health / 100)
         if self.health <= 0:
             Physics.instance.remove(self.body, self.shape)
             self.bullets.clear()
@@ -322,8 +324,6 @@ class Player:
 
         # -- update health bar
         self.healthbar.set_pos((0, window.height))
-        if self.health > 0:
-            self.healthbar.set_value(self.health / 100)
 
 class EnemyState(Enum):
     IDLE    = 0
@@ -905,7 +905,6 @@ class HUD:
             item.draw()
 
         glPopMatrix()
-
         glMatrixMode(GL_MODELVIEW)
         glPopMatrix()
 
@@ -919,17 +918,18 @@ class HealthBar:
         border.anchor_y = border.height
         self.border = pg.sprite.Sprite(border, x=position[0], y=position[1], batch=self.batch)
 
-        bar = Resources.instance.sprite("health_bar")
-        bar.anchor_y = bar.height
-        self.bar = pg.sprite.Sprite(bar, x=position[0], y=position[1], batch=self.batch)
+        self.bar_im = Resources.instance.sprite("health_bar")
+        self.bar_im.anchor_y = self.bar_im.height
+        self.bar = pg.sprite.Sprite(self.bar_im, x=position[0], y=position[1], batch=self.batch)
 
     def draw(self):
         self.batch.draw()
 
     def set_value(self, percent):
-        pass
-        # self.bar.image = self.bar_image.get_region(self.pos[0], 0,
-        #     self.bar_width*percent, self.bar_height)
+        region = self.bar_im.get_region(0, 0,
+            int(self.bar_im.width*percent), self.bar_im.height)
+        region.anchor_y = self.bar_im.height
+        self.bar.image = region
 
     def set_pos(self, pos):
         self.pos = pos
