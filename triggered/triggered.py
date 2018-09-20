@@ -655,10 +655,7 @@ class Map:
     def make_map(self):
         bg = pg.graphics.OrderedGroup(0)
         fg = pg.graphics.OrderedGroup(1)
-
         nsx, nsy = (self.node_size,)*2
-        sx = (len(self.data[0]) * nsx) - nsx/2
-        sy = (len(self.data) * nsy) - nsy/2
 
         # physics options
         wsx, wsy = (nsx//2, nsy//2)
@@ -756,6 +753,10 @@ class Map:
         offy = -clamp_Y if offy < -clamp_Y else offy
 
         return offx, offy
+
+    def make_minimap(self):
+        pass
+
 
     def draw(self):
         self.batch.draw()
