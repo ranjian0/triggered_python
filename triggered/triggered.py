@@ -961,21 +961,9 @@ class HUD:
         self.items.append(item)
 
     def draw(self):
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
-
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        glOrtho(0, window.width, 0, window.height, -1, 1)
-
-        for item in self.items:
-            item.draw()
-
-        glPopMatrix()
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
+        with reset_matrix():
+            for item in self.items:
+                item.draw()
 
 class HealthBar:
 
