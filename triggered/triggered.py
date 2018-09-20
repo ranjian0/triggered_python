@@ -84,6 +84,9 @@ class Game:
             self.manager.draw()
 
     def event(self, *args, **kwargs):
+        self.mainmenu.event(*args, **kwargs)
+        self.pausemenu.event(*args, **kwargs)
+
         if self.state == GameState.MAINMENU:
             _type = args[0]
             if _type == EventType.KEY_DOWN:
@@ -981,6 +984,11 @@ class HUD:
             for item in self.items:
                 item.draw()
 
+    def event(self, *args, **kwargs):
+        for item in self.items:
+            if hasattr(item, 'event'):
+                item.event(*args, **kwargs)
+
 class HealthBar:
 
     def __init__(self, position):
@@ -1025,14 +1033,17 @@ class MainMenu:
             self.title.draw()
             self.instruction.draw()
 
+    def event(self, _type, *args, **kwargs):
+        if _type == EventType.RESIZE:
+            w, h = args
+
+            self.title.x = w/2
+            self.title.y = h * .9
+            self.instruction.x = w/2
+
+
     def update(self, dt):
-        # -- change location on resize
-        hw = window.width/2
-
-        self.title.x = hw
-        self.title.y = window.height * .9
-
-        self.instruction.x = hw
+        pass
 
 class PauseMenu:
 
@@ -1046,12 +1057,15 @@ class PauseMenu:
         with reset_matrix():
             self.title.draw()
 
-    def update(self, dt):
-        # -- change location on resize
-        hw = window.width/2
+    def event(self, _type, *args, **kwargs):
+        if _type == EventType.RESIZE:
+            w, h = args
 
-        self.title.x = hw
-        self.title.y = window.height * .9
+            self.title.x = w/2
+            self.title.y = h * .9
+
+    def update(self, dt):
+        pass
 
 class InfoPanel:
 
