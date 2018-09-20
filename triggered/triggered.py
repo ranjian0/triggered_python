@@ -11,6 +11,7 @@ import itertools as it
 from enum import Enum
 from pyglet.gl import *
 from pyglet.window import key, mouse
+from contextlib import contextmanager
 from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
@@ -27,6 +28,7 @@ KEYMAP = {
     key.A : (-1, 0),
     key.D : (1, 0)
 }
+PAUSE_KEY = key.P
 
 RAYCAST_FILTER = 0x1
 RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
@@ -54,23 +56,61 @@ Resource = namedtuple("Resource", "name data")
 ---   CLASSES
 ============================================================
 '''
+class GameState(Enum):
+    MAINMENU    = 1
+    RUNNING     = 2
+    PAUSED      = 3
 
 class Game:
 
     def __init__(self):
+        self.state = GameState.MAINMENU
+
+        self.mainmenu = MainMenu()
+        self.pausemenu = PauseMenu()
+
         self.manager = LevelManager()
         self.manager.add([
                 Level("Kill them all", Resources.instance.level("test"))
             ])
 
     def draw(self):
-        self.manager.draw()
+        if self.state == GameState.MAINMENU:
+            self.mainmenu.draw()
+        elif self.state == GameState.PAUSED:
+            self.pausemenu.draw()
+        elif self.state == GameState.RUNNING:
+            self.manager.draw()
 
     def event(self, *args, **kwargs):
-        self.manager.event(*args, **kwargs)
+        if self.state == GameState.MAINMENU:
+            _type = args[0]
+            if _type == EventType.KEY_DOWN:
+                if args[1] == key.SPACE:
+                    self.state = GameState.RUNNING
+
+        elif self.state == GameState.PAUSED:
+            _type = args[0]
+            if _type == EventType.KEY_DOWN:
+                if args[1] == PAUSE_KEY:
+                    self.state = GameState.RUNNING
+
+        elif self.state == GameState.RUNNING:
+            self.manager.event(*args, **kwargs)
+
+            _type = args[0]
+            if _type == EventType.KEY_DOWN:
+                if args[1] == PAUSE_KEY:
+                    self.state = GameState.PAUSED
 
     def update(self, dt):
-        self.manager.update(dt)
+        if self.state == GameState.MAINMENU:
+            self.mainmenu.update(dt)
+        elif self.state == GameState.RUNNING:
+            self.manager.update(dt)
+        elif self.state == GameState.PAUSED:
+            self.pausemenu.update(dt)
+
 
 class Resources:
 
@@ -965,12 +1005,55 @@ class HealthBar:
         self.border.update(x=pos[0], y=pos[1])
         self.bar.update(x=pos[0], y=pos[1])
 
+class MainMenu:
+
+    def __init__(self):
+        self.title = pg.text.Label("TRIGGERED",
+            bold=True, color=(255, 255, 0, 255),
+            font_size=48, x=window.width/2, y=window.height*.9,
+            anchor_x='center', anchor_y='center')
+
+        self.instruction = pg.text.Label("Press Space to play",
+            x=window.width/2, y=10, anchor_x='center')
+
+    def draw(self):
+        with reset_matrix():
+            self.title.draw()
+            self.instruction.draw()
+
+    def update(self, dt):
+        # -- change location on resize
+        hw = window.width/2
+
+        self.title.x = hw
+        self.title.y = window.height * .9
+
+        self.instruction.x = hw
+
+class PauseMenu:
+
+    def __init__(self):
+        self.title = pg.text.Label("PAUSED",
+            bold=True, color=(255, 255, 0, 255),
+            font_size=48, x=window.width/2, y=window.height*.9,
+            anchor_x='center', anchor_y='center')
+
+    def draw(self):
+        with reset_matrix():
+            self.title.draw()
+
+    def update(self, dt):
+        # -- change location on resize
+        hw = window.width/2
+
+        self.title.x = hw
+        self.title.y = window.height * .9
+
 '''
 ============================================================
 ---   FUNCTIONS
 ============================================================
 '''
-
 def normalize(p):
     mag = math.sqrt(distance_sqr((0, 0), p))
     if mag:
@@ -978,6 +1061,23 @@ def normalize(p):
         y = p[1] / mag
         return (x, y)
     return p
+
+@contextmanager
+def reset_matrix():
+    glMatrixMode(GL_MODELVIEW)
+    glPushMatrix()
+    glLoadIdentity()
+
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix()
+    glLoadIdentity()
+    glOrtho(0, window.width, 0, window.height, -1, 1)
+
+    yield
+
+    glPopMatrix()
+    glMatrixMode(GL_MODELVIEW)
+    glPopMatrix()
 
 def distance_sqr(p1, p2):
     dx = p2[0] - p1[0]
