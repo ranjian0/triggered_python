@@ -344,6 +344,7 @@ class Player:
             x, y, dx, dy = args
             px, py = self.screen_coords()
             self.angle = math.degrees(-math.atan2(y - py, x - px))
+            self.sprite.update(rotation=self.angle)
 
         elif type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
@@ -358,8 +359,6 @@ class Player:
             self.healthbar.set_pos((10, h))
 
     def update(self, dt):
-        self.sprite.update(rotation=self.angle)
-
         # -- movements
         dx, dy = 0, 0
         for _key, _dir in KEYMAP.items():
