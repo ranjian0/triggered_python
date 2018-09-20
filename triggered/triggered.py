@@ -270,10 +270,6 @@ class Player:
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
 
-        # -- weird bug - have to push twice
-        window.push_handlers(KEYS)
-        window.push_handlers(KEYS)
-
         # -- collision handlers
         Physics.instance.add_collision_handler(
                 COLLISION_MAP.get("PlayerType"),
@@ -1220,6 +1216,10 @@ def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
 window = pg.window.Window(*SIZE, resizable=True)
 window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
+
+# -- wierd bug - have to push twice
+window.push_handlers(KEYS)
+window.push_handlers(KEYS)
 
 fps  = pg.window.FPSDisplay(window)
 res  = Resources()
