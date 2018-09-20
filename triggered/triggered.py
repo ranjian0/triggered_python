@@ -41,6 +41,7 @@ COLLISION_MAP = {
 }
 
 BULLET_SIZE = 12
+MINIMAP_AGENT_SIZE = 25
 
 class EventType(Enum):
     KEY_DOWN = 1
@@ -754,8 +755,39 @@ class Map:
 
         return offx, offy
 
-    def make_minimap(self):
-        pass
+    def make_minimap(self, size, wall_color=(255, 255, 0, 200),
+        background_color=(0, 0, 0, 0)):
+        sx, sy = [s/ms for s, ms in zip(size, self.size())]
+        nsx, nsy = (self.node_size,)*2
+
+        background_image = pg.image.SolidColorImagePattern(background_color)
+        background_image = background_image.create_image(*self.size())
+        background = background_image.get_texture()
+
+        wall_image = pg.image.SolidColorImagePattern(wall_color)
+        wall_image = wall_image.create_image(nsx//2, nsy//2)
+        wall = wall_image.get_texture()
+
+        for y, row in enumerate(self.data):
+            for x, data in enumerate(row):
+                offx, offy = x * nsx, y * nsy
+
+                if data == "#":
+                    background.blit_into(wall_image, offx, offy, 0)
+
+                    # Fill gaps
+                    # -- gaps along x-axis
+                    if x < len(row) - 1 and self.data[y][x + 1] == "#":
+                        background.blit_into(wall_image, offx+nsx//2, offy, 0)
+
+                    # -- gaps along y-axis
+                    if y < len(self.data) - 1 and self.data[y + 1][x] == "#":
+                        background.blit_into(wall_image, offx, offy+nsy//2, 0)
+
+        sp = pg.sprite.Sprite(background)
+        sp.scale_x = sx
+        sp.scale_y = sy
+        return sp
 
 
     def draw(self):
@@ -841,10 +873,10 @@ class Level:
         self.agent_batch = pg.graphics.Batch()
 
         self.hud = HUD()
-        self.infopanel = InfoPanel(name, data.objectives)
         self.reload()
 
         self.status = LevelStatus.RUNNING
+        self.infopanel = InfoPanel(name, data.objectives, self.map, self.agents)
         self.show_info = False
 
     def reload(self):
@@ -1074,32 +1106,64 @@ class PauseMenu:
 
 class InfoPanel:
 
-    def __init__(self, level_name, objs):
+    def __init__(self, level_name, objs, _map, agents):
         self.level_name = level_name
         self.objectives = objs
+        self.map = _map
+        self.agents = agents
 
         self.panel = self.create_panel()
         self.title = self.create_title()
         self.objs = self.create_objectives()
+        self.minimap = self.create_minimap()
+
+        # -- minimap images
+        player_img = Resources.instance.sprite("minimap_player")
+        player_img.width = MINIMAP_AGENT_SIZE
+        player_img.height = MINIMAP_AGENT_SIZE
+        player_img.anchor_x = player_img.width/2
+        player_img.anchor_y = player_img.height/2
+        self.minimap_player = pg.sprite.Sprite(player_img)
+
+        enemy_img = Resources.instance.sprite("minimap_enemy")
+        enemy_img.width = MINIMAP_AGENT_SIZE
+        enemy_img.height = MINIMAP_AGENT_SIZE
+        enemy_img.anchor_x = enemy_img.width/2
+        enemy_img.anchor_y = enemy_img.height/2
+        self.minimap_enemy = pg.sprite.Sprite(enemy_img)
 
     def draw(self):
-        self.panel.blit(0, 0)
-        self.title.draw()
-        self.objs.draw()
+        with reset_matrix():
+            self.panel.blit(0, 0)
+            self.title.draw()
+            self.objs.draw()
+            self.minimap.draw()
+            self.draw_minimap_agents()
 
     def update(self, dt):
-        pass
+        w, h = self.minimap.width, self.minimap.height
+        offx, offy = self.minimap.x - w, self.minimap.y - h
+        sx, sy = [mini/_map for mini, _map in zip((w,h), self.map.size())]
+
+        for agent in self.agents:
+            px, py = agent.pos
+            _x = offx + (px*sx)
+            _y = offy + (py*sy)
+
+            if isinstance(agent, Player):
+                self.minimap_player.update(x=_x, y=_y)
+            elif isinstance(agent, Enemy):
+                self.minimap_enemy.update(x=_x, y=_y)
 
     def event(self, _type, *args, **kwargs):
         if _type == EventType.RESIZE:
             self.panel = self.create_panel()
             self.title = self.create_title()
             self.objs = self.create_objectives()
+            self.minimap = self.create_minimap()
 
     def create_panel(self):
         w, h = window.get_size()
-
-        # -- background
         img = pg.image.SolidColorImagePattern((100, 100, 100, 200))
         panel_background = img.create_image(w, h)
         return panel_background
@@ -1117,6 +1181,25 @@ class InfoPanel:
 
         return pg.text.Label(text, color=(255, 255, 255, 200), width=w/3,
             font_size=16, x=15, y=h*.9, anchor_y='top', multiline=True, italic=True)
+
+    def create_minimap(self):
+        w, h = window.get_size()
+
+        msx, msy = w*.67, h*.9
+        minimap = self.map.make_minimap((msx, msy), (255, 255, 255, 200))
+        minimap.image.anchor_x = minimap.image.width
+        minimap.image.anchor_y = minimap.image.height
+        minimap.x = w
+        minimap.y = h*.9
+        return minimap
+
+    def draw_minimap_agents(self):
+        for agent in self.agents:
+            if isinstance(agent, Player):
+                self.minimap_player.draw()
+            elif isinstance(agent, Enemy):
+                self.minimap_enemy.draw()
+
 
 
 '''
