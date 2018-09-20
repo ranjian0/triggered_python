@@ -1292,7 +1292,11 @@ def setup_collisions(space):
 
         normal = eshape.body.position - eshape1.body.position
         normal = normal.normalized()
-        eshape.body.position = eshape1.body.position + (normal * (eshape.radius*2))
+
+        # -- to prevent, dead stop, move eshape a litte perpendicular to collision normal
+        perp = pm.Vec2d(normal.y, -normal.x)
+        perp_move = perp * (eshape.radius*2)
+        eshape.body.position = eshape1.body.position + (normal * (eshape.radius*2)) + perp_move
         return True
 
     handler = space.add_collision_handler(
