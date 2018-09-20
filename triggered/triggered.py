@@ -65,7 +65,7 @@ class GameState(Enum):
 class Game:
 
     def __init__(self):
-        self.state = GameState.MAINMENU
+        self.state = GameState.RUNNING
 
         self.mainmenu = MainMenu()
         self.pausemenu = PauseMenu()
@@ -1059,11 +1059,27 @@ class InfoPanel:
         self.level_name = level_name
         self.objectives = objs
 
+        self.panel = self.create_panel()
+
     def draw(self):
-        pass
+        self.panel.blit(0, 0)
 
     def update(self, dt):
         pass
+
+    def create_panel(self):
+        w, h = window.get_size()
+
+        # -- background
+        img = pg.image.SolidColorImagePattern((100, 100, 100, 200))
+        panel_background = img.create_image(w, h)
+
+        # -- add level name
+        level_name = pg.text.Label(self.level_name,
+            font_size=24, x=w/2, y=h/2, anchor_x='center', anchor_y='center')
+        # panel_background.blit_into(level_name, w/2, h*.9, 0)
+        return panel_background
+
 '''
 ============================================================
 ---   FUNCTIONS
