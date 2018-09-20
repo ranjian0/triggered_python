@@ -626,7 +626,7 @@ class Map:
 
         self.data       = list(reversed(data))
         self.node_size  = node_size
-        self.wall_img   = Resources.instance.sprite("wall_image")
+        self.wall_img   = Resources.instance.sprite("wall")
         self.wall_img.width = node_size//2
         self.wall_img.height = node_size//2
 
