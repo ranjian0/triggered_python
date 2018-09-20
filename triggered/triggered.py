@@ -642,6 +642,9 @@ class Map:
         self.spawn_data = self.parse_spawn_points()
 
     def make_map(self):
+        bg = pg.graphics.OrderedGroup(0)
+        fg = pg.graphics.OrderedGroup(1)
+
         nsx, nsy = (self.node_size,)*2
         sx = (len(self.data[0]) * nsx) - nsx/2
         sy = (len(self.data) * nsy) - nsy/2
@@ -654,14 +657,14 @@ class Map:
                 offx, offy = x * nsx, y * nsy
 
                 # -- create floor tiles
-                sp = pg.sprite.Sprite(self.floor_img, x=offx, y=offy, batch=self.batch)
+                sp = pg.sprite.Sprite(self.floor_img, x=offx, y=offy, batch=self.batch, group=bg)
                 self.sprites.append(sp)
 
                 directions = [(1, 0), (0, 1), (1,1)]
                 for dx, dy in directions:
                     px = offx + (dx * nsx/2)
                     py = offy + (dy * nsx/2)
-                    s = pg.sprite.Sprite(self.floor_img, x=px, y=py, batch=self.batch)
+                    s = pg.sprite.Sprite(self.floor_img, x=px, y=py, batch=self.batch, group=bg)
 
                     if dx:
                         s.anchor_x = self.floor_img.width/2
@@ -671,21 +674,21 @@ class Map:
 
                 # -- create walls
                 if data == "#":
-                    sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch)
+                    sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch, group=fg)
                     self.sprites.append(sp)
                     add_wall((offx + wsx/2, offy + wsy/2), (wsx, wsy))
 
                     # Fill gaps
                     # -- gaps along x-axis
                     if x < len(row) - 1 and self.data[y][x + 1] == "#":
-                        sp = pg.sprite.Sprite(self.wall_img, x=offx + nsx/2, y=offy, batch=self.batch)
+                        sp = pg.sprite.Sprite(self.wall_img, x=offx + nsx/2, y=offy, batch=self.batch, group=fg)
                         self.sprites.append(sp)
                         add_wall((offx + wsx/2 + nsx/2, offy + wsy/2), (wsx, wsy))
 
 
                     # -- gaps along y-axis
                     if y < len(self.data) - 1 and self.data[y + 1][x] == "#":
-                        sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy + nsy/2, batch=self.batch)
+                        sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy + nsy/2, batch=self.batch, group=fg)
                         self.sprites.append(sp)
                         add_wall((offx + wsx/2, offy + wsy/2 + nsy/2), (wsx, wsy))
 
