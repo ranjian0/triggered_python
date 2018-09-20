@@ -1130,7 +1130,9 @@ class InfoPanel:
         enemy_img.height = MINIMAP_AGENT_SIZE
         enemy_img.anchor_x = enemy_img.width/2
         enemy_img.anchor_y = enemy_img.height/2
-        self.minimap_enemy = pg.sprite.Sprite(enemy_img)
+
+        num_enemies = len([a for a in self.agents if isinstance(a, Enemy)])
+        self.minimap_enemies = [pg.sprite.Sprite(enemy_img) for _ in range(num_enemies)]
 
     def draw(self):
         with reset_matrix():
@@ -1141,10 +1143,12 @@ class InfoPanel:
             self.draw_minimap_agents()
 
     def update(self, dt):
+        # -- update position of agents on minimap
         w, h = self.minimap.width, self.minimap.height
         offx, offy = self.minimap.x - w, self.minimap.y - h
         sx, sy = [mini/_map for mini, _map in zip((w,h), self.map.size())]
 
+        e_idx = 0
         for agent in self.agents:
             px, py = agent.pos
             _x = offx + (px*sx)
@@ -1153,7 +1157,8 @@ class InfoPanel:
             if isinstance(agent, Player):
                 self.minimap_player.update(x=_x, y=_y)
             elif isinstance(agent, Enemy):
-                self.minimap_enemy.update(x=_x, y=_y)
+                self.minimap_enemies[e_idx].update(x=_x, y=_y)
+                e_idx += 1
 
     def event(self, _type, *args, **kwargs):
         if _type == EventType.RESIZE:
@@ -1194,11 +1199,13 @@ class InfoPanel:
         return minimap
 
     def draw_minimap_agents(self):
+        e_idx = 0
         for agent in self.agents:
             if isinstance(agent, Player):
                 self.minimap_player.draw()
             elif isinstance(agent, Enemy):
-                self.minimap_enemy.draw()
+                self.minimap_enemies[e_idx].draw()
+                e_idx += 1
 
 
 
