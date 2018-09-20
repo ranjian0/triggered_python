@@ -397,12 +397,16 @@ class Enemy:
         self.pos   = position
         self.size  = size
         self.speed = 100
+        self.angle = 0
         # --health properties
         self.health = 100
         self.damage = 10
         self.dead = False
         # -- weapon properties
         self.bullets = []
+        self.muzzle_offset = (self.size[0]/2+BULLET_SIZE/2, -self.size[1]*.21)
+        self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
+        self.muzzle_angle = angle(self.muzzle_offset)
         # --
         self.batch = batch
 
@@ -474,8 +478,8 @@ class Enemy:
     def look_at(self, target):
         tx, ty = target
         px, py = self.pos
-        angle = math.degrees(-math.atan2(ty - py, tx - px))
-        self.sprite.update(rotation=angle)
+        self.angle = math.degrees(-math.atan2(ty - py, tx - px))
+        self.sprite.update(rotation=self.angle)
 
     def update(self, dt):
         player = self.player_target
@@ -561,8 +565,10 @@ class Enemy:
             diff = target[0] - px, target[1] - py
             _dir = normalize(diff)
 
-            px += _dir[0] * self.size[0]
-            py += _dir[1] * self.size[1]
+            angle = self.muzzle_angle - self.angle
+            dx, dy = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+            px += dx * self.muzzle_mag
+            py += dy * self.muzzle_mag
 
             b = Bullet((px, py), _dir, self.batch)
             b.set_col_type(COLLISION_MAP.get("EnemyBulletType"))
@@ -1170,7 +1176,6 @@ class InfoPanel:
             elif isinstance(agent, Enemy):
                 self.minimap_enemies[e_idx].draw()
                 e_idx += 1
-
 
 
 '''
