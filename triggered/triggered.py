@@ -262,6 +262,9 @@ class Player:
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
+        self.muzzle_offset = (self.size[0]/2+6, -self.size[1]*.21)
+        self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
+        self.muzzle_angle = angle(self.muzzle_offset)
 
         # Create Player Image
         self.image = image
@@ -325,10 +328,10 @@ class Player:
 
         # -- eject bullet
         px, py = self.pos
-        _dir = normalize(_dir)
-
-        px += _dir[0] * self.size[0]*.75
-        py += _dir[1] * self.size[1]*.75
+        angle = self.muzzle_angle - self.angle
+        dx, dy = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+        px += dx * self.muzzle_mag
+        py += dy * self.muzzle_mag
 
         b = Bullet((px, py), _dir, self.batch)
         b.set_col_type(COLLISION_MAP.get("PlayerBulletType"))
@@ -345,7 +348,7 @@ class Player:
 
             if btn == mouse.LEFT:
                 px, py = self.screen_coords()
-                direction = x - px, y - py
+                direction = normalize((x - px, y - py))
                 self.shoot(direction)
 
         elif type == EventType.RESIZE:
@@ -1091,7 +1094,6 @@ class InfoPanel:
             self.title = self.create_title()
             self.objs = self.create_objectives()
 
-
     def create_panel(self):
         w, h = window.get_size()
 
@@ -1120,6 +1122,10 @@ class InfoPanel:
 ---   FUNCTIONS
 ============================================================
 '''
+def angle(p):
+    nx, ny = normalize(p)
+    return math.degrees(math.atan2(ny, nx))
+
 def normalize(p):
     mag = math.sqrt(distance_sqr((0, 0), p))
     if mag:
