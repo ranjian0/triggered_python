@@ -50,6 +50,7 @@ class EventType(Enum):
     RESIZE = 6
 
 Resource = namedtuple("Resource", "name data")
+LevelData = namedtuple("LevelData", "map objectives")
 
 '''
 ============================================================
@@ -175,10 +176,16 @@ class Resources:
             self._data['levels'].append(Resource(fn,lvl))
 
     def _parse_level(self, file):
-        result = []
+        map_data = []
+        objectives = []
+
         for line in file.readlines():
-            result.append(list(line.strip()))
-        return result
+            if line.startswith('#'):
+                map_data.append(list(line.strip()))
+            elif line.startswith(":"):
+                objectives.append(line.strip()[1:])
+
+        return LevelData(map_data, objectives)
 
 class Physics:
 
@@ -825,13 +832,15 @@ class Level:
         self.agent_batch = pg.graphics.Batch()
 
         self.hud = HUD()
+        self.infopanel = InfoPanel(name, data.objectives)
         self.reload()
 
         self.status = LevelStatus.RUNNING
+        self.show_info = False
 
     def reload(self):
         self.agents.clear()
-        self.map = Map(self.data, physics=Physics.instance)
+        self.map = Map(self.data.map, physics=Physics.instance)
 
         # -- add player to map position
         player = Player(self.map['player_position'], (50, 50),
@@ -866,6 +875,9 @@ class Level:
         self.agent_batch.draw()
         self.hud.draw()
 
+        if self.show_info:
+            self.infopanel.draw()
+
         if DEBUG:
             for agent in self.agents:
                 if isinstance(agent, Enemy):
@@ -896,6 +908,11 @@ class Level:
 
         if len(self.get_enemies()) == 0:
             self.status = LevelStatus.PASSED
+
+        # show info panel
+        self.show_info = KEYS[key.TAB]
+        if self.show_info:
+            self.infopanel.update(dt)
 
     def event(self, *args, **kwargs):
         for agent in self.agents:
@@ -1036,6 +1053,17 @@ class PauseMenu:
         self.title.x = hw
         self.title.y = window.height * .9
 
+class InfoPanel:
+
+    def __init__(self, level_name, objs):
+        self.level_name = level_name
+        self.objectives = objs
+
+    def draw(self):
+        pass
+
+    def update(self, dt):
+        pass
 '''
 ============================================================
 ---   FUNCTIONS
