@@ -915,14 +915,13 @@ class Level:
         if self.show_info:
             self.infopanel.update(dt)
 
-    def event(self, *args, **kwargs):
+    def event(self, _type, *args, **kwargs):
+        self.infopanel.event(_type, *args, **kwargs)
         for agent in self.agents:
             if hasattr(agent, 'event'):
-                agent.event(*args, **kwargs)
+                agent.event(_type, *args, **kwargs)
 
         if DEBUG:
-            _type = args[0]
-
             if _type == EventType.KEY_DOWN:
                 k = args[1]
                 if k == key.TAB:
@@ -1067,6 +1066,10 @@ class InfoPanel:
 
     def update(self, dt):
         pass
+
+    def event(self, _type, *args, **kwargs):
+        if _type == EventType.RESIZE:
+            self.panel = self.create_panel()
 
     def create_panel(self):
         w, h = window.get_size()
