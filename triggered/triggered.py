@@ -1074,9 +1074,13 @@ class InfoPanel:
         self.objectives = objs
 
         self.panel = self.create_panel()
+        self.title = self.create_title()
+        self.objs = self.create_objectives()
 
     def draw(self):
         self.panel.blit(0, 0)
+        self.title.draw()
+        self.objs.draw()
 
     def update(self, dt):
         pass
@@ -1084,6 +1088,9 @@ class InfoPanel:
     def event(self, _type, *args, **kwargs):
         if _type == EventType.RESIZE:
             self.panel = self.create_panel()
+            self.title = self.create_title()
+            self.objs = self.create_objectives()
+
 
     def create_panel(self):
         w, h = window.get_size()
@@ -1091,12 +1098,22 @@ class InfoPanel:
         # -- background
         img = pg.image.SolidColorImagePattern((100, 100, 100, 200))
         panel_background = img.create_image(w, h)
-
-        # -- add level name
-        level_name = pg.text.Label(self.level_name,
-            font_size=24, x=w/2, y=h/2, anchor_x='center', anchor_y='center')
-        # panel_background.blit_into(level_name, w/2, h*.9, 0)
         return panel_background
+
+    def create_title(self):
+        w, h = window.get_size()
+        level_name = pg.text.Label(self.level_name.title(), color=(255, 0, 0, 200),
+            font_size=24, x=w/2, y=h*.95, anchor_x='center', anchor_y='center', bold=True)
+        return level_name
+
+    def create_objectives(self):
+        txt_objs = "".join(["- "+obj+'\n' for obj in self.objectives])
+        text = f"""Objectives:\n {txt_objs}"""
+        w, h = window.get_size()
+
+        return pg.text.Label(text, color=(255, 255, 255, 200), width=w/3,
+            font_size=16, x=15, y=h*.9, anchor_y='top', multiline=True, italic=True)
+
 
 '''
 ============================================================

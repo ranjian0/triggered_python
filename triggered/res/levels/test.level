@@ -10,6 +10,6 @@
 # p          #
 ##############
 
-: Kill all enemy robots
-: Find control panel
-: Escape
+:Kill all robots
+:Find control panel
+:Escape
