@@ -1284,7 +1284,7 @@ def on_draw():
 
 @window.event
 def on_resize(w, h):
-    pass
+    game.event(EventType.RESIZE, w, h)
 
 @window.event
 def on_key_press(key, modifiers):
