@@ -345,6 +345,10 @@ class Player:
                 direction = x - px, y - py
                 self.shoot(direction)
 
+        elif type == EventType.RESIZE:
+            w, h = args
+            self.healthbar.set_pos((10, h))
+
     def update(self, dt):
         self.sprite.update(rotation=self.angle)
 
@@ -371,9 +375,6 @@ class Player:
         self.bullets = [b for b in self.bullets if not b.destroyed]
         for bullet in self.bullets:
             bullet.update(dt)
-
-        # -- update health bar
-        self.healthbar.set_pos((10, window.height))
 
 class EnemyState(Enum):
     IDLE    = 0
