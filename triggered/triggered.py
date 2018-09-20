@@ -633,24 +633,24 @@ class Map:
 
     def __init__(self, data,
                     wall_img  = None,
-                    node_size = 200,
+                    node_size = 100,
                     physics   = None):
 
         self.data       = list(reversed(data))
         self.node_size  = node_size
         self.wall_img   = Resources.instance.sprite("wall")
-        self.wall_img.width = node_size//2
-        self.wall_img.height = node_size//2
+        self.wall_img.width = node_size
+        self.wall_img.height = node_size
 
         self.floor_img   = Resources.instance.sprite("floor")
-        self.floor_img.width = node_size//2
-        self.floor_img.height = node_size//2
+        self.floor_img.width = node_size
+        self.floor_img.height = node_size
 
         self.sprites    = []
         self.batch      = pg.graphics.Batch()
         self.make_map()
 
-        self.pathfinder = PathFinder(data, node_size)
+        self.pathfinder = PathFinder(self.data, node_size)
         self.spawn_data = self.parse_spawn_points()
 
     def make_map(self):
@@ -658,48 +658,20 @@ class Map:
         fg = pg.graphics.OrderedGroup(1)
         nsx, nsy = (self.node_size,)*2
 
-        # physics options
-        wsx, wsy = (nsx//2, nsy//2)
-
         for y, row in enumerate(self.data):
             for x, data in enumerate(row):
                 offx, offy = x * nsx, y * nsy
 
                 # -- create floor tiles
-                sp = pg.sprite.Sprite(self.floor_img, x=offx, y=offy, batch=self.batch, group=bg)
-                self.sprites.append(sp)
-
-                directions = [(1, 0), (0, 1), (1,1)]
-                for dx, dy in directions:
-                    px = offx + (dx * nsx/2)
-                    py = offy + (dy * nsx/2)
-                    s = pg.sprite.Sprite(self.floor_img, x=px, y=py, batch=self.batch, group=bg)
-
-                    if dx:
-                        s.anchor_x = self.floor_img.width/2
-                        s.anchor_y = self.floor_img.height/2
-                        s.update(rotation=90)
-                    self.sprites.append(s)
+                if data != "#":
+                    sp = pg.sprite.Sprite(self.floor_img, x=offx, y=offy, batch=self.batch, group=bg)
+                    self.sprites.append(sp)
 
                 # -- create walls
                 if data == "#":
                     sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch, group=fg)
                     self.sprites.append(sp)
-                    add_wall((offx + wsx/2, offy + wsy/2), (wsx, wsy))
-
-                    # Fill gaps
-                    # -- gaps along x-axis
-                    if x < len(row) - 1 and self.data[y][x + 1] == "#":
-                        sp = pg.sprite.Sprite(self.wall_img, x=offx + nsx/2, y=offy, batch=self.batch, group=fg)
-                        self.sprites.append(sp)
-                        add_wall((offx + wsx/2 + nsx/2, offy + wsy/2), (wsx, wsy))
-
-
-                    # -- gaps along y-axis
-                    if y < len(self.data) - 1 and self.data[y + 1][x] == "#":
-                        sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy + nsy/2, batch=self.batch, group=fg)
-                        self.sprites.append(sp)
-                        add_wall((offx + wsx/2, offy + wsy/2 + nsy/2), (wsx, wsy))
+                    add_wall((offx + nsx/2, offy + nsy/2), (nsx, nsy))
 
     def parse_spawn_points(self):
         spawn_data = {
@@ -715,7 +687,7 @@ class Map:
         nsx, nsy = (self.node_size,)*2
         for y, row in enumerate(self.data):
             for x, data in enumerate(row):
-                location = (x*nsx, y*nsy)
+                location = (x*nsx) + nsx/2, (y*nsy) + nsy/2
 
                 if   data == "p":
                     spawn_data['player_position'] = location
@@ -765,7 +737,7 @@ class Map:
         background = background_image.get_texture()
 
         wall_image = pg.image.SolidColorImagePattern(wall_color)
-        wall_image = wall_image.create_image(nsx//2, nsy//2)
+        wall_image = wall_image.create_image(nsx, nsy)
         wall = wall_image.get_texture()
 
         for y, row in enumerate(self.data):
@@ -775,20 +747,10 @@ class Map:
                 if data == "#":
                     background.blit_into(wall_image, offx, offy, 0)
 
-                    # Fill gaps
-                    # -- gaps along x-axis
-                    if x < len(row) - 1 and self.data[y][x + 1] == "#":
-                        background.blit_into(wall_image, offx+nsx//2, offy, 0)
-
-                    # -- gaps along y-axis
-                    if y < len(self.data) - 1 and self.data[y + 1][x] == "#":
-                        background.blit_into(wall_image, offx, offy+nsy//2, 0)
-
         sp = pg.sprite.Sprite(background)
         sp.scale_x = sx
         sp.scale_y = sy
         return sp
-
 
     def draw(self):
         self.batch.draw()
@@ -808,9 +770,11 @@ class PathFinder:
 
     def walkable(self):
         # -- find all walkable nodes
+        add = lambda p1, p2 : (p1[0]+p2[0], p1[1]+p2[1])
         mul = lambda p1, p2 : (p1[0]*p2[0], p1[1]*p2[1])
 
-        walkable = [mul((x, y), self.node_size) for y, data in enumerate(self.data)
+        hns = (self.node_size[0]/2, self.node_size[1]/2)
+        walkable = [add(hns, mul((x, y), self.node_size)) for y, data in enumerate(self.data)
             for x, d in enumerate(data) if d != '#']
         return walkable
 
