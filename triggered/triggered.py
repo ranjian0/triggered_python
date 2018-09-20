@@ -40,6 +40,7 @@ COLLISION_MAP = {
     "EnemyBulletType"  : 5
 }
 
+BULLET_SIZE = 12
 
 class EventType(Enum):
     KEY_DOWN = 1
@@ -262,7 +263,7 @@ class Player:
         # -- weapon properties
         self.ammo   = 150
         self.bullets = []
-        self.muzzle_offset = (self.size[0]/2+6, -self.size[1]*.21)
+        self.muzzle_offset = (self.size[0]/2+BULLET_SIZE/2, -self.size[1]*.21)
         self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
         self.muzzle_angle = angle(self.muzzle_offset)
 
@@ -591,7 +592,7 @@ class Bullet:
         self.destroyed = False
 
         # image
-        sz = 12
+        sz = BULLET_SIZE
         self.image = Resources.instance.sprite("bullet")
         self.image.width = sz
         self.image.height = sz
