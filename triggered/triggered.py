@@ -868,7 +868,6 @@ class Level:
         random.seed(self.seed)
         for point in self.map['enemy_position']:
             patrol_point = random.choice(self.map['patrol_positions'])
-            print(f"Point  {point} Patrol {patrol_point}")
 
             patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
             path = patrol + list(reversed(patrol[1:-1]))
