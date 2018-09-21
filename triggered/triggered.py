@@ -257,6 +257,7 @@ class Player:
         self.speed  = 100
         # -- health properties
         self.dead = False
+        self.max_health = 900
         self.health = 900
         self.damage = 5
         self.healthbar = HealthBar((10, window.height))
@@ -302,7 +303,7 @@ class Player:
         self.health -= self.damage
         if self.health < 0: return
         if self.health > 0:
-            self.healthbar.set_value(self.health / 100)
+            self.healthbar.set_value(self.health / self.max_health)
         if self.health == 0:
             Physics.instance.remove(self.body, self.shape)
             self.bullets.clear()
