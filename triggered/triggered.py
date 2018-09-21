@@ -75,7 +75,7 @@ class Game:
 
         self.manager = LevelManager()
         self.manager.add([
-                Level("Kill them all", Resources.instance.level("test"))
+                Level("Kill them all", Resources.instance.level("test"), 1024)
             ])
 
     def draw(self):
@@ -837,9 +837,10 @@ class LevelStatus(Enum):
 
 class Level:
 
-    def __init__(self, name, data):
+    def __init__(self, name, data, seed):
         self.name = name
         self.data = data
+        self.seed = seed
 
         self.map = None
         self.agents = []
@@ -864,8 +865,10 @@ class Level:
         self.hud.add(player.ammobar)
 
         # -- add other agents map positions
+        random.seed(self.seed)
         for point in self.map['enemy_position']:
             patrol_point = random.choice(self.map['patrol_positions'])
+            print(f"Point  {point} Patrol {patrol_point}")
 
             patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
             path = patrol + list(reversed(patrol[1:-1]))
