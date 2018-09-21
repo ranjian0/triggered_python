@@ -186,7 +186,7 @@ class Resources:
         objectives = []
 
         for line in file.readlines():
-            if line.startswith('#'):
+            if line.startswith("#"):
                 map_data.append(list(line.strip()))
             elif line.startswith(":"):
                 objectives.append(line.strip()[1:])
