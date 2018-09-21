@@ -42,6 +42,7 @@ COLLISION_MAP = {
 
 BULLET_SIZE = 12
 MINIMAP_AGENT_SIZE = 25
+AMMO_IMG_HEIGHT = 30
 
 class EventType(Enum):
     KEY_DOWN = 1
@@ -262,11 +263,12 @@ class Player:
         self.damage = 5
         self.healthbar = HealthBar((10, window.height))
         # -- weapon properties
-        self.ammo   = 150
+        self.ammo   = 350
         self.bullets = []
         self.muzzle_offset = (self.size[0]/2+BULLET_SIZE/2, -self.size[1]*.21)
         self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
         self.muzzle_angle = angle(self.muzzle_offset)
+        self.ammobar = AmmoBar((10, window.height - (AMMO_IMG_HEIGHT*1.5)), self.ammo)
 
         # Create Player Image
         self.image = image
@@ -327,6 +329,7 @@ class Player:
         # -- reduce ammo
         if self.ammo <= 0: return
         self.ammo -= 1
+        self.ammobar.set_value(self.ammo)
 
         # -- eject bullet
         px, py = self.pos
@@ -357,6 +360,7 @@ class Player:
         elif type == EventType.RESIZE:
             w, h = args
             self.healthbar.set_pos((10, h))
+            self.ammobar.set_pos((10, window.height - (AMMO_IMG_HEIGHT*1.5)))
 
     def update(self, dt):
         # -- movements
@@ -857,6 +861,7 @@ class Level:
             Resources.instance.sprite("hitman1_gun"), self.agent_batch, self.map)
         self.agents.append(player)
         self.hud.add(player.healthbar)
+        self.hud.add(player.ammobar)
 
         # -- add other agents map positions
         for point in self.map['enemy_position']:
@@ -1022,6 +1027,52 @@ class HealthBar:
         self.pos = pos
         self.border.update(x=pos[0], y=pos[1])
         self.bar.update(x=pos[0], y=pos[1])
+
+class AmmoBar:
+
+    def __init__(self, position, ammo):
+        self.pos = position
+        self.batch = pg.graphics.Batch()
+        self.ammo = ammo
+
+        self.ammo_img = Resources.instance.sprite("ammo_bullet")
+        self.ammo_img.width = AMMO_IMG_HEIGHT//3
+        self.ammo_img.height = AMMO_IMG_HEIGHT
+        self.ammo_img.anchor_y = self.ammo_img.height
+        self.bullets = [pg.sprite.Sprite(self.ammo_img, batch=self.batch)
+            for _ in range(ammo // 100)]
+
+        self.ammo_text = pg.text.Label(f" X {self.ammo}", bold=True,
+            font_size=12, color=(200, 200, 0, 255), batch=self.batch,
+            anchor_y='top', anchor_x='left')
+
+    def draw(self):
+        self.batch.draw()
+
+    def set_value(self, val):
+        self.ammo = val
+
+        num_bul = self.ammo // 100
+        if len(self.bullets) > num_bul:
+            self.bullets.pop(len(self.bullets)-1)
+
+            # -- update position
+            self.set_pos(self.pos)
+
+        self.ammo_text.text = f" X {val}"
+
+    def set_pos(self, pos):
+        self.pos = pos
+
+        px, py = pos
+        offx = self.ammo_img.width + 2
+        for idx, bull in enumerate(self.bullets):
+            bull.x = px + (idx * offx)
+            bull.y = py
+
+        txt_off = px + (len(self.bullets) * offx)
+        self.ammo_text.x = txt_off
+        self.ammo_text.y = py
 
 class MainMenu:
 
