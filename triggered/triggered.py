@@ -34,11 +34,11 @@ RAYCAST_FILTER = 0x1
 RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
 COLLISION_MAP = {
     "PlayerType" : 1,
-    "EnemyType"  : 2,
     "WallType"   : 3,
     "PlayerBulletType" : 4,
     "EnemyBulletType"  : 5
 }
+ENEMY_COL_TYPE = 100
 
 BULLET_SIZE = 12
 MINIMAP_AGENT_SIZE = 25
@@ -207,8 +207,6 @@ class Physics:
         self.space = pm.Space()
         self.steps = steps
 
-        setup_collisions(self.space)
-
     def add(self, *args):
         self.space.add(*args)
 
@@ -259,7 +257,7 @@ class Player:
         self.speed  = 100
         # -- health properties
         self.dead = False
-        self.health = 100
+        self.health = 900
         self.damage = 5
         self.healthbar = HealthBar((10, window.height))
         # -- weapon properties
@@ -302,9 +300,10 @@ class Player:
 
     def do_damage(self):
         self.health -= self.damage
+        if self.health < 0: return
         if self.health > 0:
             self.healthbar.set_value(self.health / 100)
-        if self.health <= 0:
+        if self.health == 0:
             Physics.instance.remove(self.body, self.shape)
             self.bullets.clear()
             self.sprite.batch = None
@@ -395,7 +394,7 @@ class EnemyState(Enum):
 
 class Enemy:
 
-    def __init__(self, position, size, image, waypoints, batch):
+    def __init__(self, position, size, image, waypoints, batch, col_type):
         # -- movement properties
         self.pos   = position
         self.size  = size
@@ -439,7 +438,7 @@ class Enemy:
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
         self.shape = pm.Circle(self.body, size[0]*.45)
-        self.shape.collision_type = COLLISION_MAP.get("EnemyType")
+        self.shape.collision_type = col_type
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
 
@@ -448,7 +447,7 @@ class Enemy:
 
         # collision handlers
         Physics.instance.add_collision_handler(
-                COLLISION_MAP.get("EnemyType"),
+                col_type,
                 COLLISION_MAP.get("PlayerBulletType"),
                 handler_begin = self.bullet_hit
             )
@@ -461,9 +460,13 @@ class Enemy:
 
     def do_damage(self):
         self.health -= self.damage
-        if self.health <= 0:
+        if self.health < 0: return
+        if self.health == 0:
             Physics.instance.remove(self.body, self.shape)
+            for bul in self.bullets:
+                bul.destroy()
             self.bullets.clear()
+
             self.sprite.batch = None
             self.dead = True
 
@@ -623,6 +626,10 @@ class Bullet:
 
     def set_col_type(self, _type):
         self.shape.collision_type = _type
+
+    def destroy(self):
+        self.sprite.batch = None
+        Physics.instance.remove(self.body, self.shape)
 
     def update(self, dt):
         bx, by = self.body.position
@@ -866,17 +873,24 @@ class Level:
 
         # -- add other agents map positions
         random.seed(self.seed)
-        for point in self.map['enemy_position']:
+        for idx,point in enumerate(self.map['enemy_position']):
+            # -- calculate waypoints
             patrol_point = random.choice(self.map['patrol_positions'])
-
             patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
             path = patrol + list(reversed(patrol[1:-1]))
-            e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"), path, self.agent_batch)
+
+            e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"),
+                path, self.agent_batch, ENEMY_COL_TYPE + idx)
+            ENEMY_TYPES.append(ENEMY_COL_TYPE + idx)
+
             if DEBUG:
                 e.debug_data = (patrol, random_color())
             e.watch(player)
             e.set_map(self.map)
             self.agents.append(e)
+
+        # -- register collision types
+        setup_collisions(Physics.instance.space)
 
     def get_player(self):
         for ag in self.agents:
@@ -940,7 +954,7 @@ class Level:
         if DEBUG:
             if _type == EventType.KEY_DOWN:
                 k = args[1]
-                if k == key.TAB:
+                if k == key.BACKSPACE:
                     if hasattr(self, 'switch_view'):
                         self.switch_view = not self.switch_view
                     else:
@@ -1328,18 +1342,17 @@ def setup_collisions(space):
     def player_enemy_solve(arbiter, space, data):
         """ Keep the two bodies from intersecting"""
         pshape = arbiter.shapes[0]
-        eshape  = arbiter.shapes[1]
+        eshape = arbiter.shapes[1]
 
         normal = pshape.body.position - eshape.body.position
         normal = normal.normalized()
         pshape.body.position = eshape.body.position + (normal * (pshape.radius*2))
         return True
 
-    handler = space.add_collision_handler(
-            COLLISION_MAP.get("PlayerType"),
-            COLLISION_MAP.get("EnemyType")
-        )
-    handler.begin = player_enemy_solve
+    for etype in ENEMY_TYPES:
+        handler = space.add_collision_handler(
+                COLLISION_MAP.get("PlayerType"), etype)
+        handler.begin = player_enemy_solve
 
     # Enemy-Enemy Collision
     def enemy_enemy_solve(arbiter, space, data):
@@ -1356,11 +1369,10 @@ def setup_collisions(space):
         eshape.body.position = eshape1.body.position + (normal * (eshape.radius*2)) + perp_move
         return True
 
-    handler = space.add_collision_handler(
-            COLLISION_MAP.get("EnemyType"),
-            COLLISION_MAP.get("EnemyType")
-        )
-    handler.begin = enemy_enemy_solve
+    for etype1, etype2 in it.combinations(ENEMY_TYPES, 2):
+        handler = space.add_collision_handler(
+                etype1, etype2)
+        handler.begin = enemy_enemy_solve
 
     # Bullet Collisions
     def bullet_wall_solve(arbiter, space, data):
@@ -1422,6 +1434,9 @@ window.set_caption(CAPTION)
 # -- wierd bug - have to push twice
 window.push_handlers(KEYS)
 window.push_handlers(KEYS)
+
+# -- enemy collision - !! HACK !!
+ENEMY_TYPES = []
 
 fps  = pg.window.FPSDisplay(window)
 res  = Resources()
