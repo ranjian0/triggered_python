@@ -733,6 +733,7 @@ class Map:
         # -- clamp offset so that viewport doesnt go beyond map bounds
         winw, winh = window.get_size()
         msx, msy = self.size()
+        print(msx, msy)
 
         clamp_X = msx - winw
         clamp_Y = msy - winh
@@ -774,7 +775,7 @@ class Map:
 
     def size(self):
         ns = self.node_size
-        return (ns * len(self.data[0]))-ns//2, (ns * len(self.data))-ns//2
+        return (ns * len(self.data[0])), (ns * len(self.data))
 
     def __getitem__(self, val):
         return self.spawn_data.get(val, None)
