@@ -68,7 +68,7 @@ class GameState(Enum):
 class Game:
 
     def __init__(self):
-        self.state = GameState.RUNNING
+        self.state = GameState.MAINMENU
 
         self.mainmenu = MainMenu()
         self.pausemenu = PauseMenu()
@@ -733,7 +733,6 @@ class Map:
         # -- clamp offset so that viewport doesnt go beyond map bounds
         winw, winh = window.get_size()
         msx, msy = self.size()
-        print(msx, msy)
 
         clamp_X = msx - winw
         clamp_Y = msy - winh
@@ -1228,8 +1227,8 @@ class InfoPanel:
     def create_minimap(self):
         w, h = window.get_size()
 
-        msx, msy = w*.67, h*.9
-        minimap = self.map.make_minimap((msx, msy), (255, 255, 255, 200))
+        msx, msy = w*.75, h*.9
+        minimap = self.map.make_minimap((msx, msy), (255, 255, 255, 150))
         minimap.image.anchor_x = minimap.image.width
         minimap.image.anchor_y = minimap.image.height
         minimap.x = w
