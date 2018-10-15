@@ -65,6 +65,8 @@ class GameState(Enum):
     RUNNING     = 2
     PAUSED      = 3
 
+    EDITOR      = 4
+
 class Game:
 
     def __init__(self):
@@ -78,6 +80,8 @@ class Game:
                 Level("Kill them all", Resources.instance.level("test"), 1024)
             ])
 
+        self.editor = LevelEditor()
+
     def draw(self):
         if self.state == GameState.MAINMENU:
             self.mainmenu.draw()
@@ -85,6 +89,8 @@ class Game:
             self.pausemenu.draw()
         elif self.state == GameState.RUNNING:
             self.manager.draw()
+        elif self.state == GameState.EDITOR:
+            self.editor.draw()
 
     def event(self, *args, **kwargs):
         self.mainmenu.event(*args, **kwargs)
@@ -110,6 +116,11 @@ class Game:
                 if args[1] == PAUSE_KEY:
                     self.state = GameState.PAUSED
 
+            # -- switch to editor
+                if args[1] == key.E:
+                    self.editor.set(self.manager.current())
+                    self.state = GameState.EDITOR
+
     def update(self, dt):
         if self.state == GameState.MAINMENU:
             self.mainmenu.update(dt)
@@ -117,6 +128,8 @@ class Game:
             self.manager.update(dt)
         elif self.state == GameState.PAUSED:
             self.pausemenu.update(dt)
+        elif self.state == GameState.EDITOR:
+            self.editor.update(dt)
 
 
 class Resources:
@@ -997,6 +1010,21 @@ class LevelManager:
 
     def event(self, *args, **kwargs):
         self.current().event(*args, **kwargs)
+
+class LevelEditor:
+
+    def __init__(self):
+        self._level = None
+
+    def set(self, level):
+        if level:
+            self._level = level
+
+    def draw(self):
+        pass
+
+    def update(self, dt):
+        pass
 
 
 class HUD:
