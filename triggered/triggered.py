@@ -121,6 +121,9 @@ class Game:
                     self.editor.set(self.manager.current())
                     self.state = GameState.EDITOR
 
+        elif self.state == GameState.EDITOR:
+            self.editor.event(*args, **kwargs)
+
     def update(self, dt):
         if self.state == GameState.MAINMENU:
             self.mainmenu.update(dt)
@@ -1024,6 +1027,9 @@ class LevelEditor:
         pass
 
     def update(self, dt):
+        pass
+
+    def event(self, *args, **kwargs):
         pass
 
 
