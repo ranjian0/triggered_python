@@ -1083,6 +1083,7 @@ class LevelEditor:
             locx += brd[0] + (idx * sz[0]) + anch[0]
             locy -= brd[1] + (idx * sz[1]) + anch[0]
             tool.position = (locx, locy)
+            tool.size = self.tool_settings.get("size")
 
     def set(self, level):
         if level:
@@ -1370,6 +1371,7 @@ class EditorTool:
         # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
         self.options = options
         self.position = (0, 0)
+        self.size = (0, 0)
 
         # -- set image anchors to center:
         for _,img in self.options.items():
@@ -1417,8 +1419,21 @@ class EditorTool:
     def update(self, dt):
         pass
 
-    def event(self, *args, **kwargs):
-        pass
+    def event(self, _type, *args, **kwargs):
+
+        if _type == EventType.MOUSE_DOWN:
+            x, y, btn, mod = args
+
+            if btn == mouse.LEFT and mouse_over_tool((x, y), self):
+                self.show_options = True
+
+        if _type == EventType.MOUSE_UP:
+            x, y, btn, mod = args
+            if btn == mouse.LEFT:
+                if self.show_options:
+                    self.show_options = False
+
+
 
 class AddTileTool(EditorTool):
     def __init__(self):
@@ -1625,6 +1640,17 @@ def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
 def set_anchor_center(img):
     img.anchor_x = img.width/2
     img.anchor_y = img.height/2
+
+def mouse_over_tool(mouse, tool):
+    mx, my = mouse
+    tx, ty = tool.position
+    tsx, tsy = tool.size
+
+    dx, dy = abs(tx - mx), abs(ty - my)
+
+    if dx < tsx and dy < tsy:
+        return True
+    return False
 
 '''
 ============================================================
