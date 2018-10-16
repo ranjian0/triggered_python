@@ -1051,7 +1051,7 @@ class LevelEditor:
         self._level = None
 
         self.toolbar_settings = {
-            "size" : (75, window.height),
+            "size" : (60, window.height),
             "color" : (207, 188, 188, 255)
         }
         self.toolbar = pg.image.SolidColorImagePattern(
@@ -1067,8 +1067,7 @@ class LevelEditor:
         self.tool_start_loc = (0, window.height)
         self.tool_settings = {
             "size" : (50, 50),
-            "offset" : (5, 5),
-            "border" : (2, 2),
+            "border" : (5, 5),
             "anchor" : (25, 25)
         }
         self.tool_background = Resources.instance.sprite("tool_background")
@@ -1094,7 +1093,7 @@ class LevelEditor:
         # -- draw all tools
         locx, locy = self.tool_start_loc
         # -- rely on orderd dict
-        sz, off, brd, anch = [val for key, val in self.tool_settings.items()]
+        sz, brd, anch = [val for key, val in self.tool_settings.items()]
         for idx, tool in enumerate(self.tools):
             locx += brd[0] + (idx * sz[0]) + anch[0]
             locy -= brd[1] + (idx * sz[1]) + anch[0]
@@ -1120,7 +1119,7 @@ class LevelEditor:
             _,_,h = args
             self.tool_start_loc = (0, h)
 
-            self.tool_settings['size'] = (75, h)
+            self.toolbar_settings['size'] = (60, h)
             self.toolbar_image = self.toolbar.create_image(
                 *self.toolbar_settings.get("size"))
 
