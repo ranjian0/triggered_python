@@ -1070,13 +1070,19 @@ class LevelEditor:
             "border" : (5, 5),
             "anchor" : (25, 25)
         }
-        self.tool_background = Resources.instance.sprite("tool_background")
-        set_anchor_center(self.tool_background)
-
-        self.tool_indicator = Resources.instance.sprite("tool_indicator")
-        set_anchor_center(self.tool_indicator)
 
         self.data = dict()
+        self.init_tools()
+
+    def init_tools(self):
+        locx, locy = self.tool_start_loc
+        # -- rely on orderd dict
+        sz, brd, anch = [val for key, val in self.tool_settings.items()]
+
+        for idx, tool in enumerate(self.tools):
+            locx += brd[0] + (idx * sz[0]) + anch[0]
+            locy -= brd[1] + (idx * sz[1]) + anch[0]
+            tool.position = (locx, locy)
 
     def set(self, level):
         if level:
@@ -1089,21 +1095,8 @@ class LevelEditor:
 
     def draw(self):
         self.toolbar_image.blit(0, 0)
-
-        # -- draw all tools
-        locx, locy = self.tool_start_loc
-        # -- rely on orderd dict
-        sz, brd, anch = [val for key, val in self.tool_settings.items()]
-        for idx, tool in enumerate(self.tools):
-            locx += brd[0] + (idx * sz[0]) + anch[0]
-            locy -= brd[1] + (idx * sz[1]) + anch[0]
-
-            self.tool_background.blit(locx, locy)
-            tool.draw((locx, locy))
-
-            if len(tool.options.items()) > 1:
-                # -- draw small arror to indicate extra options
-                self.tool_indicator.blit(locx, locy)
+        for tool in self.tools:
+            tool.draw()
 
     def update(self, dt):
         for tool in self.tools:
@@ -1118,6 +1111,7 @@ class LevelEditor:
         if _type == EventType.RESIZE:
             _,_,h = args
             self.tool_start_loc = (0, h)
+            self.init_tools()
 
             self.toolbar_settings['size'] = (60, h)
             self.toolbar_image = self.toolbar.create_image(
@@ -1375,21 +1369,36 @@ class EditorTool:
     def __init__(self, options):
         # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
         self.options = options
+        self.position = (0, 0)
 
         # -- set image anchors to center:
         for _,img in self.options.items():
             set_anchor_center(img)
 
-        # -- first tool option is the default
         self.default = list(options)[0]
+
+        self.tool_background = Resources.instance.sprite("tool_background")
+        set_anchor_center(self.tool_background)
+
+        self.tool_indicator = Resources.instance.sprite("tool_indicator")
+        set_anchor_center(self.tool_indicator)
 
         # -
         self.show_tools = False
 
-    def draw(self, loc):
+    def draw(self):
+        # -- draw tool background
+        self.tool_background.blit(*self.position)
+
         # -- draw default tool
         img = self.options[self.default]
-        img.blit(*loc)
+        img.blit(*self.position)
+
+        # -- draw tool indicator
+        if len(self.options.items()) > 1:
+            # -- draw small arror to indicate more than one option
+            self.tool_indicator.blit(*self.position)
+
 
         # -- draw all tool option when mouse held down
         # -- this will be drawn a little off side
