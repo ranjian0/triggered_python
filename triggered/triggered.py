@@ -1124,8 +1124,6 @@ class LevelEditor:
                 *self.toolbar_settings.get("size"))
 
 
-
-
 class HUD:
 
     def __init__(self):
