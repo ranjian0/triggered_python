@@ -1404,7 +1404,7 @@ class EditorTool:
         # -- this will be drawn a little off side
         if self.show_options:
             idx = 1
-            offx, offy = 50, 50
+            offx = 50
             for name, image in self.options.items():
                 px, py = self.position
                 loc = (px + (idx*offx), py)
