@@ -1384,7 +1384,7 @@ class EditorTool:
         set_anchor_center(self.tool_indicator)
 
         # -
-        self.show_tools = False
+        self.show_options = False
 
     def draw(self):
         # -- draw tool background
@@ -1402,12 +1402,17 @@ class EditorTool:
 
         # -- draw all tool option when mouse held down
         # -- this will be drawn a little off side
-        if self.show_tools:
+        if self.show_options:
+            idx = 1
+            offx, offy = 50, 50
             for name, image in self.options.items():
-                # -- draw tool image
+                px, py = self.position
+                loc = (px + (idx*offx), py)
+                self.tool_background.blit(*loc)
+                image.blit(*loc)
 
-                # -- draw tool text
-                pass
+                idx += 1
+
 
     def update(self, dt):
         pass
