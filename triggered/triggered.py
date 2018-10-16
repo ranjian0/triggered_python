@@ -53,7 +53,12 @@ class EventType(Enum):
     RESIZE = 6
 
 Resource = namedtuple("Resource", "name data")
-LevelData = namedtuple("LevelData", "map objectives")
+LevelData = namedtuple("LevelData",
+            ["map",
+             "player",
+             "enemies",
+             "lights",
+             "objectives"])
 
 '''
 ============================================================
@@ -77,7 +82,8 @@ class Game:
 
         self.manager = LevelManager()
         self.manager.add([
-                Level("Kill them all", Resources.instance.level("test"), 1024)
+                Level("Kill them all", Resources.instance.level("level_one"), 1024),
+                Level("Extraction", Resources.instance.level("level_two"), 1048)
             ])
 
         self.editor = LevelEditor()
@@ -175,7 +181,21 @@ class Resources:
         for res in self._data['levels']:
             if res.name == name:
                 return self._parse_level(res.data)
-        return None
+        else:
+            # -- filename does not exit, create level file
+            fn = name + '.level'
+            path = os.path.join(self._levels, fn)
+            with open(path, 'w') as _:
+                pass
+
+            # -- create level resource
+            pg.resource.reindex()
+            lvl = pg.resource.file('levels/' + fn, 'r')
+
+            # -- add resource to database
+            self._data['levels'].append(Resource(name,lvl))
+            print(f"Created new level {name}")
+            return self._parse_level(lvl)
 
     def _load(self):
 
@@ -200,6 +220,8 @@ class Resources:
     def _parse_level(self, file):
         map_data = []
         objectives = []
+        if not file.readlines():
+            return None
 
         for line in file.readlines():
             if line.startswith("#"):
@@ -874,10 +896,13 @@ class Level:
         self.reload()
 
         self.status = LevelStatus.RUNNING
-        self.infopanel = InfoPanel(name, data.objectives, self.map, self.agents)
+        if self.data:
+            self.infopanel = InfoPanel(name, data.objectives, self.map, self.agents)
         self.show_info = False
 
     def reload(self):
+        if not self.data: return
+
         self.agents.clear()
         self.map = Map(self.data.map, physics=Physics.instance)
 
@@ -919,6 +944,8 @@ class Level:
         return [e for e in self.agents if isinstance(e, Enemy)]
 
     def draw(self):
+        if not self.data: return
+
         self.map.draw()
         self.agent_batch.draw()
         self.hud.draw()
@@ -934,6 +961,8 @@ class Level:
                     debug_draw_path(path, color)
 
     def update(self, dt):
+        if not self.data: return
+
         if DEBUG:
             if hasattr(self, 'switch_view') and self.switch_view:
                 self.map.clamp_player(self.get_enemies()[0])
@@ -963,6 +992,8 @@ class Level:
             self.infopanel.update(dt)
 
     def event(self, _type, *args, **kwargs):
+        if not self.data: return
+
         self.infopanel.event(_type, *args, **kwargs)
         for agent in self.agents:
             if hasattr(agent, 'event'):
@@ -1019,18 +1050,81 @@ class LevelEditor:
     def __init__(self):
         self._level = None
 
+        self.toolbar_settings = {
+            "size" : (75, window.height),
+            "color" : (207, 188, 188, 255)
+        }
+        self.toolbar = pg.image.SolidColorImagePattern(
+            self.toolbar_settings.get("color"))
+        self.toolbar_image = self.toolbar.create_image(
+            *self.toolbar_settings.get("size"))
+
+        self.tools = [
+            # AddTileTool(),
+            AddAgentTool()
+            # AddLightTool()
+        ]
+        self.tool_start_loc = (0, window.height)
+        self.tool_settings = {
+            "size" : (50, 50),
+            "offset" : (5, 5),
+            "border" : (2, 2),
+            "anchor" : (25, 25)
+        }
+        self.tool_background = Resources.instance.sprite("tool_background")
+        set_anchor_center(self.tool_background)
+
+        self.tool_indicator = Resources.instance.sprite("tool_indicator")
+        set_anchor_center(self.tool_indicator)
+
+        self.data = dict()
+
     def set(self, level):
         if level:
             self._level = level
 
+            # -- check if level already has data and load
+            if level.data:
+                # -- load leveldata
+                print(level.data)
+
     def draw(self):
-        pass
+        self.toolbar_image.blit(0, 0)
+
+        # -- draw all tools
+        locx, locy = self.tool_start_loc
+        # -- rely on orderd dict
+        sz, off, brd, anch = [val for key, val in self.tool_settings.items()]
+        for idx, tool in enumerate(self.tools):
+            locx += brd[0] + (idx * sz[0]) + anch[0]
+            locy -= brd[1] + (idx * sz[1]) + anch[0]
+
+            self.tool_background.blit(locx, locy)
+            tool.draw((locx, locy))
+
+            if len(tool.options.items()) > 1:
+                # -- draw small arror to indicate extra options
+                self.tool_indicator.blit(locx, locy)
 
     def update(self, dt):
-        pass
+        for tool in self.tools:
+            tool.update(dt)
 
     def event(self, *args, **kwargs):
-        pass
+        for tool in self.tools:
+            tool.event(*args, **kwargs)
+
+        # -- handle resize
+        _type = args[0]
+        if _type == EventType.RESIZE:
+            _,_,h = args
+            self.tool_start_loc = (0, h)
+
+            self.tool_settings['size'] = (75, h)
+            self.toolbar_image = self.toolbar.create_image(
+                *self.toolbar_settings.get("size"))
+
+
 
 
 class HUD:
@@ -1279,6 +1373,68 @@ class InfoPanel:
                 e_idx += 1
 
 
+class EditorTool:
+
+    def __init__(self, options):
+        # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
+        self.options = options
+
+        # -- set image anchors to center:
+        for _,img in self.options.items():
+            set_anchor_center(img)
+
+        # -- first tool option is the default
+        self.default = list(options)[0]
+
+        # -
+        self.show_tools = False
+
+    def draw(self, loc):
+        # -- draw default tool
+        img = self.options[self.default]
+        img.blit(*loc)
+
+        # -- draw all tool option when mouse held down
+        # -- this will be drawn a little off side
+        if self.show_tools:
+            for name, image in self.options.items():
+                # -- draw tool image
+
+                # -- draw tool text
+                pass
+
+    def update(self, dt):
+        pass
+
+    def event(self, *args, **kwargs):
+        pass
+
+class AddTileTool(EditorTool):
+    def __init__(self):
+        opts = {
+            "Wall" : Resources.instance.sprite("tool_wall"),
+            "Floor" : Resources.instance.sprite("tool_floor")
+        }
+        super(AddTileTool, self).__init__(opts)
+
+class AddAgentTool(EditorTool):
+    def __init__(self):
+        opts = {
+            "Player" : Resources.instance.sprite("tool_player"),
+            "Enemy" : Resources.instance.sprite("tool_enemy"),
+            # "NPC" : Resources.instance.sprite("tool_npc")
+        }
+        super(AddAgentTool, self).__init__(opts)
+
+class AddLightTool(EditorTool):
+    def __init__(self):
+        opts = {
+            "Light" : Resources.instance.sprite("tool_light"),
+        }
+        super(AddLightTool, self).__init__(opts)
+
+
+
 '''
 ============================================================
 ---   FUNCTIONS
@@ -1454,6 +1610,10 @@ def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
     for point in points:
         glVertex2f(*point)
     glEnd()
+
+def set_anchor_center(img):
+    img.anchor_x = img.width/2
+    img.anchor_y = img.height/2
 
 '''
 ============================================================
