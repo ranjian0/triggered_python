@@ -1361,7 +1361,7 @@ class EditorToolbar:
 
         for idx, tool in enumerate(self.tools):
             locx = brd[0] + anch[0]
-            locy -= brd[1] + (idx * sz[1]) + (anch[1] if idx == 0 else 0)
+            locy -= brd[1] + (sz[1] if idx > 0 else 0) + (anch[1] if idx == 0 else 0)
             tool.position = (locx, locy)
             tool.size = self.tool_settings.get("size")
 
