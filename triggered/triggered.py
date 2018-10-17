@@ -1342,6 +1342,7 @@ class EditorToolbar:
         # -- tools
         self.tools = [
             # AddTileTool(),
+            AddAgentTool(),
             AddAgentTool()
             # AddLightTool()
         ]
@@ -1360,8 +1361,8 @@ class EditorToolbar:
         sz, brd, anch = [val for key, val in self.tool_settings.items()]
 
         for idx, tool in enumerate(self.tools):
-            locx += brd[0] + (idx * sz[0]) + anch[0]
-            locy -= brd[1] + (idx * sz[1]) + anch[0]
+            locx = brd[0] + anch[0]
+            locy -= brd[1] + (idx * sz[1]) + (anch[1] if idx == 0 else 0)
             tool.position = (locx, locy)
             tool.size = self.tool_settings.get("size")
 
@@ -1373,6 +1374,14 @@ class EditorToolbar:
     def update(self, dt):
         for tool in self.tools:
             tool.update(dt)
+
+            if tool.activated:
+                # -- set other tools as not active
+                set_flag('is_active', False, self.tools)
+                set_flag('activated', False, self.tools)
+
+                # -- activate current tool
+                tool.is_active = True
 
     def event(self, *args, **kwargs):
         for tool in self.tools:
@@ -1417,11 +1426,18 @@ class EditorTool:
         self.tool_indicator = Resources.instance.sprite("tool_indicator")
         set_anchor_center(self.tool_indicator)
 
+        self.tool_active = Resources.instance.sprite("tool_select")
+        set_anchor_center(self.tool_active)
+
         # -- flags to show optional tools
         self.mouse_down_duration = 0
         self.mouse_hold_duration = .5
         self.start_show_event = False
         self.show_options = False
+
+        # -- flags for active state of the tool
+        self.is_active = False
+        self.activated = False
 
     def draw(self):
         # -- draw tool background
@@ -1436,6 +1452,10 @@ class EditorTool:
             # -- draw small arror to indicate more than one option
             if not self.show_options:
                 self.tool_indicator.blit(*self.position)
+
+        # -- draw tool active
+        if self.is_active:
+            self.tool_active.blit(*self.position)
 
         # -- draw all tool option when mouse held down
         # -- this will be drawn a little off side
@@ -1467,6 +1487,9 @@ class EditorTool:
         if _type == EventType.MOUSE_UP:
             x, y, btn, mod = args
             if btn == mouse.LEFT:
+                if self.start_show_event or self.show_options:
+                    self.activated = True
+
                 if self.start_show_event:
                     self.start_show_event = False
 
@@ -1482,8 +1505,6 @@ class EditorTool:
                             self.default = list(self.options)[idx-1]
 
                     self.show_options = False
-
-
 
 class AddTileTool(EditorTool):
     def __init__(self):
@@ -1527,6 +1548,10 @@ def normalize(p):
         y = p[1] / mag
         return (x, y)
     return p
+
+def set_flag(name, value, items):
+    for item  in items:
+        setattr(item, name, value)
 
 @contextmanager
 def reset_matrix():
