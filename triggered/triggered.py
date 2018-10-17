@@ -1066,8 +1066,6 @@ class LevelEditor:
 
     def set(self, level):
         self._level = level
-
-        # -- check if level already has data and load
         if level.data:
             # -- load leveldata
             pass
