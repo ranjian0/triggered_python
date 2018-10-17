@@ -1050,73 +1050,28 @@ class LevelEditor:
     def __init__(self):
         self._level = None
 
-        self.toolbar_settings = {
-            "size" : (60, window.height),
-            "color" : (207, 188, 188, 255)
-        }
-        self.toolbar = pg.image.SolidColorImagePattern(
-            self.toolbar_settings.get("color"))
-        self.toolbar_image = self.toolbar.create_image(
-            *self.toolbar_settings.get("size"))
-
-        self.tools = [
-            # AddTileTool(),
-            AddAgentTool()
-            # AddLightTool()
-        ]
-        self.tool_start_loc = (0, window.height)
-        self.tool_settings = {
-            "size" : (50, 50),
-            "border" : (5, 5),
-            "anchor" : (25, 25)
-        }
+        self.toolbar = EditorToolbar()
+        self.viewport = EditorViewport()
+        self.properties = EditorToolprops()
 
         self.data = dict()
-        self.init_tools()
-
-    def init_tools(self):
-        locx, locy = self.tool_start_loc
-        # -- rely on orderd dict
-        sz, brd, anch = [val for key, val in self.tool_settings.items()]
-
-        for idx, tool in enumerate(self.tools):
-            locx += brd[0] + (idx * sz[0]) + anch[0]
-            locy -= brd[1] + (idx * sz[1]) + anch[0]
-            tool.position = (locx, locy)
-            tool.size = self.tool_settings.get("size")
 
     def set(self, level):
-        if level:
-            self._level = level
+        self._level = level
 
-            # -- check if level already has data and load
-            if level.data:
-                # -- load leveldata
-                print(level.data)
+        # -- check if level already has data and load
+        if level.data:
+            # -- load leveldata
+            pass
 
     def draw(self):
-        self.toolbar_image.blit(0, 0)
-        for tool in self.tools:
-            tool.draw()
+        self.toolbar.draw()
 
     def update(self, dt):
-        for tool in self.tools:
-            tool.update(dt)
+        self.toolbar.update(dt)
 
     def event(self, *args, **kwargs):
-        for tool in self.tools:
-            tool.event(*args, **kwargs)
-
-        # -- handle resize
-        _type = args[0]
-        if _type == EventType.RESIZE:
-            _,_,h = args
-            self.tool_start_loc = (0, h)
-            self.init_tools()
-
-            self.toolbar_settings['size'] = (60, h)
-            self.toolbar_image = self.toolbar.create_image(
-                *self.toolbar_settings.get("size"))
+        self.toolbar.event(*args, **kwargs)
 
 
 class HUD:
@@ -1365,11 +1320,79 @@ class InfoPanel:
                 e_idx += 1
 
 
+class EditorToolbar:
+
+    def __init__(self):
+        self.active_tool = None
+        self.toolbar_settings = {
+            "size" : (60, window.height),
+            "color" : (207, 188, 188, 255)
+        }
+        self.toolbar = pg.image.SolidColorImagePattern(
+            self.toolbar_settings.get("color"))
+        self.toolbar_image = self.toolbar.create_image(
+            *self.toolbar_settings.get("size"))
+
+        self.tools = [
+            # AddTileTool(),
+            AddAgentTool()
+            # AddLightTool()
+        ]
+        self.tool_start_loc = (0, window.height)
+        self.tool_settings = {
+            "size" : (50, 50),
+            "border" : (5, 5),
+            "anchor" : (25, 25)
+        }
+
+    def init_tools(self):
+        locx, locy = self.tool_start_loc
+        # -- rely on orderd dict
+        sz, brd, anch = [val for key, val in self.tool_settings.items()]
+
+        for idx, tool in enumerate(self.tools):
+            locx += brd[0] + (idx * sz[0]) + anch[0]
+            locy -= brd[1] + (idx * sz[1]) + anch[0]
+            tool.position = (locx, locy)
+            tool.size = self.tool_settings.get("size")
+
+    def draw(self):
+        self.toolbar_image.blit(0, 0)
+        for tool in self.tools:
+            tool.draw()
+
+    def update(self, dt):
+        for tool in self.tools:
+            tool.update(dt)
+
+    def event(self, *args, **kwargs):
+        for tool in self.tools:
+            tool.event(*args, **kwargs)
+
+        # -- handle resize
+        _type = args[0]
+        if _type == EventType.RESIZE:
+            _,_,h = args
+            self.tool_start_loc = (0, h)
+            self.init_tools()
+
+            self.toolbar_settings['size'] = (60, h)
+            self.toolbar_image = self.toolbar.create_image(
+                *self.toolbar_settings.get("size"))
+
+class EditorViewport:
+    pass
+
+class EditorToolprops:
+    pass
+
 class EditorTool:
 
     def __init__(self, options):
+        # -- options
         # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
         self.options = options
+
         self.position = (0, 0)
         self.size = (0, 0)
 
@@ -1423,7 +1446,6 @@ class EditorTool:
 
         if _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
-
             if btn == mouse.LEFT and mouse_over_tool((x, y), self):
                 self.show_options = True
 
@@ -1432,8 +1454,6 @@ class EditorTool:
             if btn == mouse.LEFT:
                 if self.show_options:
                     self.show_options = False
-
-
 
 class AddTileTool(EditorTool):
     def __init__(self):
