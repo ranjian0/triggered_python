@@ -1341,10 +1341,9 @@ class EditorToolbar:
 
         # -- tools
         self.tools = [
-            # AddTileTool(),
+            AddTileTool(),
             AddAgentTool(),
-            AddAgentTool()
-            # AddLightTool()
+            AddWaypointTool()
         ]
         self.active_tool = None
         self.tool_start_loc = (0, window.height)
@@ -1403,6 +1402,7 @@ class EditorViewport:
 
 class EditorToolprops:
     pass
+
 
 class EditorTool:
 
@@ -1523,12 +1523,12 @@ class AddAgentTool(EditorTool):
         }
         super(AddAgentTool, self).__init__(opts)
 
-class AddLightTool(EditorTool):
+class AddWaypointTool(EditorTool):
     def __init__(self):
         opts = {
-            "Light" : Resources.instance.sprite("tool_light"),
+            "Waypoint" : Resources.instance.sprite("tool_waypoint"),
         }
-        super(AddLightTool, self).__init__(opts)
+        super(AddWaypointTool, self).__init__(opts)
 
 
 
