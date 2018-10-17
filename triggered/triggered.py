@@ -1329,7 +1329,7 @@ class InfoPanel:
 class EditorToolbar:
 
     def __init__(self):
-
+        # -- toolbar
         self.toolbar_settings = {
             "size" : (60, window.height),
             "color" : (207, 188, 188, 255)
@@ -1339,6 +1339,7 @@ class EditorToolbar:
         self.toolbar_image = self.toolbar.create_image(
             *self.toolbar_settings.get("size"))
 
+        # -- tools
         self.tools = [
             # AddTileTool(),
             AddAgentTool()
@@ -1416,7 +1417,10 @@ class EditorTool:
         self.tool_indicator = Resources.instance.sprite("tool_indicator")
         set_anchor_center(self.tool_indicator)
 
-        # -
+        # -- flags to show optional tools
+        self.mouse_down_duration = 0
+        self.mouse_hold_duration = .5
+        self.start_show_event = False
         self.show_options = False
 
     def draw(self):
@@ -1430,7 +1434,8 @@ class EditorTool:
         # -- draw tool indicator
         if len(self.options.items()) > 1:
             # -- draw small arror to indicate more than one option
-            self.tool_indicator.blit(*self.position)
+            if not self.show_options:
+                self.tool_indicator.blit(*self.position)
 
         # -- draw all tool option when mouse held down
         # -- this will be drawn a little off side
@@ -1445,20 +1450,27 @@ class EditorTool:
 
                 idx += 1
 
-
     def update(self, dt):
-        pass
+        if self.start_show_event:
+            self.mouse_down_duration += dt
+
+            if self.mouse_down_duration >= self.mouse_hold_duration:
+                self.show_options = True
+                self.start_show_event = False
+                self.mouse_down_duration = 0
 
     def event(self, _type, *args, **kwargs):
 
         if _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
             if btn == mouse.LEFT and mouse_over_tool((x, y), self):
-                self.show_options = True
+                self.start_show_event = True
 
         if _type == EventType.MOUSE_UP:
             x, y, btn, mod = args
             if btn == mouse.LEFT:
+                if self.start_show_event:
+                    self.start_show_event = False
                 if self.show_options:
                     self.show_options = False
 
