@@ -1440,15 +1440,13 @@ class EditorTool:
         # -- draw all tool option when mouse held down
         # -- this will be drawn a little off side
         if self.show_options:
-            idx = 1
             offx = 50
-            for name, image in self.options.items():
+            for idx, (name, image) in enumerate(self.options.items()):
+                idx += 1
                 px, py = self.position
                 loc = (px + (idx*offx), py)
                 self.tool_background.blit(*loc)
                 image.blit(*loc)
-
-                idx += 1
 
     def update(self, dt):
         if self.start_show_event:
@@ -1463,7 +1461,7 @@ class EditorTool:
 
         if _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
-            if btn == mouse.LEFT and mouse_over_tool((x, y), self):
+            if btn == mouse.LEFT and mouse_over_rect((x, y), self.position, self.size):
                 self.start_show_event = True
 
         if _type == EventType.MOUSE_UP:
@@ -1471,8 +1469,21 @@ class EditorTool:
             if btn == mouse.LEFT:
                 if self.start_show_event:
                     self.start_show_event = False
+
                 if self.show_options:
+                    # -- check if mouse was released over a tool option
+                    # --  set that tool as active
+                    offx = 50
+                    for idx, (name, image) in enumerate(self.options.items()):
+                        idx += 1
+                        px, py = self.position
+                        loc = (px + (idx*offx), py)
+                        if mouse_over_rect((x,y), loc, self.size):
+                            self.default = list(self.options)[idx-1]
+
                     self.show_options = False
+
+
 
 class AddTileTool(EditorTool):
     def __init__(self):
@@ -1680,10 +1691,10 @@ def set_anchor_center(img):
     img.anchor_x = img.width/2
     img.anchor_y = img.height/2
 
-def mouse_over_tool(mouse, tool):
+def mouse_over_rect(mouse, center, size):
     mx, my = mouse
-    tx, ty = tool.position
-    tsx, tsy = tool.size
+    tx, ty = center
+    tsx, tsy = size
 
     dx, dy = abs(tx - mx), abs(ty - my)
 
