@@ -102,14 +102,14 @@ class Game:
         self.mainmenu.event(*args, **kwargs)
         self.pausemenu.event(*args, **kwargs)
 
+        _type = args[0]
+
         if self.state == GameState.MAINMENU:
-            _type = args[0]
             if _type == EventType.KEY_DOWN:
                 if args[1] == key.SPACE:
                     self.state = GameState.RUNNING
 
         elif self.state == GameState.PAUSED:
-            _type = args[0]
             if _type == EventType.KEY_DOWN:
                 if args[1] == PAUSE_KEY:
                     self.state = GameState.RUNNING
@@ -117,7 +117,6 @@ class Game:
         elif self.state == GameState.RUNNING:
             self.manager.event(*args, **kwargs)
 
-            _type = args[0]
             if _type == EventType.KEY_DOWN:
                 if args[1] == PAUSE_KEY:
                     self.state = GameState.PAUSED
@@ -129,6 +128,15 @@ class Game:
 
         elif self.state == GameState.EDITOR:
             self.editor.event(*args, **kwargs)
+
+            if _type == EventType.KEY_DOWN:
+                if args[1] == key.E:
+                    self.state = GameState.RUNNING
+
+        # -- special case Resize event
+        if _type == EventType.RESIZE:
+            self.editor.event(*args, *kwargs)
+
 
     def update(self, dt):
         if self.state == GameState.MAINMENU:
@@ -1323,7 +1331,7 @@ class InfoPanel:
 class EditorToolbar:
 
     def __init__(self):
-        self.active_tool = None
+
         self.toolbar_settings = {
             "size" : (60, window.height),
             "color" : (207, 188, 188, 255)
@@ -1338,12 +1346,14 @@ class EditorToolbar:
             AddAgentTool()
             # AddLightTool()
         ]
+        self.active_tool = None
         self.tool_start_loc = (0, window.height)
         self.tool_settings = {
             "size" : (50, 50),
             "border" : (5, 5),
             "anchor" : (25, 25)
         }
+        self.init_tools()
 
     def init_tools(self):
         locx, locy = self.tool_start_loc
@@ -1423,7 +1433,6 @@ class EditorTool:
         if len(self.options.items()) > 1:
             # -- draw small arror to indicate more than one option
             self.tool_indicator.blit(*self.position)
-
 
         # -- draw all tool option when mouse held down
         # -- this will be drawn a little off side
