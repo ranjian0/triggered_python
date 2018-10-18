@@ -1459,7 +1459,7 @@ class EditorTool:
 
         # -- draw all tool option when mouse held down
         # -- this will be drawn a little off side
-        if self.show_options:
+        if self.show_options and len(self.options.items()) > 1:
             offx = 50
             for idx, (name, image) in enumerate(self.options.items()):
                 idx += 1
