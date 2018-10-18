@@ -1719,11 +1719,10 @@ def set_anchor_center(img):
 def mouse_over_rect(mouse, center, size):
     mx, my = mouse
     tx, ty = center
-    tsx, tsy = size
-
     dx, dy = abs(tx - mx), abs(ty - my)
 
-    if dx < tsx and dy < tsy:
+    tsx, tsy = size
+    if dx < tsx/2 and dy < tsy/2:
         return True
     return False
 
