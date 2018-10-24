@@ -60,6 +60,18 @@ LevelData = namedtuple("LevelData",
              "lights",
              "objectives"])
 
+TestLevel = LevelData(
+    [['#', '#', '#', '#'],
+     [' ', ' ', ' ', ' '],
+     [' ', ' ', ' ', ' '],
+     [' ', ' ', ' ', ' '],
+     [' ', ' ', ' ', ' '],
+     ['#', '#', '#', '#']],
+    (100, 100),
+    [(50, 50)],
+    [],
+    ["Kill all enemies", "Find Exit"])
+
 '''
 ============================================================
 ---   CLASSES
@@ -82,6 +94,7 @@ class Game:
 
         self.manager = LevelManager()
         self.manager.add([
+                Level("Test", TestLevel, 1000),
                 Level("Kill them all", Resources.instance.level("level_one"), 1024),
                 Level("Extraction", Resources.instance.level("level_two"), 1048)
             ])
@@ -228,6 +241,10 @@ class Resources:
     def _parse_level(self, file):
         map_data = []
         objectives = []
+        player = None
+        enemies = []
+        light = []
+
         if not file.readlines():
             return None
 
@@ -237,7 +254,7 @@ class Resources:
             elif line.startswith(":"):
                 objectives.append(line.strip()[1:])
 
-        return LevelData(map_data, objectives)
+        return LevelData(map_data, player, enemies, light, objectives)
 
 class Physics:
 
@@ -714,7 +731,6 @@ class Map:
         self.make_map()
 
         self.pathfinder = PathFinder(self.data, node_size)
-        self.spawn_data = self.parse_spawn_points()
 
     def make_map(self):
         bg = pg.graphics.OrderedGroup(0)
@@ -736,37 +752,6 @@ class Map:
                     self.sprites.append(sp)
                     add_wall((offx + nsx/2, offy + nsy/2), (nsx, nsy))
 
-    def parse_spawn_points(self):
-        spawn_data = {
-            'player_position' : None,   # identifier == 'p'
-            'enemy_position'  : [],     # identifier == 'e'
-            'mino_position'   : None,   # identifier == 'm'
-            'vip_position'    : None,   # identifier == 'v'
-            'time_stone'      : None,   # identifier == 't'
-
-            'patrol_positions': [],     # anything but '#', used for enemy patrol
-        }
-
-        nsx, nsy = (self.node_size,)*2
-        for y, row in enumerate(self.data):
-            for x, data in enumerate(row):
-                location = (x*nsx) + nsx/2, (y*nsy) + nsy/2
-
-                if   data == "p":
-                    spawn_data['player_position'] = location
-                elif data == 'e':
-                    spawn_data['enemy_position'].append(location)
-                elif data == 'm':
-                    spawn_data['mino_position'] = location
-                elif data == 'v':
-                    spawn_data['vip_position'] = location
-                elif data == 't':
-                    spawn_data['time_stone'] = location
-
-                if data != '#':
-                    spawn_data['patrol_positions'].append(location)
-        return spawn_data
-
     def clamp_player(self, player):
         # -- keep player within map bounds
         offx, offy = self.clamped_offset(*player.offset())
@@ -777,6 +762,7 @@ class Map:
 
     def clamped_offset(self, offx, offy):
         # -- clamp offset so that viewport doesnt go beyond map bounds
+        # -- if map is smaller than window, no need for offset
         winw, winh = window.get_size()
         msx, msy = self.size()
 
@@ -784,9 +770,12 @@ class Map:
         clamp_Y = msy - winh
 
         offx = 0 if offx > 0 else offx
-        offx = -clamp_X if offx < -clamp_X else offx
+        if clamp_X > 0:
+            offx = -clamp_X if offx < -clamp_X else offx
+
         offy = 0 if offy > 0 else offy
-        offy = -clamp_Y if offy < -clamp_Y else offy
+        if clamp_Y > 0:
+            offy = -clamp_Y if offy < -clamp_Y else offy
 
         return offx, offy
 
@@ -821,9 +810,6 @@ class Map:
     def size(self):
         ns = self.node_size
         return (ns * len(self.data[0])), (ns * len(self.data))
-
-    def __getitem__(self, val):
-        return self.spawn_data.get(val, None)
 
 class PathFinder:
 
@@ -915,7 +901,7 @@ class Level:
         self.map = Map(self.data.map, physics=Physics.instance)
 
         # -- add player to map position
-        player = Player(self.map['player_position'], (50, 50),
+        player = Player(self.data.player, (50, 50),
             Resources.instance.sprite("hitman1_gun"), self.agent_batch, self.map)
         self.agents.append(player)
         self.hud.add(player.healthbar)
@@ -923,14 +909,14 @@ class Level:
 
         # -- add other agents map positions
         random.seed(self.seed)
-        for idx,point in enumerate(self.map['enemy_position']):
-            # -- calculate waypoints
-            patrol_point = random.choice(self.map['patrol_positions'])
-            patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
-            path = patrol + list(reversed(patrol[1:-1]))
+        for idx,point in enumerate(self.data.enemies):
+            # # -- calculate waypoints
+            # patrol_point = random.choice(self.map['patrol_positions'])
+            # patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
+            # path = patrol + list(reversed(patrol[1:-1]))
 
             e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"),
-                path, self.agent_batch, ENEMY_COL_TYPE + idx)
+                [point], self.agent_batch, ENEMY_COL_TYPE + idx)
             ENEMY_TYPES.append(ENEMY_COL_TYPE + idx)
 
             if DEBUG:
@@ -1057,27 +1043,32 @@ class LevelEditor:
 
     def __init__(self):
         self._level = None
+        self.data = dict()
 
-        self.toolbar = EditorToolbar()
-        self.viewport = EditorViewport()
+        self.toolbar = EditorToolbar(self.data)
+        self.viewport = EditorViewport(self.data)
         self.properties = EditorToolprops()
 
-        self.data = dict()
 
     def set(self, level):
         self._level = level
         if level.data:
             # -- load leveldata
-            pass
+            for key, val in level.data._asdict().items():
+                self.data[key] = val
 
     def draw(self):
-        self.toolbar.draw()
+        with reset_matrix():
+            self.toolbar.draw()
+            self.viewport.draw()
 
     def update(self, dt):
         self.toolbar.update(dt)
+        self.viewport.update(dt)
 
     def event(self, *args, **kwargs):
         self.toolbar.event(*args, **kwargs)
+        self.viewport.event(*args, **kwargs)
 
 
 class HUD:
@@ -1328,7 +1319,7 @@ class InfoPanel:
 
 class EditorToolbar:
 
-    def __init__(self):
+    def __init__(self, data):
         # -- toolbar
         self.toolbar_settings = {
             "size" : (60, window.height),
@@ -1353,6 +1344,9 @@ class EditorToolbar:
             "anchor" : (25, 25)
         }
         self.init_tools()
+        # -- set data that tools operate on
+        for tool in self.tools:
+            tool.set_data(data)
 
     def init_tools(self):
         locx, locy = self.tool_start_loc
@@ -1398,7 +1392,32 @@ class EditorToolbar:
                 *self.toolbar_settings.get("size"))
 
 class EditorViewport:
-    pass
+
+    def __init__(self, data):
+        self.data = data
+
+
+    def draw(self):
+        # -- draw editor grid
+
+        # -- draw map data
+
+        # -- draw player
+
+        # -- draw enemies
+
+        # -- draw patrol points
+        pass
+
+    def update(self, dt):
+        pass
+
+    def event(self, *args, **kwargs):
+        _type = args[0]
+        if _type == EventType.MOUSE_MOTION:
+            x, y, dx, dy = args[1:]
+            pass
+        pass
 
 class EditorToolprops:
     pass
@@ -1410,6 +1429,7 @@ class EditorTool:
         # -- options
         # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
         self.options = options
+        self.level_data = None
 
         self.position = (0, 0)
         self.size = (0, 0)
@@ -1438,6 +1458,9 @@ class EditorTool:
         # -- flags for active state of the tool
         self.is_active = False
         self.activated = False
+
+    def set_data(self, val):
+        self.level_data = val
 
     def draw(self):
         # -- draw tool background
@@ -1513,6 +1536,18 @@ class AddTileTool(EditorTool):
             "Floor" : Resources.instance.sprite("tool_floor")
         }
         super(AddTileTool, self).__init__(opts)
+
+    def event(self, _type, *args, **kwargs):
+        super(AddTileTool, self).event(_type, *args, **kwargs)
+        data = self.level_data
+
+        if _type == EventType.MOUSE_DOWN:
+            x,y,but,mod = args
+            if but == mouse.LEFT:
+                if self.default == 'Wall':
+                    pass
+                elif self.default == 'Floor':
+                    pass
 
 class AddAgentTool(EditorTool):
     def __init__(self):
@@ -1736,7 +1771,7 @@ def mouse_over_rect(mouse, center, size):
 window = pg.window.Window(*SIZE, resizable=True)
 window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
-window.maximize()
+# window.maximize()
 
 # -- wierd bug - have to push twice
 window.push_handlers(KEYS)
