@@ -1771,7 +1771,7 @@ def mouse_over_rect(mouse, center, size):
 window = pg.window.Window(*SIZE, resizable=True)
 window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
-# window.maximize()
+window.maximize()
 
 # -- wierd bug - have to push twice
 window.push_handlers(KEYS)
