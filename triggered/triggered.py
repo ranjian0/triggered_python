@@ -1321,11 +1321,12 @@ class InfoPanel:
 
 
 class EditorToolbar:
+    WIDTH = 60
 
     def __init__(self, data):
         # -- toolbar
         self.toolbar_settings = {
-            "size" : (60, window.height),
+            "size" : (self.WIDTH, window.height),
             "color" : (207, 188, 188, 255)
         }
         self.toolbar = pg.image.SolidColorImagePattern(
@@ -1399,7 +1400,9 @@ class EditorViewport:
     def __init__(self, data):
         self.data = data
 
-        self.grid_spacing = 25
+        # -- grid options
+        self.grid_size = 10000
+        self.grid_spacing = 50
 
         # -- drag options
         self._is_panning = False
@@ -1426,23 +1429,23 @@ class EditorViewport:
     def _editor_draw_grid(self):
         glLineWidth(2)
         glPushMatrix()
-        glTranslatef(70, 0, 0)
+        glTranslatef(EditorToolbar.WIDTH, 0, 0)
 
         glBegin(GL_LINES)
-        for y in range(-10000, 10000, self.grid_spacing):
+        for y in range(-self.grid_size, self.grid_size, self.grid_spacing):
             glColor4f(1, 1, 1, 1)
 
             # -- vertical lines
             if y == 0:
                 glColor4f(0, 0, 1, 1)
-            glVertex2f(y, -10000)
-            glVertex2f(y, 10000)
+            glVertex2f(y, -self.grid_size)
+            glVertex2f(y, self.grid_size)
 
             # -- horizontal lines
             if y == 0:
                 glColor4f(1, 0, 0, 1)
-            glVertex2f(-10000, y)
-            glVertex2f(10000, y)
+            glVertex2f(-self.grid_size, y)
+            glVertex2f(self.grid_size, y)
 
         glEnd()
         glPopMatrix()
