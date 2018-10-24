@@ -1363,6 +1363,11 @@ class EditorToolbar:
             tool.position = (locx, locy)
             tool.size = self.tool_settings.get("size")
 
+    def get_rect(self):
+        center = (self.WIDTH/2, window.height/2)
+        size = (self.WIDTH, window.height)
+        return [center, size]
+
     def draw(self):
         self.toolbar_image.blit(0, 0)
         for tool in self.tools:
@@ -1411,6 +1416,14 @@ class EditorViewport:
         # -- zoom ptions
         self._zoom = (1, 1)
         self._zoom_sensitivity = 0.1
+
+    def get_rect(self):
+        width = window.width - EditorToolbar.WIDTH
+        size = (width, window.height)
+        center = (
+            width/2 + EditorToolbar.WIDTH,
+            window.height/2)
+        return [center, size]
 
     @contextmanager
     def _editor_do_pan(self):
@@ -1474,6 +1487,8 @@ class EditorViewport:
 
         if _type == EventType.MOUSE_DRAG:
             x, y, dx, dy, but, mod = args[1:]
+            if not mouse_over_rect((x, y), *self.get_rect()): return
+
             if but == mouse.MIDDLE:
                 self._is_panning = True
                 px, py = self._pan_offset
@@ -1483,6 +1498,7 @@ class EditorViewport:
 
         if _type == EventType.MOUSE_SCROLL:
             x, y, sx, sy = args[1:]
+            if not mouse_over_rect((x, y), *self.get_rect()): return
 
             zx, zy = self._zoom
             if sy < 0:
