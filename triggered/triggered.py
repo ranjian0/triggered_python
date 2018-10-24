@@ -1447,8 +1447,6 @@ class EditorViewport:
         glEnd()
         glPopMatrix()
 
-    def _editor_draw(self):
-
     def draw(self):
         with self._editor_do_pan():
             with self._editor_do_zoom():
