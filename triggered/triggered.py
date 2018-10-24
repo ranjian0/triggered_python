@@ -50,7 +50,9 @@ class EventType(Enum):
     MOUSE_DOWN = 3
     MOUSE_UP   = 4
     MOUSE_MOTION = 5
-    RESIZE = 6
+    MOUSE_DRAG = 6
+    MOUSE_SCROLL = 7
+    RESIZE = 8
 
 Resource = namedtuple("Resource", "name data")
 LevelData = namedtuple("LevelData",
@@ -1399,6 +1401,28 @@ class EditorViewport:
 
         self.grid_spacing = 25
 
+        # -- drag options
+        self._is_panning = False
+        self._pan_offset = (0, 0)
+
+        # -- zoom ptions
+        self._zoom = (1, 1)
+        self._zoom_sensitivity = 0.1
+
+    @contextmanager
+    def _editor_do_pan(self):
+        glPushMatrix()
+        glTranslatef(*self._pan_offset, 0)
+        yield
+        glPopMatrix()
+
+    @contextmanager
+    def _editor_do_zoom(self):
+        glPushMatrix()
+        glScalef(*self._zoom, 1)
+        yield
+        glPopMatrix()
+
     def _editor_draw_grid(self):
         glLineWidth(2)
         glPushMatrix()
@@ -1423,28 +1447,52 @@ class EditorViewport:
         glEnd()
         glPopMatrix()
 
+    def _editor_draw(self):
+
     def draw(self):
-        # -- draw editor grid
-        self._editor_draw_grid()
+        with self._editor_do_pan():
+            with self._editor_do_zoom():
 
-        # -- draw map data
+                # -- draw editor grid
+                self._editor_draw_grid()
 
-        # -- draw player
+                # -- draw map data
 
-        # -- draw enemies
+                # -- draw player
 
-        # -- draw patrol points
-        pass
+                # -- draw enemies
+
+                # -- draw patrol points
+
 
     def update(self, dt):
         pass
 
     def event(self, *args, **kwargs):
         _type = args[0]
-        if _type == EventType.MOUSE_MOTION:
-            x, y, dx, dy = args[1:]
-            pass
-        pass
+
+        if _type == EventType.MOUSE_DRAG:
+            x, y, dx, dy, but, mod = args[1:]
+            if but == mouse.MIDDLE:
+                self._is_panning = True
+                px, py = self._pan_offset
+                self._pan_offset = (px+dx, py+dy)
+        else:
+            self._is_panning = False
+
+        if _type == EventType.MOUSE_SCROLL:
+            x, y, sx, sy = args[1:]
+
+            zx, zy = self._zoom
+            if sy < 0:
+                if zx > .2 and zy > .2:
+                    zx -= self._zoom_sensitivity
+                    zy -= self._zoom_sensitivity
+            else:
+                zx += self._zoom_sensitivity
+                zy += self._zoom_sensitivity
+
+            self._zoom = (zx, zy)
 
 class EditorToolprops:
     pass
@@ -1847,6 +1895,14 @@ def on_mouse_release(x, y, button, modifiers):
 @window.event
 def on_mouse_motion(x, y, dx, dy):
     game.event(EventType.MOUSE_MOTION, x, y, dx, dy)
+
+@window.event
+def on_mouse_drag(x, y, dx, dy, button, modifiers):
+    game.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
+
+@window.event
+def on_mouse_scroll(x, y, scroll_x, scroll_y):
+    game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
 
 def on_update(dt):
     phy.update()
