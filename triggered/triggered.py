@@ -721,12 +721,10 @@ class Map:
         self.data       = list(reversed(data))
         self.node_size  = node_size
         self.wall_img   = Resources.instance.sprite("wall")
-        self.wall_img.width = node_size
-        self.wall_img.height = node_size
+        image_set_size(self.wall_img, node_size, node_size)
 
         self.floor_img   = Resources.instance.sprite("floor")
-        self.floor_img.width = node_size
-        self.floor_img.height = node_size
+        image_set_size(self.floor_img, node_size, node_size)
 
         self.sprites    = []
         self.batch      = pg.graphics.Batch()
@@ -1417,6 +1415,14 @@ class EditorViewport:
         self._zoom = (1, 1)
         self._zoom_sensitivity = 0.1
 
+        # -- map options
+        self.map_offset = (EditorToolbar.WIDTH, 0)
+        self.wall_img   = Resources.instance.sprite("wall")
+        image_set_size(self.wall_img, self.grid_spacing, self.grid_spacing)
+
+        self.floor_img   = Resources.instance.sprite("floor")
+        image_set_size(self.floor_img, self.grid_spacing, self.grid_spacing)
+
     def get_rect(self):
         width = window.width - EditorToolbar.WIDTH
         size = (width, window.height)
@@ -1463,6 +1469,17 @@ class EditorViewport:
         glEnd()
         glPopMatrix()
 
+    def _editor_draw_map(self):
+        mx, my = self.map_offset
+        for y, row in enumerate(self.data['map']):
+            for x, data in enumerate(row):
+                offx, offy = x * self.grid_spacing, y * self.grid_spacing
+                if data == "#":
+                    self.wall_img.blit(offx+mx, offy+my, 0)
+                else:
+                    self.floor_img.blit(offx+mx, offy+my, 0)
+
+
     def draw(self):
         with self._editor_do_pan():
             with self._editor_do_zoom():
@@ -1471,6 +1488,7 @@ class EditorViewport:
                 self._editor_draw_grid()
 
                 # -- draw map data
+                self._editor_draw_map()
 
                 # -- draw player
 
@@ -1528,18 +1546,18 @@ class EditorTool:
 
         # -- set image anchors to center:
         for _,img in self.options.items():
-            set_anchor_center(img)
+            image_set_anchor_center(img)
 
         self.default = list(options)[0]
 
         self.tool_background = Resources.instance.sprite("tool_background")
-        set_anchor_center(self.tool_background)
+        image_set_anchor_center(self.tool_background)
 
         self.tool_indicator = Resources.instance.sprite("tool_indicator")
-        set_anchor_center(self.tool_indicator)
+        image_set_anchor_center(self.tool_indicator)
 
         self.tool_active = Resources.instance.sprite("tool_select")
-        set_anchor_center(self.tool_active)
+        image_set_anchor_center(self.tool_active)
 
         # -- flags to show optional tools
         self.mouse_down_duration = 0
@@ -1839,7 +1857,11 @@ def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
         glVertex2f(*point)
     glEnd()
 
-def set_anchor_center(img):
+def image_set_size(img, w, h):
+    img.width = w
+    img.height = h
+
+def image_set_anchor_center(img):
     img.anchor_x = img.width/2
     img.anchor_y = img.height/2
 
