@@ -1059,8 +1059,9 @@ class LevelEditor:
 
     def draw(self):
         with reset_matrix():
-            self.toolbar.draw()
             self.viewport.draw()
+            self.toolbar.draw()
+
 
     def update(self, dt):
         self.toolbar.update(dt)
@@ -1396,9 +1397,35 @@ class EditorViewport:
     def __init__(self, data):
         self.data = data
 
+        self.grid_spacing = 25
+
+    def _editor_draw_grid(self):
+        glLineWidth(2)
+        glPushMatrix()
+        glTranslatef(70, 0, 0)
+
+        glBegin(GL_LINES)
+        for y in range(-10000, 10000, self.grid_spacing):
+            glColor4f(1, 1, 1, 1)
+
+            # -- vertical lines
+            if y == 0:
+                glColor4f(0, 0, 1, 1)
+            glVertex2f(y, -10000)
+            glVertex2f(y, 10000)
+
+            # -- horizontal lines
+            if y == 0:
+                glColor4f(1, 0, 0, 1)
+            glVertex2f(-10000, y)
+            glVertex2f(10000, y)
+
+        glEnd()
+        glPopMatrix()
 
     def draw(self):
         # -- draw editor grid
+        self._editor_draw_grid()
 
         # -- draw map data
 
