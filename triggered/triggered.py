@@ -1792,6 +1792,31 @@ class AddAgentTool(EditorTool):
         }
         super(AddAgentTool, self).__init__(opts)
 
+    def event(self, _type, *args, **kwargs):
+        super(AddAgentTool, self).event(_type, *args, **kwargs)
+        if not self.is_active: return
+
+        if _type == EventType.MOUSE_DOWN:
+            x, y, but, mod = args
+            # -- ensure mouse if over viewport
+            if x < EditorToolbar.WIDTH: return
+
+            if but == mouse.LEFT:
+                ox, oy = EditorViewport.OFFSET
+                px, py = x-ox, y-oy
+
+                if self.default == 'Player':
+                    self.level_data['player'] = (px, py)
+                elif self.default == 'Enemy':
+                    if mod & key.MOD_CTRL:
+                        enemies = self.level_data['enemies']
+                        for en in enemies:
+                            if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
+                                self.level_data['enemies'].remove(en)
+                    else:
+                        self.level_data['enemies'].append((px, py))
+
+
 class AddWaypointTool(EditorTool):
     def __init__(self):
         opts = {
