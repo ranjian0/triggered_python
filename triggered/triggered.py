@@ -69,8 +69,8 @@ TestLevel = LevelData(
      [' ', ' ', ' ', ' '],
      [' ', ' ', ' ', ' '],
      ['#', '#', '#', '#']],
-    (100, 100),
-    [(50, 50)],
+    (75, 75),
+    [(150, 150)],
     [],
     ["Kill all enemies", "Find Exit"])
 
@@ -1423,6 +1423,16 @@ class EditorViewport:
         self.floor_img   = Resources.instance.sprite("floor")
         image_set_size(self.floor_img, self.grid_spacing, self.grid_spacing)
 
+        # -- player options
+        self.player_img = Resources.instance.sprite("hitman1_gun")
+        image_set_size(self.player_img, self.grid_spacing*.75, self.grid_spacing*.75)
+        image_set_anchor_center(self.player_img)
+
+        # -- enemy options
+        self.enemy_img = Resources.instance.sprite("robot1_gun")
+        image_set_size(self.enemy_img, self.grid_spacing*.75, self.grid_spacing*.75)
+        image_set_anchor_center(self.enemy_img)
+
     def get_rect(self):
         width = window.width - EditorToolbar.WIDTH
         size = (width, window.height)
@@ -1479,6 +1489,16 @@ class EditorViewport:
                 else:
                     self.floor_img.blit(offx+mx, offy+my, 0)
 
+    def _editor_draw_player(self):
+        px, py = self.data['player']
+        mx, my = self.map_offset
+        self.player_img.blit(px+mx, py+my, 0)
+
+    def _editor_draw_enemies(self):
+        mx, my = self.map_offset
+        for pos in self.data['enemies']:
+            px, py = pos
+            self.enemy_img.blit(px+mx, py+my, 0)
 
     def draw(self):
         with self._editor_do_pan():
@@ -1491,8 +1511,10 @@ class EditorViewport:
                 self._editor_draw_map()
 
                 # -- draw player
+                self._editor_draw_player()
 
                 # -- draw enemies
+                self._editor_draw_enemies()
 
                 # -- draw patrol points
 
@@ -1655,9 +1677,9 @@ class AddTileTool(EditorTool):
             x,y,but,mod = args
             if but == mouse.LEFT:
                 if self.default == 'Wall':
-                    pass
+                    print("Add wall at", x, y)
                 elif self.default == 'Floor':
-                    pass
+                    print(self.level_data)
 
 class AddAgentTool(EditorTool):
     def __init__(self):
@@ -1674,7 +1696,6 @@ class AddWaypointTool(EditorTool):
             "Waypoint" : Resources.instance.sprite("tool_waypoint"),
         }
         super(AddWaypointTool, self).__init__(opts)
-
 
 
 '''
