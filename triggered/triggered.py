@@ -1767,7 +1767,6 @@ class AddTileTool(EditorTool):
                     else:
                         self._map_add_floor_at(*map_id)
 
-
 class AddAgentTool(EditorTool):
     def __init__(self):
         opts = {
