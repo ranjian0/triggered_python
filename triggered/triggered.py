@@ -256,7 +256,7 @@ class Resources:
             elif line.startswith(":"):
                 objectives.append(line.strip()[1:])
 
-        return LevelData(map_data, player, enemies, light, objectives)
+        return LevelData(list(reversed(map_data)), player, enemies, light, objectives)
 
 class Physics:
 
@@ -718,7 +718,7 @@ class Map:
                     node_size = 100,
                     physics   = None):
 
-        self.data       = list(reversed(data))
+        self.data       = data
         self.node_size  = node_size
         self.wall_img   = Resources.instance.sprite("wall")
         image_set_size(self.wall_img, node_size, node_size)
@@ -742,7 +742,7 @@ class Map:
                 offx, offy = x * nsx, y * nsy
 
                 # -- create floor tiles
-                if data != "#":
+                if data == " ":
                     sp = pg.sprite.Sprite(self.floor_img, x=offx, y=offy, batch=self.batch, group=bg)
                     self.sprites.append(sp)
 
@@ -1057,6 +1057,14 @@ class LevelEditor:
             for key, val in level.data._asdict().items():
                 self.data[key] = val
 
+    def save(self):
+        # -- update level data and reload level
+        self._level.data._replace(**self.data)
+        self._level.reload()
+
+        # --  update viewport
+        self.viewport.reload()
+
     def draw(self):
         with reset_matrix():
             self.viewport.draw()
@@ -1071,6 +1079,11 @@ class LevelEditor:
         self.toolbar.event(*args, **kwargs)
         self.viewport.event(*args, **kwargs)
 
+        _type = args[0]
+        if _type == EventType.KEY_DOWN:
+            k, mod = args[1:]
+            if k == key.S:
+                self.save()
 
 class HUD:
 
@@ -1442,6 +1455,9 @@ class EditorViewport:
         self.enemy_img = Resources.instance.sprite("robot1_gun")
         image_set_size(self.enemy_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
         image_set_anchor_center(self.enemy_img)
+
+    def reload(self):
+        self = EditorViewport(self.data)
 
     def get_rect(self):
         width = window.width - EditorToolbar.WIDTH
