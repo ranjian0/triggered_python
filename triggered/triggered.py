@@ -1058,12 +1058,23 @@ class LevelEditor:
                 self.data[key] = val
 
     def save(self):
+        # -- remove temp data from self.data
+        tmp_items = [key for key,v in self.data.items() if key.startswith('_')]
+        tmp_data = [v for key,v in self.data.items() if key.startswith('_')]
+        for it in tmp_items:
+            del self.data[it]
+
         # -- update level data and reload level
         self._level.data._replace(**self.data)
         self._level.reload()
 
+        # -- restore temp data from self.data
+        for key,val in zip(tmp_items, tmp_data):
+            self.data[key] = val
+
         # --  update viewport
         self.viewport.reload()
+        print("Level saved")
 
     def draw(self):
         with reset_matrix():
@@ -1084,6 +1095,7 @@ class LevelEditor:
             k, mod = args[1:]
             if k == key.S:
                 self.save()
+
 
 class HUD:
 
@@ -1456,6 +1468,10 @@ class EditorViewport:
         image_set_size(self.enemy_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
         image_set_anchor_center(self.enemy_img)
 
+        self.enemy_target = Resources.instance.sprite("enemy_target")
+        image_set_size(self.enemy_target, *(EditorViewport.GRID_SPACING,)*2)
+        image_set_anchor_center(self.enemy_target)
+
     def reload(self):
         self = EditorViewport(self.data)
 
@@ -1526,10 +1542,28 @@ class EditorViewport:
             px, py = pos
             self.enemy_img.blit(px+mx, py+my, 0)
 
+        enemy_id = self.data.get('_active_enemy')
+        if enemy_id:
+            ex, ey = self.data['enemies'][enemy_id-1]
+            self.enemy_target.blit(ex+mx, ey+my, 0)
+
+    def _editor_draw_waypoints(self):
+        waypoints = self.data.get('_waypoints')
+        if waypoints:
+            # -- check if we have active enemy
+            enemy_id = self.data.get('_active_enemy')
+            if enemy_id:
+                # -- select waypoints for active enemy
+                points = waypoints[enemy_id-1]
+
+                # -- draw waypoints
+                debug_draw_path(points, color=(0,0,1,1))
+                for point in points:
+                    debug_draw_point(point, color=(1,1,1,1))
+
     def draw(self):
         with self._editor_do_pan():
             with self._editor_do_zoom():
-
                 # -- draw editor grid
                 self._editor_draw_grid()
 
@@ -1542,8 +1576,8 @@ class EditorViewport:
                 # -- draw enemies
                 self._editor_draw_enemies()
 
-                # -- draw patrol points
-
+                # -- draw waypoints
+                self._editor_draw_waypoints()
 
     def update(self, dt):
         pass
@@ -1823,6 +1857,48 @@ class AddWaypointTool(EditorTool):
         }
         super(AddWaypointTool, self).__init__(opts)
 
+    def event(self, _type, *args, **kwargs):
+        super(AddWaypointTool, self).event(_type, *args, **kwargs)
+        if not self.is_active: return
+
+        if _type == EventType.MOUSE_DOWN:
+            x, y, but, mod = args
+
+            # -- ensure mouse if over viewport
+            if x < EditorToolbar.WIDTH: return
+
+            # -- create waypoint
+            if but == mouse.LEFT:
+                # -- check if an enemy is selected
+                enemy_id = self.level_data.get('_active_enemy')
+                if enemy_id:
+                    # -- ensure waypoint list exist
+                    waypoints = self.level_data.get('_waypoints')
+                    if not waypoints:
+                        self.level_data['_waypoints'] = []
+                        waypoints = self.level_data['_waypoints']
+
+                    # -- check if waypoints exist for all enemies
+                    missing = len(self.level_data['enemies']) > len(waypoints)
+                    if missing:
+                        for _ in range(len(self.level_data['enemies']) - len(waypoints)):
+                            waypoints.append([])
+
+                    # -- add mouse location to the selected enemy waypoint
+                    waypoints[enemy_id-1].append((x, y))
+
+            # -- select enemy
+            elif but == mouse.RIGHT:
+                ox, oy = EditorViewport.OFFSET
+                px, py = x-ox, y-oy
+
+                if mod & key.MOD_CTRL:
+                    del self.level_data['_active_enemy']
+                else:
+                    enemies = self.level_data['enemies']
+                    for idx, en in enumerate(enemies):
+                        if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
+                            self.level_data['_active_enemy'] = idx+1
 
 '''
 ============================================================
