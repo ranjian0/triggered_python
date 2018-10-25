@@ -1496,7 +1496,7 @@ class EditorViewport:
                 offx, offy = x * self.GRID_SPACING, y * self.GRID_SPACING
                 if data == "#":
                     self.wall_img.blit(offx+mx, offy+my, 0)
-                else:
+                elif data == ' ':
                     self.floor_img.blit(offx+mx, offy+my, 0)
 
     def _editor_draw_player(self):
@@ -1679,17 +1679,94 @@ class AddTileTool(EditorTool):
         }
         super(AddTileTool, self).__init__(opts)
 
+    def _mouse_pos_to_map(self, x, y):
+        # -- convert mouse position to map array indices
+        grid_sp = EditorViewport.GRID_SPACING
+        ox, oy = EditorViewport.OFFSET
+        return (x-ox) // grid_sp, (y-oy) // grid_sp
+
+    def _mouse_pos_to_grid(self, x, y):
+        # -- convert mouse position to grid center position
+        grid_sp = EditorViewport.GRID_SPACING
+        idx, idy = self._mouse_pos_to_map(x, y)
+        return (idx * grid_sp) + grid_sp/2, (idy * grid_sp) + grid_sp/2
+
+    def _map_add_tile(self, idx, idy, data):
+        _map = self.level_data.get('map')
+
+        # -- modifiy map list to accomodate new wall
+        items_to_add = (idx+1) - len(_map[0])
+        rows_to_add = (idy+1) - len(_map)
+        len_rows = len(_map[0])
+
+        # -- add new rows
+        if rows_to_add:
+            for i in range(rows_to_add):
+                _map.append(['' for _ in range(len_rows)])
+
+        # -- add new items
+        if items_to_add:
+            for row in _map:
+                    for _ in range(items_to_add):
+                        row.append('')
+
+        # -- set wall at target index
+        _map[idy][idx] = data
+
+    def _map_add_wall_at(self, idx, idy):
+        _map = self.level_data.get('map')
+        if _map:
+            # -- ensure list contains data
+            if idy < len(_map) and idx < len(_map[0]):
+                _map[idy][idx] = '#'
+            else:
+                self._map_add_tile(idx, idy, '#')
+
+    def _map_remove_wall_at(self, idx, idy):
+        _map = self.level_data.get('map')
+        if _map:
+            # -- ensure list contains data
+            if idy < len(_map) and idx < len(_map[0]):
+                _map[idy][idx] = ''
+
+    def _map_add_floor_at(self, idx, idy):
+        _map = self.level_data.get('map')
+        if _map:
+            # -- ensure list contains data
+            if idy < len(_map) and idx < len(_map[0]):
+                _map[idy][idx] = ' '
+            else:
+                self._map_add_tile(idx, idy, ' ')
+
+    def _map_remove_floor_at(self, idx, idy):
+        _map = self.level_data.get('map')
+        if _map:
+            # -- ensure list contains data
+            if idy < len(_map) and idx < len(_map[0]):
+                _map[idy][idx] = ''
+
     def event(self, _type, *args, **kwargs):
         super(AddTileTool, self).event(_type, *args, **kwargs)
-        data = self.level_data
+        if not self.is_active: return
 
-        if _type == EventType.MOUSE_DOWN:
-            x,y,but,mod = args
+        if _type == EventType.MOUSE_DRAG or _type == EventType.MOUSE_DOWN:
+            x,y,*_,but,mod = args
+            # -- ensure mouse if over viewport
+            if x < EditorToolbar.WIDTH: return
+
             if but == mouse.LEFT:
+                map_id = self._mouse_pos_to_map(x, y)
                 if self.default == 'Wall':
-                    pass
+                    if mod & key.MOD_CTRL:
+                        self._map_remove_wall_at(*map_id)
+                    else:
+                        self._map_add_wall_at(*map_id)
                 elif self.default == 'Floor':
-                    pass
+                    if mod & key.MOD_CTRL:
+                        self._map_remove_floor_at(*map_id)
+                    else:
+                        self._map_add_floor_at(*map_id)
+
 
 class AddAgentTool(EditorTool):
     def __init__(self):
