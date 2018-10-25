@@ -1816,7 +1816,6 @@ class AddAgentTool(EditorTool):
                     else:
                         self.level_data['enemies'].append((px, py))
 
-
 class AddWaypointTool(EditorTool):
     def __init__(self):
         opts = {
