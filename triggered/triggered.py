@@ -1338,7 +1338,7 @@ class EditorToolbar:
             AddAgentTool(),
             AddWaypointTool()
         ]
-        self.active_tool = None
+
         self.tool_start_loc = (0, window.height)
         self.tool_settings = {
             "size" : (50, 50),
@@ -1376,7 +1376,7 @@ class EditorToolbar:
             tool.update(dt)
 
             if tool.activated:
-                # -- set other tools as not active
+                # -- set all tools as inactive
                 set_flag('is_active', False, self.tools)
                 set_flag('activated', False, self.tools)
 
@@ -1397,6 +1397,17 @@ class EditorToolbar:
             self.toolbar_settings['size'] = (60, h)
             self.toolbar_image = self.toolbar.create_image(
                 *self.toolbar_settings.get("size"))
+
+        elif _type == EventType.MOUSE_DOWN:
+            x, y, btn, mod = args[1:]
+
+            # -- deactivate all tools if click over empty toolbar area
+            if btn == mouse.LEFT and mouse_over_rect((x, y), *self.get_rect()):
+                # -- check if mouse was clicked over toolbar but not over a tool,
+                if not any([mouse_over_rect((x, y), tool.position, tool.size) for tool in self.tools]):
+                    # -- set all tools as inactive
+                    set_flag('is_active', False, self.tools)
+                    set_flag('activated', False, self.tools)
 
 class EditorViewport:
 
@@ -1677,9 +1688,9 @@ class AddTileTool(EditorTool):
             x,y,but,mod = args
             if but == mouse.LEFT:
                 if self.default == 'Wall':
-                    print("Add wall at", x, y)
+                    pass
                 elif self.default == 'Floor':
-                    print(self.level_data)
+                    pass
 
 class AddAgentTool(EditorTool):
     def __init__(self):
