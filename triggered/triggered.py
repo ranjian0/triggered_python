@@ -3,6 +3,7 @@ import sys
 import math
 import heapq
 import random
+import pickle
 import pprint as pp
 import pyglet as pg
 import pymunk as pm
@@ -59,20 +60,9 @@ LevelData = namedtuple("LevelData",
             ["map",
              "player",
              "enemies",
+             "waypoints"
              "lights",
              "objectives"])
-
-TestLevel = LevelData(
-    [['#', '#', '#', '#'],
-     [' ', ' ', ' ', ' '],
-     [' ', ' ', ' ', ' '],
-     [' ', ' ', ' ', ' '],
-     [' ', ' ', ' ', ' '],
-     ['#', '#', '#', '#']],
-    (75, 75),
-    [(150, 150)],
-    [],
-    ["Kill all enemies", "Find Exit"])
 
 '''
 ============================================================
@@ -96,7 +86,6 @@ class Game:
 
         self.manager = LevelManager()
         self.manager.add([
-                Level("Test", TestLevel, 1000),
                 Level("Kill them all", Resources.instance.level("level_one"), 1024),
                 Level("Extraction", Resources.instance.level("level_two"), 1048)
             ])
@@ -145,7 +134,9 @@ class Game:
             self.editor.event(*args, **kwargs)
 
             if _type == EventType.KEY_DOWN:
+                # -- switch to game, save edited level
                 if args[1] == key.E:
+                    self.editor.save()
                     self.state = GameState.RUNNING
 
         # -- special case Resize event
@@ -245,6 +236,7 @@ class Resources:
         objectives = []
         player = None
         enemies = []
+        waypoints = []
         light = []
 
         if not file.readlines():
@@ -1089,13 +1081,6 @@ class LevelEditor:
     def event(self, *args, **kwargs):
         self.toolbar.event(*args, **kwargs)
         self.viewport.event(*args, **kwargs)
-
-        _type = args[0]
-        if _type == EventType.KEY_DOWN:
-            k, mod = args[1:]
-            if k == key.S:
-                self.save()
-
 
 class HUD:
 
