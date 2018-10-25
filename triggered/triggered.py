@@ -1410,13 +1410,13 @@ class EditorToolbar:
                     set_flag('activated', False, self.tools)
 
 class EditorViewport:
+    OFFSET = (EditorToolbar.WIDTH, 0)
+
+    GRID_SIZE = 10000
+    GRID_SPACING = 50
 
     def __init__(self, data):
         self.data = data
-
-        # -- grid options
-        self.grid_size = 10000
-        self.grid_spacing = 50
 
         # -- drag options
         self._is_panning = False
@@ -1427,21 +1427,20 @@ class EditorViewport:
         self._zoom_sensitivity = 0.1
 
         # -- map options
-        self.map_offset = (EditorToolbar.WIDTH, 0)
         self.wall_img   = Resources.instance.sprite("wall")
-        image_set_size(self.wall_img, self.grid_spacing, self.grid_spacing)
+        image_set_size(self.wall_img, self.GRID_SPACING, self.GRID_SPACING)
 
         self.floor_img   = Resources.instance.sprite("floor")
-        image_set_size(self.floor_img, self.grid_spacing, self.grid_spacing)
+        image_set_size(self.floor_img, self.GRID_SPACING, self.GRID_SPACING)
 
         # -- player options
         self.player_img = Resources.instance.sprite("hitman1_gun")
-        image_set_size(self.player_img, self.grid_spacing*.75, self.grid_spacing*.75)
+        image_set_size(self.player_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
         image_set_anchor_center(self.player_img)
 
         # -- enemy options
         self.enemy_img = Resources.instance.sprite("robot1_gun")
-        image_set_size(self.enemy_img, self.grid_spacing*.75, self.grid_spacing*.75)
+        image_set_size(self.enemy_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
         image_set_anchor_center(self.enemy_img)
 
     def get_rect(self):
@@ -1472,29 +1471,29 @@ class EditorViewport:
         glTranslatef(EditorToolbar.WIDTH, 0, 0)
 
         glBegin(GL_LINES)
-        for y in range(-self.grid_size, self.grid_size, self.grid_spacing):
+        for y in range(-self.GRID_SIZE, self.GRID_SIZE, self.GRID_SPACING):
             glColor4f(1, 1, 1, 1)
 
             # -- vertical lines
             if y == 0:
                 glColor4f(0, 0, 1, 1)
-            glVertex2f(y, -self.grid_size)
-            glVertex2f(y, self.grid_size)
+            glVertex2f(y, -self.GRID_SIZE)
+            glVertex2f(y, self.GRID_SIZE)
 
             # -- horizontal lines
             if y == 0:
                 glColor4f(1, 0, 0, 1)
-            glVertex2f(-self.grid_size, y)
-            glVertex2f(self.grid_size, y)
+            glVertex2f(-self.GRID_SIZE, y)
+            glVertex2f(self.GRID_SIZE, y)
 
         glEnd()
         glPopMatrix()
 
     def _editor_draw_map(self):
-        mx, my = self.map_offset
+        mx, my = self.OFFSET
         for y, row in enumerate(self.data['map']):
             for x, data in enumerate(row):
-                offx, offy = x * self.grid_spacing, y * self.grid_spacing
+                offx, offy = x * self.GRID_SPACING, y * self.GRID_SPACING
                 if data == "#":
                     self.wall_img.blit(offx+mx, offy+my, 0)
                 else:
@@ -1502,11 +1501,11 @@ class EditorViewport:
 
     def _editor_draw_player(self):
         px, py = self.data['player']
-        mx, my = self.map_offset
+        mx, my = self.OFFSET
         self.player_img.blit(px+mx, py+my, 0)
 
     def _editor_draw_enemies(self):
-        mx, my = self.map_offset
+        mx, my = self.OFFSET
         for pos in self.data['enemies']:
             px, py = pos
             self.enemy_img.blit(px+mx, py+my, 0)
