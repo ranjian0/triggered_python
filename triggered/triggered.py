@@ -422,7 +422,7 @@ class Player:
         elif type == EventType.RESIZE:
             w, h = args
             self.healthbar.set_pos((10, h))
-            self.ammobar.set_pos((10, window.height - (AMMO_IMG_HEIGHT*1.5)))
+            self.ammobar.set_pos((10, h - (AMMO_IMG_HEIGHT*1.5)))
 
     def update(self, dt):
         # -- movements
@@ -448,6 +448,9 @@ class Player:
         self.bullets = [b for b in self.bullets if not b.destroyed]
         for bullet in self.bullets:
             bullet.update(dt)
+
+        self.healthbar.set_pos((10, window.height))
+        self.ammobar.set_pos((10, window.height - (AMMO_IMG_HEIGHT*1.5)))
 
 class EnemyState(Enum):
     IDLE    = 0
