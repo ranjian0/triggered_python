@@ -60,7 +60,7 @@ LevelData = namedtuple("LevelData",
             ["map",
              "player",
              "enemies",
-             "waypoints"
+             "waypoints",
              "lights",
              "objectives"])
 
@@ -86,8 +86,8 @@ class Game:
 
         self.manager = LevelManager()
         self.manager.add([
-                Level("Kill them all", Resources.instance.level("level_one"), 1024),
-                Level("Extraction", Resources.instance.level("level_two"), 1048)
+                Level("Kill them all", "level_one"),
+                Level("Extraction", "level_two")
             ])
 
         self.editor = LevelEditor()
@@ -179,6 +179,24 @@ class Resources:
         self._data = defaultdict(list)
         self._load()
 
+    def get_path(self, name):
+        # -- determine the full path of a resource called name
+        for sprite in os.listdir(self._sprites):
+            n = sprite.split('.')[0]
+            if n == name:
+                return os.path.join(self._sprites, sprite)
+
+        for sound in os.listdir(self._sounds):
+            n = sound.split('.')[0]
+            if n == name:
+                return os.path.join(self._sounds, sound)
+
+        for level in os.listdir(self._levels):
+            n = level.split('.')[0]
+            if n == name:
+                return os.path.join(self._levels, level)
+        return None
+
     def sprite(self, name):
         for res in self._data['sprites']:
             if res.name == name:
@@ -227,28 +245,15 @@ class Resources:
 
         # -- load levels
         for level in os.listdir(self._levels):
-            lvl = pg.resource.file('levels/' + level, 'r')
+            lvl = pg.resource.file('levels/' + level)
             fn = os.path.basename(level.split('.')[0])
             self._data['levels'].append(Resource(fn,lvl))
 
     def _parse_level(self, file):
-        map_data = []
-        objectives = []
-        player = None
-        enemies = []
-        waypoints = []
-        light = []
-
-        if not file.readlines():
+        try:
+            return pickle.load(file)
+        except EOFError:
             return None
-
-        for line in file.readlines():
-            if line.startswith("#"):
-                map_data.append(list(line.strip()))
-            elif line.startswith(":"):
-                objectives.append(line.strip()[1:])
-
-        return LevelData(list(reversed(map_data)), player, enemies, light, objectives)
 
 class Physics:
 
@@ -869,26 +874,27 @@ class LevelStatus(Enum):
 
 class Level:
 
-    def __init__(self, name, data, seed):
+    def __init__(self, name, resource_name):
         self.name = name
-        self.data = data
-        self.seed = seed
+        self.file = Resources.instance.get_path(resource_name)
+        self.data = Resources.instance.level(resource_name)
 
         self.map = None
         self.agents = []
         self.agent_batch = pg.graphics.Batch()
 
-        self.hud = HUD()
         self.reload()
-
         self.status = LevelStatus.RUNNING
+
+    def save(self):
         if self.data:
-            self.infopanel = InfoPanel(name, data.objectives, self.map, self.agents)
-        self.show_info = False
+            f = open(self.file, 'wb')
+            pickle.dump(self.data, f)
 
     def reload(self):
         if not self.data: return
 
+        self.hud = HUD()
         self.agents.clear()
         self.map = Map(self.data.map, physics=Physics.instance)
 
@@ -900,15 +906,12 @@ class Level:
         self.hud.add(player.ammobar)
 
         # -- add other agents map positions
-        random.seed(self.seed)
-        for idx,point in enumerate(self.data.enemies):
-            # # -- calculate waypoints
-            # patrol_point = random.choice(self.map['patrol_positions'])
-            # patrol = self.map.pathfinder.calc_patrol_path([point, patrol_point])
-            # path = patrol + list(reversed(patrol[1:-1]))
+        for idx, point in enumerate(self.data.enemies):
+            # -- get waypoints
+            path = self.data.waypoints[idx]
 
             e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"),
-                [point], self.agent_batch, ENEMY_COL_TYPE + idx)
+                path, self.agent_batch, ENEMY_COL_TYPE + idx)
             ENEMY_TYPES.append(ENEMY_COL_TYPE + idx)
 
             if DEBUG:
@@ -919,6 +922,10 @@ class Level:
 
         # -- register collision types
         setup_collisions(Physics.instance.space)
+
+        # -- create infopanel
+        self.infopanel = InfoPanel(self.name, self.data.objectives, self.map, self.agents)
+        self.show_info = False
 
     def get_player(self):
         for ag in self.agents:
@@ -1048,6 +1055,12 @@ class LevelEditor:
             # -- load leveldata
             for key, val in level.data._asdict().items():
                 self.data[key] = val
+        else:
+            # -- initialize data with default values
+            keys = LevelData._fields
+            defaults = ([[]], (-10000, -10000), [], [], [], [])
+            for k,v in zip(keys, defaults):
+                self.data[k] = v
 
     def save(self):
         # -- remove temp data from self.data
@@ -1057,7 +1070,8 @@ class LevelEditor:
             del self.data[it]
 
         # -- update level data and reload level
-        self._level.data._replace(**self.data)
+        self._level.data = LevelData(**self.data)
+        self._level.save()
         self._level.reload()
 
         # -- restore temp data from self.data
@@ -1066,13 +1080,11 @@ class LevelEditor:
 
         # --  update viewport
         self.viewport.reload()
-        print("Level saved")
 
     def draw(self):
         with reset_matrix():
             self.viewport.draw()
             self.toolbar.draw()
-
 
     def update(self, dt):
         self.toolbar.update(dt)
@@ -1081,6 +1093,7 @@ class LevelEditor:
     def event(self, *args, **kwargs):
         self.toolbar.event(*args, **kwargs)
         self.viewport.event(*args, **kwargs)
+
 
 class HUD:
 
@@ -1533,7 +1546,7 @@ class EditorViewport:
             self.enemy_target.blit(ex+mx, ey+my, 0)
 
     def _editor_draw_waypoints(self):
-        waypoints = self.data.get('_waypoints')
+        waypoints = self.data.get('waypoints')
         if waypoints:
             # -- check if we have active enemy
             enemy_id = self.data.get('_active_enemy')
@@ -1829,11 +1842,14 @@ class AddAgentTool(EditorTool):
                 elif self.default == 'Enemy':
                     if mod & key.MOD_CTRL:
                         enemies = self.level_data['enemies']
-                        for en in enemies:
+                        waypoints = self.level_data['waypoints']
+                        for idx, en in enumerate(enemies):
                             if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
                                 self.level_data['enemies'].remove(en)
+                                self.level_data['waypoints'].remove(waypoints[idx])
                     else:
                         self.level_data['enemies'].append((px, py))
+                        self.level_data['waypoints'].append([])
 
 class AddWaypointTool(EditorTool):
     def __init__(self):
