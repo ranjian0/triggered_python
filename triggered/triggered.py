@@ -1803,6 +1803,8 @@ class AddTileTool(EditorTool):
             if x < EditorToolbar.WIDTH: return
 
             if but == mouse.LEFT:
+                if self.show_options: return # -- showing tool options
+
                 map_id = self._mouse_pos_to_map(x, y)
                 if self.default == 'Wall':
                     if mod & key.MOD_CTRL:
