@@ -88,7 +88,6 @@ class Game:
                 Level("Extraction", "level_two")
             ])
 
-
         self.mainmenu = MainMenu()
         self.pausemenu = PauseMenu()
 
@@ -1738,7 +1737,7 @@ class EditorTool:
         # -- transform viewport scale
         # px, py = px*zx, py*zy
 
-        return px+sox, py+soy
+        return px, py
 
     def mouse_pos_to_map(self, x, y):
         # -- convert mouse position to map array indices
