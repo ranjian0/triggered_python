@@ -1604,7 +1604,9 @@ class EditorViewport:
             if but == mouse.MIDDLE:
                 self._is_panning = True
                 px, py = self._pan_offset
-                self._pan_offset = (px+dx, py+dy)
+                px = 0 if (px+dx) > 0 else px+dx
+                py = 0 if (py+dy) > 0 else py+dy
+                self._pan_offset = (px, py)
         else:
             self._is_panning = False
 
