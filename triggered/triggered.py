@@ -1051,7 +1051,6 @@ class LevelEditor:
         self.viewport = EditorViewport(self.data)
         self.properties = EditorToolprops()
 
-
     def set(self, level):
         self._level = level
         if level.data:
@@ -1092,6 +1091,10 @@ class LevelEditor:
     def update(self, dt):
         self.toolbar.update(dt)
         self.viewport.update(dt)
+
+        # -- update tools for viewport transform
+        for tool in self.toolbar.tools:
+            tool.set_viewport_transform(self.viewport.get_transform())
 
     def event(self, *args, **kwargs):
         self.toolbar.event(*args, **kwargs)
@@ -1439,7 +1442,7 @@ class EditorViewport:
     OFFSET = (EditorToolbar.WIDTH, 0)
 
     GRID_SIZE = 10000
-    GRID_SPACING = 50
+    GRID_SPACING = 100
 
     def __init__(self, data):
         self.data = data
@@ -1483,6 +1486,9 @@ class EditorViewport:
             width/2 + EditorToolbar.WIDTH,
             window.height/2)
         return [center, size]
+
+    def get_transform(self):
+        return (self._pan_offset, self._zoom)
 
     @contextmanager
     def _editor_do_pan(self):
@@ -1652,8 +1658,42 @@ class EditorTool:
         self.is_active = False
         self.activated = False
 
+        # -- flag to track viewport transform
+        self._viewport_pan = (0, 0)
+        self._viewport_zoom = (1, 1)
+
     def set_data(self, val):
         self.level_data = val
+
+    def set_viewport_transform(self, val):
+        self._viewport_pan = val[0]
+        self._viewport_zoom = val[1]
+
+    def mouse_pos_to_viewport(self, x, y):
+        # -- convert mouse position to viewport position
+        panx, pany = self._viewport_pan
+        zx, zy = self._viewport_zoom
+
+        # -- transform viewport pan
+        px, py = x-panx, y-pany
+
+        # -- transfrom viewport scale
+        gs = EditorViewport.GRID_SPACING
+        gsx, gsy = round(zx * gs), round(zy * gs)
+
+        ox, oy = EditorViewport.OFFSET
+        sox, soy = (1-zx) * ox, (1-zy) * oy
+        return px-ox+sox, py-oy+soy
+
+    def mouse_pos_to_map(self, x, y):
+        # -- convert mouse position to map array indices
+        vx, vy = self.mouse_pos_to_viewport(x, y)
+
+        zx, zy = self._viewport_zoom
+        gs = EditorViewport.GRID_SPACING
+        gsx, gsy = round(zx * gs), round(zy * gs)
+
+        return int(vx) // gsx, int(vy) // gsy
 
     def draw(self):
         # -- draw tool background
@@ -1730,18 +1770,6 @@ class AddTileTool(EditorTool):
         }
         super(AddTileTool, self).__init__(opts)
 
-    def _mouse_pos_to_map(self, x, y):
-        # -- convert mouse position to map array indices
-        grid_sp = EditorViewport.GRID_SPACING
-        ox, oy = EditorViewport.OFFSET
-        return (x-ox) // grid_sp, (y-oy) // grid_sp
-
-    def _mouse_pos_to_grid(self, x, y):
-        # -- convert mouse position to grid center position
-        grid_sp = EditorViewport.GRID_SPACING
-        idx, idy = self._mouse_pos_to_map(x, y)
-        return (idx * grid_sp) + grid_sp/2, (idy * grid_sp) + grid_sp/2
-
     def _map_add_tile(self, idx, idy, data):
         _map = self.level_data.get('map')
 
@@ -1808,7 +1836,7 @@ class AddTileTool(EditorTool):
             if but == mouse.LEFT:
                 if self.show_options: return # -- showing tool options
 
-                map_id = self._mouse_pos_to_map(x, y)
+                map_id = self.mouse_pos_to_map(x, y)
                 if self.default == 'Wall':
                     if mod & key.MOD_CTRL:
                         self._map_remove_wall_at(*map_id)
@@ -1839,8 +1867,7 @@ class AddAgentTool(EditorTool):
             if x < EditorToolbar.WIDTH: return
 
             if but == mouse.LEFT:
-                ox, oy = EditorViewport.OFFSET
-                px, py = x-ox, y-oy
+                px, py = self.mouse_pos_to_viewport(x, y)
 
                 if self.default == 'Player':
                     self.level_data['player'] = (px, py)
