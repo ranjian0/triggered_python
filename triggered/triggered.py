@@ -1514,12 +1514,12 @@ class EditorViewport:
         image_set_size(self.floor_img, self.GRID_SPACING, self.GRID_SPACING)
 
         # -- player options
-        self.player_img = Resources.instance.sprite("hitman1_gun")
+        self.player_img = Resources.instance.sprite("hitman1_stand")
         image_set_size(self.player_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
         image_set_anchor_center(self.player_img)
 
         # -- enemy options
-        self.enemy_img = Resources.instance.sprite("robot1_gun")
+        self.enemy_img = Resources.instance.sprite("robot1_stand")
         image_set_size(self.enemy_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
         image_set_anchor_center(self.enemy_img)
 
