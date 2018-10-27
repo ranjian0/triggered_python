@@ -1679,6 +1679,23 @@ class EditorTool:
         panx, pany = self._viewport_pan
         zx, zy = self._viewport_zoom
 
+        # -- subtract editor offset
+        ox, oy = EditorViewport.OFFSET
+        px, py = x-ox, y-oy
+
+        # -- transform viewport pan
+        px, py = px-panx, py-pany
+
+        # -- transform viewport scale
+        # px, py = px*zx, py*zy
+
+        return px+sox, py+soy
+
+    def mouse_pos_to_map(self, x, y):
+        # -- convert mouse position to map array indices
+        panx, pany = self._viewport_pan
+        zx, zy = self._viewport_zoom
+
         # -- transform viewport pan
         px, py = x-panx, y-pany
 
@@ -1688,17 +1705,7 @@ class EditorTool:
 
         ox, oy = EditorViewport.OFFSET
         sox, soy = (1-zx) * ox, (1-zy) * oy
-        return px-ox+sox, py-oy+soy
-
-    def mouse_pos_to_map(self, x, y):
-        # -- convert mouse position to map array indices
-        vx, vy = self.mouse_pos_to_viewport(x, y)
-
-        zx, zy = self._viewport_zoom
-        gs = EditorViewport.GRID_SPACING
-        gsx, gsy = round(zx * gs), round(zy * gs)
-
-        return int(vx) // gsx, int(vy) // gsy
+        return int(px-ox+sox) // gsx, int(py-oy+soy) // gsy
 
     def draw(self):
         # -- draw tool background
