@@ -1446,7 +1446,7 @@ class EditorToolbar:
 class EditorViewport:
     OFFSET = (EditorToolbar.WIDTH, 0)
 
-    GRID_SIZE = 10000
+    GRID_SIZE = 20000
     GRID_SPACING = 100
 
     def __init__(self, data):
