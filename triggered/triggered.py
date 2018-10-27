@@ -453,9 +453,6 @@ class Player:
         for bullet in self.bullets:
             bullet.update(dt)
 
-        self.healthbar.set_pos((10, window.height))
-        self.ammobar.set_pos((10, window.height - (AMMO_IMG_HEIGHT*1.5)))
-
 class EnemyState(Enum):
     IDLE    = 0
     PATROL  = 1
@@ -1256,10 +1253,7 @@ class InfoPanel:
         self.map = _map
         self.agents = agents
 
-        self.panel = self.create_panel()
-        self.title = self.create_title()
-        self.objs = self.create_objectives()
-        self.minimap = self.create_minimap()
+        self.reload()
 
         # -- minimap images
         player_img = Resources.instance.sprite("minimap_player")
@@ -1277,6 +1271,12 @@ class InfoPanel:
 
         num_enemies = len([a for a in self.agents if isinstance(a, Enemy)])
         self.minimap_enemies = [pg.sprite.Sprite(enemy_img) for _ in range(num_enemies)]
+
+    def reload(self):
+        self.panel = self.create_panel()
+        self.title = self.create_title()
+        self.objs = self.create_objectives()
+        self.minimap = self.create_minimap()
 
     def draw(self):
         with reset_matrix():
@@ -1306,10 +1306,7 @@ class InfoPanel:
 
     def event(self, _type, *args, **kwargs):
         if _type == EventType.RESIZE:
-            self.panel = self.create_panel()
-            self.title = self.create_title()
-            self.objs = self.create_objectives()
-            self.minimap = self.create_minimap()
+            self.reload()
 
     def create_panel(self):
         w, h = window.get_size()
@@ -2168,6 +2165,7 @@ fps  = pg.window.FPSDisplay(window)
 res  = Resources()
 phy  = Physics()
 game = Game()
+size = window.get_size()
 
 @window.event
 def on_draw():
@@ -2216,6 +2214,10 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
 def on_update(dt):
     phy.update()
     game.update(dt)
+
+    # - dispatch resize event manually - fix for maximize
+    if size != window.get_size():
+        window.dispatch_event("on_resize", *window.get_size())
 
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)
