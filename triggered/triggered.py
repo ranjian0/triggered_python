@@ -275,6 +275,10 @@ class Physics:
     def remove(self, *args):
         self.space.remove(*args)
 
+    def clear(self):
+        for body in self.space.bodies:
+            self.remove(body, body.shape)
+
     def update(self):
         for _ in it.repeat(None, self.steps):
             self.space.step(0.1 / self.steps)
@@ -343,7 +347,7 @@ class Player:
         # player physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
-        self.shape = pm.Circle(self.body, size[0]*.45)
+        self.shape = pm.Circle(self.body, size[0]*.75)
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
@@ -899,6 +903,7 @@ class Level:
 
         self.hud = HUD()
         self.agents.clear()
+        Physics.instance.clear()
         self.map = Map(self.data.map, physics=Physics.instance)
 
         # -- add player to map position
