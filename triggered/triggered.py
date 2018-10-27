@@ -277,7 +277,7 @@ class Physics:
 
     def clear(self):
         for body in self.space.bodies:
-            self.remove(body, body.shape)
+            self.remove(body)
 
     def update(self):
         for _ in it.repeat(None, self.steps):
