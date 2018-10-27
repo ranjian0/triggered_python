@@ -1515,19 +1515,19 @@ class EditorViewport:
         glTranslatef(EditorToolbar.WIDTH, 0, 0)
 
         glBegin(GL_LINES)
-        for y in range(-self.GRID_SIZE, self.GRID_SIZE, self.GRID_SPACING):
+        for y in range(0, self.GRID_SIZE, self.GRID_SPACING):
             glColor4f(1, 1, 1, 1)
 
             # -- vertical lines
             if y == 0:
                 glColor4f(0, 0, 1, 1)
-            glVertex2f(y, -self.GRID_SIZE)
+            glVertex2f(y, 0)
             glVertex2f(y, self.GRID_SIZE)
 
             # -- horizontal lines
             if y == 0:
                 glColor4f(1, 0, 0, 1)
-            glVertex2f(-self.GRID_SIZE, y)
+            glVertex2f(0, y)
             glVertex2f(self.GRID_SIZE, y)
 
         glEnd()
