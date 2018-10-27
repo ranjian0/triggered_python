@@ -81,16 +81,22 @@ class Game:
     def __init__(self):
         self.state = GameState.MAINMENU
 
-        self.mainmenu = MainMenu()
-        self.pausemenu = PauseMenu()
-
+        self.editor = LevelEditor()
         self.manager = LevelManager()
         self.manager.add([
                 Level("Kill them all", "level_one"),
                 Level("Extraction", "level_two")
             ])
 
-        self.editor = LevelEditor()
+
+        self.mainmenu = MainMenu()
+        self.pausemenu = PauseMenu()
+
+    def start(self):
+        self.state = GameState.RUNNING
+
+    def pause(self):
+        self.state = GameState.PAUSED
 
     def draw(self):
         if self.state == GameState.MAINMENU:
@@ -1008,6 +1014,13 @@ class Level:
 
 class LevelManager:
 
+    # -- singleton
+    instance = None
+    def __new__(cls):
+        if LevelManager.instance is None:
+            LevelManager.instance = object.__new__(cls)
+        return LevelManager.instance
+
     def __init__(self):
         self.levels = []
         self.index = 0
@@ -1029,6 +1042,11 @@ class LevelManager:
             self.index += 1
             return self.current()
         return None
+
+    def set(self, name):
+        for idx, level in enumerate(self.levels):
+            if level.name == name:
+                self.index = idx
 
     def __iter__(self):
         for l in self.levels:
@@ -1203,12 +1221,22 @@ class MainMenu:
             font_size=48, x=window.width/2, y=window.height*.9,
             anchor_x='center', anchor_y='center')
 
+        self.txt_height = 50
+        self.level_batch = pg.graphics.Batch()
+        self.level_select = [
+            pg.text.Label(level.name, bold=True, font_size=32,
+                x=window.width/4, y=(window.height*.8)-(idx*self.txt_height),
+                anchor_x='center', anchor_y='center', batch=self.level_batch)
+            for idx, level in enumerate(LevelManager.instance.levels)
+        ]
+
         self.instruction = pg.text.Label("Press Space to play",
             x=window.width/2, y=10, anchor_x='center')
 
     def draw(self):
         with reset_matrix():
             self.title.draw()
+            self.level_batch.draw()
             self.instruction.draw()
 
     def event(self, _type, *args, **kwargs):
@@ -1218,7 +1246,29 @@ class MainMenu:
             self.title.x = w/2
             self.title.y = h * .9
             self.instruction.x = w/2
+        elif _type == EventType.MOUSE_MOTION:
+            x, y, *_ = args
 
+            for txt in self.level_select:
+                center = txt.x, txt.y
+                size = (200, self.txt_height)
+
+                if mouse_over_rect((x,y), center, size):
+                    txt.color = (255, 0, 0, 255)
+                else:
+                    txt.color = (255,)*4
+
+        elif _type == EventType.MOUSE_DOWN:
+            x, y, btn, mod = args
+
+            for txt in self.level_select:
+                center = txt.x, txt.y
+                size = (200, self.txt_height)
+
+                if btn == mouse.LEFT:
+                    if mouse_over_rect((x,y), center, size):
+                        LevelManager.instance.set(txt.text)
+                        game.start()
 
     def update(self, dt):
         pass
