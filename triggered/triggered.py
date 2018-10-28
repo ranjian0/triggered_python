@@ -17,7 +17,7 @@ from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
 FPS        = 60
-DEBUG      = 0
+DEBUG      = 1
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -685,7 +685,7 @@ class Bullet:
         # Bullet physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
-        self.shape = pm.Circle(self.body, 10) #pm.Poly.create_box(self.body, size=(sz, sz)) -- no rotation
+        self.shape = pm.Circle(self.body, 10)
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
 
@@ -2217,7 +2217,7 @@ def on_draw():
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     game.draw()
 
-    if DEBUG:
+    if DEBUG and game.state == GameState.RUNNING:
         fps.draw()
         phy.debug_draw()
 
