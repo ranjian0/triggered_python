@@ -17,7 +17,7 @@ from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
 FPS        = 60
-DEBUG      = 1
+DEBUG      = 0
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -35,13 +35,12 @@ RAYCAST_FILTER = 0x1
 RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
 COLLISION_MAP = {
     "PlayerType" : 1,
-    "WallType"   : 3,
-    "PlayerBulletType" : 4,
-    "EnemyBulletType"  : 5
+    "WallType"   : 2,
+    "PlayerBulletType" : 3,
+    "EnemyBulletType"  : 4,
+    "EnemyType" : 100
 }
-ENEMY_COL_TYPE = 100
 
-BULLET_SIZE = 12
 MINIMAP_AGENT_SIZE = 25
 AMMO_IMG_HEIGHT = 30
 
@@ -264,10 +263,8 @@ class Physics:
             Physics.instance = object.__new__(cls)
         return Physics.instance
 
-
-    def __init__(self, steps=50):
+    def __init__(self):
         self.space = pm.Space()
-        self.steps = steps
 
     def add(self, *args):
         self.space.add(*args)
@@ -277,11 +274,11 @@ class Physics:
 
     def clear(self):
         for body in self.space.bodies:
-            self.remove(body)
+            self.remove(body, body.shapes)
 
-    def update(self):
-        for _ in it.repeat(None, self.steps):
-            self.space.step(0.1 / self.steps)
+    def update(self, dt):
+        for _ in it.repeat(None, FPS):
+            self.space.step(1. / FPS)
 
     def raycast(self, start, end, radius, filter):
         res = self.space.segment_query_first(start, end, radius, filter)
@@ -330,7 +327,7 @@ class Player:
         # -- weapon properties
         self.ammo   = 350
         self.bullets = []
-        self.muzzle_offset = (self.size[0]/2+BULLET_SIZE/2, -self.size[1]*.21)
+        self.muzzle_offset = (self.size[0]/2+Bullet.SIZE/2, -self.size[1]*.21)
         self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
         self.muzzle_angle = angle(self.muzzle_offset)
         self.ammobar = AmmoBar((10, window.height - (AMMO_IMG_HEIGHT*1.5)), self.ammo)
@@ -345,7 +342,7 @@ class Player:
             batch=self.batch)
 
         # player physics
-        self.body = pm.Body(1, 100)
+        self.body = pm.Body(1, pm.inf)
         self.body.position = self.pos
         self.shape = pm.Circle(self.body, size[0]*.45)
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
@@ -443,10 +440,11 @@ class Player:
         bx, by = self.body.position
         bx += dx * dt * speed
         by += dy * dt * speed
-        self.body.position = (bx, by)
 
-        self.sprite.position = (bx, by)
         self.pos = (bx, by)
+        self.body.position = self.pos
+        Physics.instance.space.reindex_shapes_for_body(self.body)
+        self.sprite.set_position(self.body.position.x, self.body.position.y)
 
         # -- update bullets
         self.bullets = [b for b in self.bullets if not b.destroyed]
@@ -663,6 +661,7 @@ class Enemy:
             self.pos = (bx, by)
 
 class Bullet:
+    SIZE = 12
 
     def __init__(self, position, direction, batch, speed=500):
         self.pos = position
@@ -672,9 +671,8 @@ class Bullet:
         self.destroyed = False
 
         # image
-        sz = BULLET_SIZE
         self.image = Resources.instance.sprite("bullet")
-        image_set_size(self.image, sz, sz)
+        image_set_size(self.image, self.SIZE, self.SIZE)
         image_set_anchor_center(self.image)
         self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1],
             batch=self.batch)
@@ -697,15 +695,16 @@ class Bullet:
         Physics.instance.remove(self.body, self.shape)
 
     def update(self, dt):
-        bx, by = self.body.position
+        bx, by = self.pos #self.body.position
         dx, dy = self.dir
 
         bx += dx * dt * self.speed
         by += dy * dt * self.speed
 
-        self.body.position = (bx, by)
-        self.sprite.position = (bx, by)
         self.pos = (bx, by)
+        self.body.position = self.pos
+        Physics.instance.space.reindex_shapes_for_body(self.body)
+        self.sprite.set_position(self.body.position.x, self.body.position.y)
 
         if not self.body in Physics.instance.space.bodies:
             self.destroyed = True
@@ -914,8 +913,8 @@ class Level:
             path = self.data.waypoints[idx]
 
             e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"),
-                path, self.agent_batch, ENEMY_COL_TYPE + idx)
-            ENEMY_TYPES.append(ENEMY_COL_TYPE + idx)
+                path, self.agent_batch, COLLISION_MAP.get("EnemyType") + idx)
+            ENEMY_TYPES.append(COLLISION_MAP.get("EnemyType") + idx)
 
             if DEBUG:
                 e.debug_data = (patrol, random_color())
@@ -2218,8 +2217,8 @@ def on_draw():
     game.draw()
 
     if DEBUG and game.state == GameState.RUNNING:
-        fps.draw()
         phy.debug_draw()
+        fps.draw()
 
 @window.event
 def on_resize(w, h):
@@ -2254,7 +2253,7 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
     game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
 
 def on_update(dt):
-    phy.update()
+    phy.update(dt)
     game.update(dt)
 
     # - dispatch resize event manually - fix for maximize
