@@ -1224,19 +1224,15 @@ class MainMenu:
         self.level_batch = pg.graphics.Batch()
         self.level_select = [
             pg.text.Label(level.name, bold=True, font_size=32,
-                x=window.width/4, y=(window.height*.8)-(idx*self.txt_height),
+                x=window.width/4, y=(window.height*.8)-((idx+1)*self.txt_height),
                 anchor_x='center', anchor_y='center', batch=self.level_batch)
             for idx, level in enumerate(LevelManager.instance.levels)
         ]
-
-        self.instruction = pg.text.Label("Press Space to play",
-            x=window.width/2, y=10, anchor_x='center')
 
     def draw(self):
         with reset_matrix():
             self.title.draw()
             self.level_batch.draw()
-            self.instruction.draw()
 
     def event(self, _type, *args, **kwargs):
         if _type == EventType.RESIZE:
@@ -1244,7 +1240,11 @@ class MainMenu:
 
             self.title.x = w/2
             self.title.y = h * .9
-            self.instruction.x = w/2
+
+            for idx, txt in enumerate(self.level_select):
+                txt.x = window.width/4
+                txt.y = (window.height*.8)-((idx+1)*self.txt_height)
+
         elif _type == EventType.MOUSE_MOTION:
             x, y, *_ = args
 
@@ -1253,7 +1253,7 @@ class MainMenu:
                 size = (200, self.txt_height)
 
                 if mouse_over_rect((x,y), center, size):
-                    txt.color = (255, 0, 0, 255)
+                    txt.color = (200, 0, 0, 255)
                 else:
                     txt.color = (255,)*4
 
