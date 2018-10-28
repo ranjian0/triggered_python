@@ -29,7 +29,6 @@ KEYMAP = {
     key.A : (-1, 0),
     key.D : (1, 0)
 }
-PAUSE_KEY = key.P
 
 RAYCAST_FILTER = 0x1
 RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
@@ -40,9 +39,6 @@ COLLISION_MAP = {
     "EnemyBulletType"  : 4,
     "EnemyType" : 100
 }
-
-MINIMAP_AGENT_SIZE = 25
-AMMO_IMG_HEIGHT = 30
 
 class EventType(Enum):
     KEY_DOWN = 1
@@ -114,14 +110,14 @@ class Game:
 
         if self.state == GameState.PAUSED:
             if _type == EventType.KEY_DOWN:
-                if args[1] == PAUSE_KEY:
+                if args[1] == key.P:
                     self.state = GameState.RUNNING
 
         elif self.state == GameState.RUNNING:
             self.manager.event(*args, **kwargs)
 
             if _type == EventType.KEY_DOWN:
-                if args[1] == PAUSE_KEY:
+                if args[1] == key.P:
                     self.state = GameState.PAUSED
 
             # -- switch to editor
@@ -330,7 +326,7 @@ class Player:
         self.muzzle_offset = (self.size[0]/2+Bullet.SIZE/2, -self.size[1]*.21)
         self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
         self.muzzle_angle = angle(self.muzzle_offset)
-        self.ammobar = AmmoBar((10, window.height - (AMMO_IMG_HEIGHT*1.5)), self.ammo)
+        self.ammobar = AmmoBar((10, window.height - (AmmoBar.AMMO_IMG_HEIGHT*1.5)), self.ammo)
 
         # Create Player Image
         self.image = image
@@ -423,7 +419,7 @@ class Player:
         elif type == EventType.RESIZE:
             w, h = args
             self.healthbar.set_pos((10, h))
-            self.ammobar.set_pos((10, h - (AMMO_IMG_HEIGHT*1.5)))
+            self.ammobar.set_pos((10, h - (AmmoBar.AMMO_IMG_HEIGHT*1.5)))
 
     def update(self, dt):
         # -- movements
@@ -1159,6 +1155,7 @@ class HealthBar:
         self.bar.update(x=pos[0], y=pos[1])
 
 class AmmoBar:
+    AMMO_IMG_HEIGHT = 30
 
     def __init__(self, position, ammo):
         self.pos = position
@@ -1166,8 +1163,7 @@ class AmmoBar:
         self.ammo = ammo
 
         self.ammo_img = Resources.instance.sprite("ammo_bullet")
-        self.ammo_img.width = AMMO_IMG_HEIGHT//3
-        self.ammo_img.height = AMMO_IMG_HEIGHT
+        image_set_size(self.ammo_img, self.AMMO_IMG_HEIGHT//3, self.AMMO_IMG_HEIGHT)
         self.ammo_img.anchor_y = self.ammo_img.height
         self.bullets = [pg.sprite.Sprite(self.ammo_img, batch=self.batch)
             for _ in range(ammo // 100)]
@@ -1287,6 +1283,7 @@ class PauseMenu:
         pass
 
 class InfoPanel:
+    MINIMAP_AGENT_SIZE = 25
 
     def __init__(self, level_name, objs, _map, agents):
         self.level_name = level_name
@@ -1298,17 +1295,13 @@ class InfoPanel:
 
         # -- minimap images
         player_img = Resources.instance.sprite("minimap_player")
-        player_img.width = MINIMAP_AGENT_SIZE
-        player_img.height = MINIMAP_AGENT_SIZE
-        player_img.anchor_x = player_img.width/2
-        player_img.anchor_y = player_img.height/2
+        image_set_size(player_img, *(self.MINIMAP_AGENT_SIZE,)*2)
+        image_set_anchor_center(player_img)
         self.minimap_player = pg.sprite.Sprite(player_img)
 
         enemy_img = Resources.instance.sprite("minimap_enemy")
-        enemy_img.width = MINIMAP_AGENT_SIZE
-        enemy_img.height = MINIMAP_AGENT_SIZE
-        enemy_img.anchor_x = enemy_img.width/2
-        enemy_img.anchor_y = enemy_img.height/2
+        image_set_size(enemy_img, *(self.MINIMAP_AGENT_SIZE,)*2)
+        image_set_anchor_center(enemy_img)
 
         num_enemies = len([a for a in self.agents if isinstance(a, Enemy)])
         self.minimap_enemies = [pg.sprite.Sprite(enemy_img) for _ in range(num_enemies)]
