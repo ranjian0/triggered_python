@@ -1558,7 +1558,7 @@ class EditorViewport:
     def _editor_draw_grid(self):
         glLineWidth(2)
         glPushMatrix()
-        glTranslatef(EditorToolbar.WIDTH, 0, 0)
+        glTranslatef(*self.OFFSET, 0)
 
         glBegin(GL_LINES)
         for y in range(0, self.GRID_SIZE, self.GRID_SPACING):
@@ -1966,10 +1966,10 @@ class AddWaypointTool(EditorTool):
                 enemy_id = self.level_data.get('_active_enemy')
                 if enemy_id:
                     # -- ensure waypoint list exist
-                    waypoints = self.level_data.get('_waypoints')
+                    waypoints = self.level_data.get('waypoints')
                     if not waypoints:
-                        self.level_data['_waypoints'] = []
-                        waypoints = self.level_data['_waypoints']
+                        self.level_data['waypoints'] = []
+                        waypoints = self.level_data['waypoints']
 
                     # -- check if waypoints exist for all enemies
                     missing = len(self.level_data['enemies']) > len(waypoints)
