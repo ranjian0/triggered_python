@@ -113,12 +113,7 @@ class Game:
 
         _type = args[0]
 
-        if self.state == GameState.MAINMENU:
-            if _type == EventType.KEY_DOWN:
-                if args[1] == key.SPACE:
-                    self.state = GameState.RUNNING
-
-        elif self.state == GameState.PAUSED:
+        if self.state == GameState.PAUSED:
             if _type == EventType.KEY_DOWN:
                 if args[1] == PAUSE_KEY:
                     self.state = GameState.RUNNING
@@ -352,7 +347,7 @@ class Player:
         # player physics
         self.body = pm.Body(1, 100)
         self.body.position = self.pos
-        self.shape = pm.Circle(self.body, size[0]*.75)
+        self.shape = pm.Circle(self.body, size[0]*.45)
         self.shape.collision_type = COLLISION_MAP.get("PlayerType")
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         Physics.instance.add(self.body, self.shape)
@@ -679,10 +674,8 @@ class Bullet:
         # image
         sz = BULLET_SIZE
         self.image = Resources.instance.sprite("bullet")
-        self.image.width = sz
-        self.image.height = sz
-        self.image.anchor_x = sz/2
-        self.image.anchor_y = sz/2
+        image_set_size(self.image, sz, sz)
+        image_set_anchor_center(self.image)
         self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1],
             batch=self.batch)
 
