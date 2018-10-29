@@ -1857,7 +1857,7 @@ class AddTileTool(EditorTool):
             if but == mouse.LEFT:
                 # -- if we are showing tool options for other tools, return
                 for tool in EditorTool.tools:
-                    if tool != self and tool.show_options:
+                    if tool.show_options:
                         return
 
                 map_id = self.mouse_pos_to_map(x, y)
