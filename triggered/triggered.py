@@ -22,7 +22,7 @@ SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
 
-KEYS = key.KeyStateHandler()
+KEYS   = key.KeyStateHandler()
 KEYMAP = {
     key.W : (0, 1),
     key.S : (0, -1),
@@ -41,16 +41,16 @@ COLLISION_MAP = {
 }
 
 class EventType(Enum):
-    KEY_DOWN = 1
-    KEY_UP   = 2
-    MOUSE_DOWN = 3
-    MOUSE_UP   = 4
+    KEY_DOWN     = 1
+    KEY_UP       = 2
+    MOUSE_DOWN   = 3
+    MOUSE_UP     = 4
     MOUSE_MOTION = 5
-    MOUSE_DRAG = 6
+    MOUSE_DRAG   = 6
     MOUSE_SCROLL = 7
     RESIZE = 8
 
-Resource = namedtuple("Resource", "name data")
+Resource  = namedtuple("Resource", "name data")
 LevelData = namedtuple("LevelData",
             ["map",
              "player",
@@ -65,11 +65,10 @@ LevelData = namedtuple("LevelData",
 ============================================================
 '''
 class GameState(Enum):
-    MAINMENU    = 1
-    RUNNING     = 2
-    PAUSED      = 3
-
-    EDITOR      = 4
+    MAINMENU = 1
+    RUNNING  = 2
+    PAUSED   = 3
+    EDITOR   = 4
 
 class Game:
 
@@ -269,6 +268,7 @@ class Physics:
         self.space.remove(*args)
 
     def clear(self):
+        self.remove(self.space.static_body.shapes)
         for body in self.space.bodies:
             self.remove(body, body.shapes)
 
@@ -467,7 +467,7 @@ class Enemy:
         self.dead = False
         # -- weapon properties
         self.bullets = []
-        self.muzzle_offset = (self.size[0]/2+BULLET_SIZE/2, -self.size[1]*.21)
+        self.muzzle_offset = (self.size[0]/2+Bullet.SIZE/2, -self.size[1]*.21)
         self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
         self.muzzle_angle = angle(self.muzzle_offset)
         # --
@@ -913,7 +913,7 @@ class Level:
             ENEMY_TYPES.append(COLLISION_MAP.get("EnemyType") + idx)
 
             if DEBUG:
-                e.debug_data = (patrol, random_color())
+                e.debug_data = (path, random_color())
             e.watch(player)
             e.set_map(self.map)
             self.agents.append(e)
@@ -1962,8 +1962,19 @@ class AddWaypointTool(EditorTool):
                         for _ in range(len(self.level_data['enemies']) - len(waypoints)):
                             waypoints.append([])
 
-                    # -- add mouse location to the selected enemy waypoint
-                    waypoints[enemy_id-1].append((x, y))
+
+                    if mod & key.MOD_CTRL:
+                        # -- remove waypoint at mouse location
+                        selected = None
+                        for point in waypoints[enemy_id-1]:
+                            if mouse_over_rect((x, y), point, (10, 10)):
+                                selected = point
+                                break
+                        if selected:
+                            waypoints[enemy_id-1].remove(selected)
+                    else:
+                        # -- add mouse location to the selected enemy waypoints
+                        waypoints[enemy_id-1].append((x, y))
 
             # -- select enemy
             elif but == mouse.RIGHT:
