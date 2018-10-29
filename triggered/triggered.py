@@ -1921,6 +1921,7 @@ class AddWaypointTool(EditorTool):
 
         if _type == EventType.MOUSE_DOWN:
             x, y, but, mod = args
+            px, py = self.mouse_pos_to_viewport(x, y)
 
             # -- ensure mouse if over viewport
             if x < EditorToolbar.WIDTH: return
@@ -1947,20 +1948,17 @@ class AddWaypointTool(EditorTool):
                         # -- remove waypoint at mouse location
                         selected = None
                         for point in waypoints[enemy_id-1]:
-                            if mouse_over_rect((x, y), point, (10, 10)):
+                            if mouse_over_rect((px, py), point, (10, 10)):
                                 selected = point
                                 break
                         if selected:
                             waypoints[enemy_id-1].remove(selected)
                     else:
                         # -- add mouse location to the selected enemy waypoints
-                        waypoints[enemy_id-1].append((x, y))
+                        waypoints[enemy_id-1].append((px, py))
 
             # -- select enemy
             elif but == mouse.RIGHT:
-                ox, oy = EditorViewport.OFFSET
-                px, py = x-ox, y-oy
-
                 if mod & key.MOD_CTRL:
                     del self.level_data['_active_enemy']
                 else:
