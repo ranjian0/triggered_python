@@ -1483,7 +1483,7 @@ class EditorViewport:
     def __init__(self, data):
         self.data = data
 
-        # -- drag options
+        # -- panning options
         self._is_panning = False
         self._pan_offset = (0, 0)
 
@@ -1518,9 +1518,7 @@ class EditorViewport:
     def get_rect(self):
         width = window.width - EditorToolbar.WIDTH
         size = (width, window.height)
-        center = (
-            width/2 + EditorToolbar.WIDTH,
-            window.height/2)
+        center = (width/2 + EditorToolbar.WIDTH, window.height/2)
         return [center, size]
 
     def get_transform(self):
@@ -1645,16 +1643,15 @@ class EditorViewport:
             x, y, sx, sy = args[1:]
             if not mouse_over_rect((x, y), *self.get_rect()): return
 
-            zx, zy = self._zoom
+            _sum = lambda x,y,val: (x+val, y+val)
             if sy < 0:
-                if zx > .2 and zy > .2:
-                    zx -= self._zoom_sensitivity
-                    zy -= self._zoom_sensitivity
+                self._zoom = _sum(*self._zoom, -self._zoom_sensitivity)
             else:
-                zx += self._zoom_sensitivity
-                zy += self._zoom_sensitivity
+                self._zoom = _sum(*self._zoom,  self._zoom_sensitivity)
 
-            self._zoom = (zx, zy)
+            # -- clamp zoom to (0.2, 10.0) and round to  d.p
+            self._zoom = tuple(map(lambda x: clamp(x, 0.2, 10.0), self._zoom))
+            self._zoom = tuple(map(lambda x: round(x, 1), self._zoom))
 
 class EditorToolprops:
     pass
@@ -1994,6 +1991,9 @@ class AddWaypointTool(EditorTool):
 ---   FUNCTIONS
 ============================================================
 '''
+def clamp(x, _min, _max):
+    return max(_min, min(_max, x))
+
 def angle(p):
     nx, ny = normalize(p)
     return math.degrees(math.atan2(ny, nx))
