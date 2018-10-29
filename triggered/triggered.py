@@ -1644,6 +1644,12 @@ class EditorToolprops:
 
 class EditorTool:
 
+    tools = []
+    def __new__(cls):
+        instance = object.__new__(cls)
+        EditorTool.tools.append(instance)
+        return instance
+
     def __init__(self, options):
         # -- options
         # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
@@ -1849,7 +1855,10 @@ class AddTileTool(EditorTool):
             if x < EditorToolbar.WIDTH: return
 
             if but == mouse.LEFT:
-                if self.show_options: return # -- showing tool options
+                # -- if we are showing tool options for other tools, return
+                for tool in EditorTool.tools:
+                    if tool != self and tool.show_options:
+                        return
 
                 map_id = self.mouse_pos_to_map(x, y)
                 if self.default == 'Wall':
