@@ -1459,7 +1459,7 @@ class EditorToolbar:
             self.tool_start_loc = (0, h)
             self.init_tools()
 
-            self.toolbar_settings['size'] = (60, h)
+            self.toolbar_settings['size'] = (self.WIDTH, h)
             self.toolbar_image = self.toolbar.create_image(
                 *self.toolbar_settings.get("size"))
 
