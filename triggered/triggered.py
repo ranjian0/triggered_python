@@ -102,12 +102,13 @@ class Game:
             self.editor.draw()
 
     def event(self, *args, **kwargs):
-        self.mainmenu.event(*args, **kwargs)
-        self.pausemenu.event(*args, **kwargs)
-
         _type = args[0]
 
-        if self.state == GameState.PAUSED:
+        if self.state == GameState.MAINMENU:
+            self.mainmenu.event(*args, **kwargs)
+
+        elif self.state == GameState.PAUSED:
+            self.pausemenu.event(*args, **kwargs)
             if _type == EventType.KEY_DOWN:
                 if args[1] == key.P:
                     self.state = GameState.RUNNING
