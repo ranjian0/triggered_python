@@ -1475,7 +1475,8 @@ class EditorToolbar:
                     set_flag('activated', False, self.tools)
 
 class EditorViewport:
-    OFFSET = (EditorToolbar.WIDTH, 0)
+    LINE_WIDTH = 2
+    OFFSET = (EditorToolbar.WIDTH+LINE_WIDTH, LINE_WIDTH)
 
     GRID_SIZE = 20000
     GRID_SPACING = 100
@@ -1539,10 +1540,7 @@ class EditorViewport:
         glPopMatrix()
 
     def _editor_draw_grid(self):
-        glLineWidth(2)
-        glPushMatrix()
-        glTranslatef(*self.OFFSET, 0)
-
+        glLineWidth(self.LINE_WIDTH)
         glBegin(GL_LINES)
         for y in range(0, self.GRID_SIZE, self.GRID_SPACING):
             glColor4f(1, 1, 1, 1)
@@ -1560,33 +1558,26 @@ class EditorViewport:
             glVertex2f(self.GRID_SIZE, y)
 
         glEnd()
-        glPopMatrix()
 
     def _editor_draw_map(self):
-        mx, my = self.OFFSET
         for y, row in enumerate(self.data['map']):
             for x, data in enumerate(row):
                 offx, offy = x * self.GRID_SPACING, y * self.GRID_SPACING
                 if data == "#":
-                    self.wall_img.blit(offx+mx, offy+my, 0)
+                    self.wall_img.blit(offx, offy, 0)
                 elif data == ' ':
-                    self.floor_img.blit(offx+mx, offy+my, 0)
+                    self.floor_img.blit(offx, offy, 0)
 
     def _editor_draw_player(self):
-        px, py = self.data['player']
-        mx, my = self.OFFSET
-        self.player_img.blit(px+mx, py+my, 0)
+        self.player_img.blit(*self.data['player'], 0)
 
     def _editor_draw_enemies(self):
-        mx, my = self.OFFSET
         for pos in self.data['enemies']:
-            px, py = pos
-            self.enemy_img.blit(px+mx, py+my, 0)
+            self.enemy_img.blit(*pos, 0)
 
         enemy_id = self.data.get('_active_enemy')
         if enemy_id:
-            ex, ey = self.data['enemies'][enemy_id-1]
-            self.enemy_target.blit(ex+mx, ey+my, 0)
+            self.enemy_target.blit(*self.data['enemies'][enemy_id-1], 0)
 
     def _editor_draw_waypoints(self):
         waypoints = self.data.get('waypoints')
@@ -1603,22 +1594,16 @@ class EditorViewport:
                     debug_draw_point(point, color=(1,1,1,1))
 
     def draw(self):
+        glPushMatrix()
+        glTranslatef(*self.OFFSET, 1)
         with self._editor_do_pan():
             with self._editor_do_zoom():
-                # -- draw editor grid
                 self._editor_draw_grid()
-
-                # -- draw map data
                 self._editor_draw_map()
-
-                # -- draw player
                 self._editor_draw_player()
-
-                # -- draw enemies
                 self._editor_draw_enemies()
-
-                # -- draw waypoints
                 self._editor_draw_waypoints()
+        glPopMatrix()
 
     def update(self, dt):
         pass
@@ -1706,36 +1691,24 @@ class EditorTool:
 
     def mouse_pos_to_viewport(self, x, y):
         # -- convert mouse position to viewport position
-        panx, pany = self._viewport_pan
-        zx, zy = self._viewport_zoom
-
         # -- subtract editor offset
         ox, oy = EditorViewport.OFFSET
         px, py = x-ox, y-oy
 
         # -- transform viewport pan
+        panx, pany = self._viewport_pan
         px, py = px-panx, py-pany
 
         # -- transform viewport scale
-        # px, py = px*zx, py*zy
-
+        zx, zy = self._viewport_zoom
+        px, py = px*(1/zx), py*(1/zy)
         return px, py
 
     def mouse_pos_to_map(self, x, y):
         # -- convert mouse position to map array indices
-        panx, pany = self._viewport_pan
-        zx, zy = self._viewport_zoom
-
-        # -- transform viewport pan
-        px, py = x-panx, y-pany
-
-        # -- transfrom viewport scale
+        vx, vy = self.mouse_pos_to_viewport(x, y)
         gs = EditorViewport.GRID_SPACING
-        gsx, gsy = round(zx * gs), round(zy * gs)
-
-        ox, oy = EditorViewport.OFFSET
-        sox, soy = (1-zx) * ox, (1-zy) * oy
-        return int(px-ox+sox) // gsx, int(py-oy+soy) // gsy
+        return int(vx) // gs, int(vy) // gs
 
     def draw(self):
         # -- draw tool background
