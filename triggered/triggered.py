@@ -1960,7 +1960,8 @@ class AddWaypointTool(EditorTool):
             # -- select enemy
             elif but == mouse.RIGHT:
                 if mod & key.MOD_CTRL:
-                    del self.level_data['_active_enemy']
+                    if self.level_data.get('_active_enemy'):
+                        del self.level_data['_active_enemy']
                 else:
                     enemies = self.level_data['enemies']
                     for idx, en in enumerate(enemies):
@@ -2131,6 +2132,8 @@ def debug_draw_point(pos, color=(1, 0, 0, 1), size=5):
     glBegin(GL_POINTS)
     glVertex2f(*pos)
     glEnd()
+    # -- reset color
+    glColor4f(1,1,1,1)
 
 def debug_draw_line(start, end, color=(1, 1, 0, 1), width=2):
     glColor4f(*color)
@@ -2140,6 +2143,8 @@ def debug_draw_line(start, end, color=(1, 1, 0, 1), width=2):
     glVertex2f(*start)
     glVertex2f(*end)
     glEnd()
+    # -- reset color
+    glColor4f(1,1,1,1)
 
 def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
     glColor4f(*color)
@@ -2149,6 +2154,8 @@ def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
     for point in points:
         glVertex2f(*point)
     glEnd()
+    # -- reset color
+    glColor4f(1,1,1,1)
 
 def image_set_size(img, w, h):
     img.width = w
