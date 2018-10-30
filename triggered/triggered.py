@@ -17,7 +17,7 @@ from pymunk import pyglet_util as putils
 from collections import defaultdict, namedtuple
 
 FPS        = 60
-DEBUG      = 1
+DEBUG      = 0
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -684,20 +684,28 @@ class Bullet:
         self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
         physics.add(self.body, self.shape)
 
+        self.shape.cls_object = self
         if collision_type not in self.HANDLER_TYPES:
             physics.add_collision_handler(
                 collision_type,
                 COLLISION_MAP.get("WallType"),
-                handler_begin = self.destroy)
+                handler_begin = self.collide_wall)
 
             self.HANDLER_TYPES.append(collision_type)
 
-    def destroy(self, arbiter, space, data):
+    def collide_wall(self, arbiter, space, data):
         bullet = arbiter.shapes[0]
+        bullet.cls_object.destroy()
+
         space.remove(bullet.body, bullet)
         return False
 
+    def destroy(self):
+        self.sprite.batch = None
+        self.destroyed = True
+
     def update(self, dt):
+        if self.destroyed: return
         bx, by = self.pos #self.body.position
         dx, dy = self.dir
 
