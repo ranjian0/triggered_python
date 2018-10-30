@@ -2242,12 +2242,14 @@ def on_resize(w, h):
     game.event(EventType.RESIZE, w, h)
 
 @window.event
-def on_key_press(key, modifiers):
-    game.event(EventType.KEY_DOWN, key, modifiers)
+def on_key_press(symbol, modifiers):
+    if symbol == key.ESCAPE:
+        return True
+    game.event(EventType.KEY_DOWN, symbol, modifiers)
 
 @window.event
-def on_key_release(key, modifiers):
-    game.event(EventType.KEY_UP, key, modifiers)
+def on_key_release(symbol, modifiers):
+    game.event(EventType.KEY_UP, symbol, modifiers)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
