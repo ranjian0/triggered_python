@@ -1194,6 +1194,8 @@ class AmmoBar:
             font_size=12, color=(200, 200, 0, 255), batch=self.batch,
             anchor_y='top', anchor_x='left')
 
+        self.set_pos(position)
+
     def draw(self):
         self.batch.draw()
 
@@ -1203,8 +1205,6 @@ class AmmoBar:
         num_bul = self.ammo // 100
         if len(self.bullets) > num_bul:
             self.bullets.pop(len(self.bullets)-1)
-
-            # -- update position
             self.set_pos(self.pos)
 
         self.ammo_text.text = f" X {val}"
