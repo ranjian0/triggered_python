@@ -123,7 +123,7 @@ class Game:
 
             # -- switch to editor
                 if args[1] == key.E:
-                    self.editor.set(self.manager.current())
+                    self.editor.set(self.manager.current)
                     self.state = GameState.EDITOR
 
         elif self.state == GameState.EDITOR:
