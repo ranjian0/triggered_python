@@ -688,15 +688,11 @@ class Bullet:
             physics.add_collision_handler(
                 collision_type,
                 COLLISION_MAP.get("WallType"),
-                handler_begin = self.destroy,
-                data={"bullet":self})
+                handler_begin = self.destroy)
 
             self.HANDLER_TYPES.append(collision_type)
 
     def destroy(self, arbiter, space, data):
-        data['bullet'].sprite.visible = False
-        data['bullet'].destroyed = True
-
         bullet = arbiter.shapes[0]
         space.remove(bullet.body, bullet)
         return False
