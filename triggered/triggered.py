@@ -708,8 +708,7 @@ class Bullet:
         self.destroyed = True
 
     def update(self, dt):
-        if self.destroyed: return
-        bx, by = self.pos #self.body.position
+        bx, by = self.pos
         dx, dy = self.dir
 
         bx += dx * dt * self.speed
@@ -1265,8 +1264,10 @@ class MainMenu:
 
                 if mouse_over_rect((x,y), center, size):
                     txt.color = (200, 0, 0, 255)
+                    # txt.set_style("underline", (255,)*4)
                 else:
                     txt.color = (255,)*4
+                    # txt.set_style("underline", None)
 
         elif _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
@@ -1290,6 +1291,10 @@ class PauseMenu:
             bold=True, color=(255, 255, 0, 255),
             font_size=48, x=window.width/2, y=window.height*.9,
             anchor_x='center', anchor_y='center')
+
+        # self.resume = text_button("Resume")
+        # self.quit = text_button("Quit")
+        # self.mainmenu = text_button("MainMenu")
 
     def draw(self):
         with reset_matrix():
@@ -2015,6 +2020,29 @@ def set_flag(name, value, items):
         setattr(item, name, value)
 
 @contextmanager
+def profile(perform=True):
+    if perform:
+        import cProfile, pstats, io
+        s = io.StringIO()
+        pr = cProfile.Profile()
+
+        pr.enable()
+        yield
+        pr.disable()
+
+        ps = pstats.Stats(pr, stream=s)
+        ps.sort_stats('cumtime')
+        # ps.strip_dirs()
+        ps.print_stats()
+
+        all_stats = s.getvalue().split('\n')
+        self_stats = "".join([line+'\n' for idx, line in enumerate(all_stats)
+            if ('triggered' in  line) or (idx <= 4)])
+        print(self_stats)
+    else:
+        yield
+
+@contextmanager
 def reset_matrix():
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
@@ -2196,9 +2224,7 @@ ENEMY_TYPES = []
 
 fps  = pg.window.FPSDisplay(window)
 res  = Resources()
-# phy  = Physics()
 game = Game()
-size = window.get_size()
 
 @window.event
 def on_draw():
@@ -2246,10 +2272,7 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
 def on_update(dt):
     game.update(dt)
 
-    # - dispatch resize event manually - fix for maximize
-    if size != window.get_size():
-        window.dispatch_event("on_resize", *window.get_size())
-
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)
-    pg.app.run()
+    with profile(False):
+        pg.app.run()
