@@ -299,9 +299,9 @@ class Physics:
 
 class Player:
 
-    def __init__(self, position, size, image, batch, _map, physics):
+    def __init__(self, position, size, image, _map, physics):
         # --
-        self.batch = batch
+        self.batch = pg.graphics.Batch()
         self.map = _map
         self.physics = physics
 
@@ -396,6 +396,9 @@ class Player:
         b = Bullet((px, py), _dir, self.batch, collision_type=COLLISION_MAP.get("PlayerBulletType"), physics=self.physics)
         self.bullets.append(b)
 
+    def draw(self):
+        self.batch.draw()
+
     def event(self, type, *args, **kwargs):
         if type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
@@ -450,7 +453,8 @@ class EnemyState(Enum):
 
 class Enemy:
 
-    def __init__(self, position, size, image, waypoints, batch, col_type, physics):
+    def __init__(self, position, size, image, waypoints, col_type, physics):
+        self.batch = pg.graphics.Batch()
         self.physics = physics
         # -- movement properties
         self.pos   = position
@@ -466,8 +470,6 @@ class Enemy:
         self.muzzle_offset = (self.size[0]/2+Bullet.SIZE/2, -self.size[1]*.21)
         self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
         self.muzzle_angle = angle(self.muzzle_offset)
-        # --
-        self.batch = batch
 
         # -- patrol properties
         self.state = EnemyState.IDLE
@@ -541,6 +543,9 @@ class Enemy:
         px, py = self.pos
         self.angle = math.degrees(-math.atan2(ty - py, tx - px))
         self.sprite.update(rotation=self.angle)
+
+    def draw(self):
+        self.batch.draw()
 
     def update(self, dt):
         player = self.player_target
@@ -882,7 +887,6 @@ class Level:
         self.phy = Physics()
         self.map = None
         self.agents = []
-        self.agent_batch = pg.graphics.Batch()
         self.status = LevelStatus.RUNNING
 
     def save(self):
@@ -901,7 +905,7 @@ class Level:
 
         # -- add player
         player = Player(self.data.player, (50, 50),
-            Resources.instance.sprite("hitman1_gun"), self.agent_batch, self.map, self.phy)
+            Resources.instance.sprite("hitman1_gun"), self.map, self.phy)
         self.agents.append(player)
         self.hud.add(player.healthbar)
         self.hud.add(player.ammobar)
@@ -912,7 +916,7 @@ class Level:
             path = self.data.waypoints[idx]
 
             e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"),
-                path, self.agent_batch, COLLISION_MAP.get("EnemyType") + idx)
+                path, COLLISION_MAP.get("EnemyType") + idx, self.phy)
             ENEMY_TYPES.append(COLLISION_MAP.get("EnemyType") + idx)
 
             if DEBUG:
@@ -941,7 +945,8 @@ class Level:
         if not self.data: return
 
         self.map.draw()
-        self.agent_batch.draw()
+        for agent in self.agents:
+            agent.draw()
         self.hud.draw()
 
         if self.show_info:
