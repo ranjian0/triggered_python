@@ -345,11 +345,12 @@ class Player:
         physics.add_collision_handler(
                 COLLISION_MAP.get("PlayerType"),
                 COLLISION_MAP.get("EnemyBulletType"),
-                handler_begin = self.bullet_hit
+                handler_begin = self.collide_enemy_bullet
             )
 
-    def bullet_hit(self, arbiter, space, data):
+    def collide_enemy_bullet(self, arbiter, space, data):
         bullet = arbiter.shapes[1]
+        bullet.cls_object.destroy()
         space.remove(bullet.body, bullet)
         self.do_damage()
         return False
@@ -508,11 +509,13 @@ class Enemy:
         physics.add_collision_handler(
                 col_type,
                 COLLISION_MAP.get("PlayerBulletType"),
-                handler_begin = self.bullet_hit
+                handler_begin = self.collide_player_bullet
             )
 
-    def bullet_hit(self, arbiter, space, data):
+    def collide_player_bullet(self, arbiter, space, data):
         bullet = arbiter.shapes[1]
+        bullet.cls_object.destroy()
+
         space.remove(bullet.body, bullet)
         self.do_damage()
         return False
