@@ -86,6 +86,7 @@ class Game:
         self.pausemenu = PauseMenu()
 
     def start(self):
+        self.manager.load()
         self.state = GameState.RUNNING
 
     def pause(self):
@@ -251,13 +252,6 @@ class Resources:
             return None
 
 class Physics:
-
-    # # -- singleton
-    # instance = None
-    # def __new__(cls):
-    #     if Physics.instance is None:
-    #         Physics.instance = object.__new__(cls)
-    #     return Physics.instance
 
     def __init__(self):
         self.space = pm.Space()
@@ -889,8 +883,6 @@ class Level:
         self.map = None
         self.agents = []
         self.agent_batch = pg.graphics.Batch()
-
-        self.reload()
         self.status = LevelStatus.RUNNING
 
     def save(self):
@@ -1025,7 +1017,12 @@ class LevelManager:
         self.levels = []
         self.index = 0
 
+        self.current = None
         self.completed = False
+
+    def load(self):
+        self.current = self.levels[self.index]
+        self.current.reload()
 
     def add(self, levels):
         if isinstance(levels, list):
@@ -1033,14 +1030,11 @@ class LevelManager:
         else:
             self.levels.append(levels)
 
-    def current(self):
-        return self.levels[self.index]
-
     def next(self):
         self.completed = self.index == len(self.levels) - 1
         if not self.completed:
             self.index += 1
-            return self.current()
+            return self.levels[self.index]
         return None
 
     def set(self, name):
@@ -1053,13 +1047,16 @@ class LevelManager:
             yield l
 
     def draw(self):
-        self.current().draw()
+        if self.current:
+            self.current.draw()
 
     def update(self, dt):
-        self.current().update(dt)
+        if self.current:
+            self.current.update(dt)
 
     def event(self, *args, **kwargs):
-        self.current().event(*args, **kwargs)
+        if self.current:
+            self.current.event(*args, **kwargs)
 
 class LevelEditor:
 
