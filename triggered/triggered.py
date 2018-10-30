@@ -910,9 +910,10 @@ class Level:
         for idx, point in enumerate(self.data.enemies):
             # -- get waypoints
             path = self.data.waypoints[idx]
+            reversed_midpath = path[::-1][1:-1]
 
             e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"),
-                path, COLLISION_MAP.get("EnemyType") + idx, self.phy)
+                path + reversed_midpath, COLLISION_MAP.get("EnemyType") + idx, self.phy)
             ENEMY_TYPES.append(COLLISION_MAP.get("EnemyType") + idx)
 
             if DEBUG:
