@@ -2019,6 +2019,12 @@ def set_flag(name, value, items):
     for item  in items:
         setattr(item, name, value)
 
+def skip_escape():
+    def on_key_press(symbol, modifiers):
+        if symbol == key.ESCAPE:
+            return True
+    window.push_handlers(on_key_press)
+
 @contextmanager
 def profile(perform=True):
     if perform:
@@ -2215,9 +2221,8 @@ window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 window.maximize()
 
-# -- wierd bug - have to push twice
 window.push_handlers(KEYS)
-window.push_handlers(KEYS)
+skip_escape()
 
 # -- enemy collision - !! HACK !!
 ENEMY_TYPES = []
@@ -2243,8 +2248,6 @@ def on_resize(w, h):
 
 @window.event
 def on_key_press(symbol, modifiers):
-    if symbol == key.ESCAPE:
-        return True
     game.event(EventType.KEY_DOWN, symbol, modifiers)
 
 @window.event
