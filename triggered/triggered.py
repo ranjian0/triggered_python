@@ -124,8 +124,7 @@ class Game:
 
             # -- switch to editor
                 if args[1] == key.E:
-                    self.editor.set(self.manager.current)
-                    self.editor.load()
+                    self.editor.load(self.manager.current)
                     self.state = GameState.EDITOR
 
         elif self.state == GameState.EDITOR:
@@ -1074,12 +1073,11 @@ class LevelEditor:
         self._level = None
         self.data = dict()
 
-    def load(self):
+    def load(self, level):
         self.toolbar = EditorToolbar(self.data)
         self.viewport = EditorViewport(self.data)
         self.properties = EditorToolprops()
 
-    def set(self, level):
         self._level = level
         if level.data:
             # -- load leveldata
@@ -2068,7 +2066,6 @@ class TextInput:
         self.size = size
         self.style = style or dict()
 
-        # -- create
         # - document
         self.m_document = document.FormattedDocument(prompt)
         self.m_document.set_style(0, len(self.m_document.text), style)
