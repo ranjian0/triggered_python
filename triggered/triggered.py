@@ -14,6 +14,7 @@ from pyglet.gl import *
 from pyglet.window import key, mouse
 from contextlib import contextmanager
 from pymunk import pyglet_util as putils
+from pyglet.text import layout, caret, document
 from collections import defaultdict, namedtuple
 
 FPS        = 60
@@ -1429,7 +1430,8 @@ class EditorToolbar:
         self.tools = [
             AddTileTool(),
             AddAgentTool(),
-            AddWaypointTool()
+            AddWaypointTool(),
+            ObjectivesTool()
         ]
 
         self.tool_start_loc = (0, window.height)
@@ -1995,6 +1997,104 @@ class AddWaypointTool(EditorTool):
                         if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
                             self.level_data['_active_enemy'] = idx+1
 
+class ObjectivesTool(EditorTool):
+    def __init__(self):
+        opts = {
+            "Objectives" : Resources.instance.sprite("tool_waypoint"),
+        }
+        super(ObjectivesTool, self).__init__(opts)
+
+        self.num_inputs = 1
+        self.active_field = 0
+        self.input_fields = []
+
+        self._generate_fields()
+
+    def _generate_fields(self):
+        pad = (5, 5)
+        px, py = [ox+px for ox,px in zip(EditorViewport.OFFSET, pad)]
+
+        w, h, fs = 400, 35, 18
+        for idx in range(self.num_inputs - len(self.input_fields)):
+            self.input_fields.append(
+                TextInput("Enter Objective", (px, py+(idx*h)), (w, h), {'color':(0, 0, 0, 255), 'font_size':fs})
+            )
+
+    def event(self, _type, *args, **kwargs):
+        super(ObjectivesTool, self).event(_type, *args, **kwargs)
+        if not self.is_active: return
+
+    def draw(self):
+        super(ObjectivesTool, self).draw()
+        if self.is_active:
+            for field in self.input_fields:
+                field.draw()
+
+
+class TextInput:
+
+    def __init__(self, prompt, position, size, style=None, *args, **kwargs):
+        self.text = prompt
+        self.position = position
+        self.size = size
+        self.style = style or dict()
+
+        # -- create
+        # - document
+        self.m_document = document.FormattedDocument(prompt)
+        self.m_document.set_style(0, len(self.m_document.text), style)
+
+        # - layout
+        px, py = position
+        self.m_layout = layout.IncrementalTextLayout(self.m_document, *size)
+        self.m_layout.selection_color = None
+        self.m_layout.x = px
+        self.m_layout.y = py
+
+        # - caret
+        self.m_caret = caret.Caret(self.m_layout, color=(255, 0, 0))
+        self.m_caret.visible = True
+        self.m_caret.mark = 0
+        self.m_caret.position = len(self.m_document.text)
+
+    def add_handlers(self):
+        window.push_handlers(self.m_caret)
+
+    def remove_handler(self):
+        window.remove_handlers(self.m_caret)
+
+    def draw(self):
+        self._draw_background()
+        self.m_layout.draw()
+
+    def _draw_background(self, color=(255, 255, 255, 255)):
+        x, y = self.m_layout.x, self.m_layout.y
+        w, h = self.m_layout.width, self.m_layout.height
+        verts = [
+            (x, y),
+            (x+w, y),
+            (x+w, y+h),
+            (x, y+h)
+        ]
+
+        poly_modes = [GL_FILL, GL_LINE]
+        colors = (color, (0, 0, 0, 255))
+        for c, mode in zip(colors, poly_modes):
+            glPolygonMode(GL_FRONT, mode)
+            glColor4f(*c)
+            if mode == GL_LINE:
+                glLineWidth(3)
+
+            glBegin(GL_QUADS)
+            for v in verts:
+                glVertex2f(*v)
+            glEnd()
+
+        # -- reset gl state
+        glLineWidth(1)
+        glColor4f(*color)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
 '''
 ============================================================
 ---   FUNCTIONS
@@ -2008,7 +2108,7 @@ def angle(p):
     return math.degrees(math.atan2(ny, nx))
 
 def normalize(p):
-    mag = math.sqrt(distance_sqr((0, 0), p))
+    mag = math.hypot(*p)
     if mag:
         x = p[0] / mag
         y = p[1] / mag
