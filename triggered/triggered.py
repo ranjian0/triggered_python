@@ -2008,21 +2008,31 @@ class ObjectivesTool(EditorTool):
         self.active_field = 0
         self.input_fields = []
 
-        self._generate_fields()
+        self._add_fields()
 
-    def _generate_fields(self):
+    def _add_fields(self):
         pad = (5, 5)
         px, py = [ox+px for ox,px in zip(EditorViewport.OFFSET, pad)]
 
         w, h, fs = 400, 35, 18
+        hoff = py + (len(self.input_fields) * h)
         for idx in range(self.num_inputs - len(self.input_fields)):
             self.input_fields.append(
-                TextInput("Enter Objective", (px, py+(idx*h)), (w, h), {'color':(0, 0, 0, 255), 'font_size':fs})
+                TextInput("Enter Objective", (px, hoff+(idx*h)), (w, h), {'color':(0, 0, 0, 255), 'font_size':fs})
             )
+
+    def _remove_fields(self):
+        if len(self.input_fields) >  self.num_inputs:
+            del self.input_fields[self.num_inputs:]
 
     def event(self, _type, *args, **kwargs):
         super(ObjectivesTool, self).event(_type, *args, **kwargs)
-        if not self.is_active: return
+        if self.is_active:
+            if _type == EventType.KEY_DOWN:
+                symbol, mod = args
+                if symbol == key.RETURN:
+                    self.num_inputs += 1
+                    self._add_fields()
 
     def draw(self):
         super(ObjectivesTool, self).draw()
@@ -2054,7 +2064,6 @@ class TextInput:
         # - caret
         self.m_caret = caret.Caret(self.m_layout, color=(255, 0, 0))
         self.m_caret.visible = True
-        self.m_caret.mark = 0
         self.m_caret.position = len(self.m_document.text)
 
     def add_handlers(self):
