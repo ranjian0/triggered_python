@@ -2003,7 +2003,7 @@ class ObjectivesTool(EditorTool):
         super(ObjectivesTool, self).__init__(opts)
 
         self.num_inputs = 1
-        self.active_field = 0
+        self.active_field = None
         self.input_fields = []
 
         self._add_fields()
@@ -2040,15 +2040,19 @@ class ObjectivesTool(EditorTool):
                 x, y, but, mod = args
                 if but == mouse.LEFT:
                     activated = False
+                    # - check if we clicked on an input field and add caret
                     for idx, field in enumerate(self.input_fields):
                         if field.mouse_hover(x, y):
                             self.active_field = idx
-                            activated = True
-                            break
 
-                    if activated:
+                            self._clear_handlers()
+                            self.input_fields[self.active_field].add_handler()
+                            break
+                    else:
+                    # - no field selected, clear all carets
+                        self.active_field = None
                         self._clear_handlers()
-                        self.input_fields[self.active_field].add_handler()
+
 
     def draw(self):
         super(ObjectivesTool, self).draw()
@@ -2079,13 +2083,14 @@ class TextInput:
 
         # - caret
         self.m_caret = caret.Caret(self.m_layout, color=(255, 0, 0))
-        self.m_caret.visible = True
         self.m_caret.position = len(self.m_document.text)
 
     def add_handler(self):
+        self.m_caret.visible = True
         window.push_handlers(self.m_caret)
 
     def remove_handler(self):
+        self.m_caret.visible = False
         window.remove_handlers(self.m_caret)
 
     def mouse_hover(self, mx, my):
@@ -2368,7 +2373,7 @@ def on_draw():
     window.clear()
     glClearColor(.39, .39, .39, 1)
     glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     game.draw()
 
     if DEBUG and game.state == GameState.RUNNING:
