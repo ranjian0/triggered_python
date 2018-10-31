@@ -2023,6 +2023,10 @@ class ObjectivesTool(EditorTool):
         if len(self.input_fields) >  self.num_inputs:
             del self.input_fields[self.num_inputs:]
 
+    def _clear_handlers(self):
+        for field in self.input_fields:
+            field.remove_handler()
+
     def event(self, _type, *args, **kwargs):
         super(ObjectivesTool, self).event(_type, *args, **kwargs)
         if self.is_active:
@@ -2031,6 +2035,20 @@ class ObjectivesTool(EditorTool):
                 if symbol == key.RETURN:
                     self.num_inputs += 1
                     self._add_fields()
+
+            if _type == EventType.MOUSE_DOWN:
+                x, y, but, mod = args
+                if but == mouse.LEFT:
+                    activated = False
+                    for idx, field in enumerate(self.input_fields):
+                        if field.mouse_hover(x, y):
+                            self.active_field = idx
+                            activated = True
+                            break
+
+                    if activated:
+                        self._clear_handlers()
+                        self.input_fields[self.active_field].add_handler()
 
     def draw(self):
         super(ObjectivesTool, self).draw()
@@ -2064,11 +2082,18 @@ class TextInput:
         self.m_caret.visible = True
         self.m_caret.position = len(self.m_document.text)
 
-    def add_handlers(self):
+    def add_handler(self):
         window.push_handlers(self.m_caret)
 
     def remove_handler(self):
         window.remove_handlers(self.m_caret)
+
+    def mouse_hover(self, mx, my):
+        x, y = self.m_layout.x, self.m_layout.y
+        w, h = self.m_layout.width, self.m_layout.height
+
+        center = (x + w/2, y + h/2)
+        return mouse_over_rect((mx, my), center, (w, h))
 
     def draw(self):
         self._draw_background()
