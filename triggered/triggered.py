@@ -963,8 +963,8 @@ class Level:
             for agent in self.agents:
                 if isinstance(agent, Enemy):
                     path, color = agent.debug_data
-                    debug_draw_point(agent.pos, color, 10)
-                    debug_draw_path(path, color)
+                    draw_point(agent.pos, color, 10)
+                    draw_path(path, color)
 
     def update(self, dt):
         if not self.data: return
@@ -1617,9 +1617,9 @@ class EditorViewport:
                 points = waypoints[enemy_id-1]
 
                 # -- draw waypoints
-                debug_draw_path(points, color=(0,0,1,1))
+                draw_path(points, color=(0,0,1,1))
                 for point in points:
-                    debug_draw_point(point, color=(1,1,1,1))
+                    draw_point(point, color=(1,1,1,1))
 
     def draw(self):
         glPushMatrix()
@@ -2294,7 +2294,7 @@ def setup_collisions(space):
                 etype1, etype2)
         handler.begin = enemy_enemy_solve
 
-def debug_draw_point(pos, color=(1, 0, 0, 1), size=5):
+def draw_point(pos, color=(1, 0, 0, 1), size=5):
     glColor4f(*color)
     glPointSize(size)
 
@@ -2304,7 +2304,7 @@ def debug_draw_point(pos, color=(1, 0, 0, 1), size=5):
     # -- reset color
     glColor4f(1,1,1,1)
 
-def debug_draw_line(start, end, color=(1, 1, 0, 1), width=2):
+def draw_line(start, end, color=(1, 1, 0, 1), width=2):
     glColor4f(*color)
     glLineWidth(width)
 
@@ -2315,7 +2315,7 @@ def debug_draw_line(start, end, color=(1, 1, 0, 1), width=2):
     # -- reset color
     glColor4f(1,1,1,1)
 
-def debug_draw_path(points, color=(1, 0, 1, 1), width=5):
+def draw_path(points, color=(1, 0, 1, 1), width=5):
     glColor4f(*color)
     glLineWidth(width)
 
