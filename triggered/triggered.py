@@ -119,11 +119,12 @@ class Game:
             self.manager.event(*args, **kwargs)
 
             if _type == EventType.KEY_DOWN:
-                if args[1] == key.P:
+                symbol, mod = args[1:]
+                if symbol == key.P:
                     self.state = GameState.PAUSED
 
             # -- switch to editor
-                if args[1] == key.E:
+                if symbol == key.E and mod & key.MOD_CTRL:
                     self.editor.load(self.manager.current)
                     self.state = GameState.EDITOR
 
@@ -131,8 +132,9 @@ class Game:
             self.editor.event(*args, **kwargs)
 
             if _type == EventType.KEY_DOWN:
+                symbol, mod = args[1:]
                 # -- switch to game, save edited level
-                if args[1] == key.E:
+                if symbol == key.E and mod & key.MOD_CTRL:
                     self.editor.save()
                     self.state = GameState.RUNNING
 
