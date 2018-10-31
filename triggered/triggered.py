@@ -2053,7 +2053,6 @@ class ObjectivesTool(EditorTool):
                         self.active_field = None
                         self._clear_handlers()
 
-
     def draw(self):
         super(ObjectivesTool, self).draw()
         if self.is_active:
