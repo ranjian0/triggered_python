@@ -121,9 +121,9 @@ class Game:
             if _type == EventType.KEY_DOWN:
                 symbol, mod = args[1:]
                 if symbol == key.P:
+                    self.pausemenu.reload()
                     self.state = GameState.PAUSED
 
-            # -- switch to editor
                 if symbol == key.E and mod & key.MOD_CTRL:
                     self.editor.load(self.manager.current)
                     self.state = GameState.EDITOR
@@ -133,11 +133,10 @@ class Game:
 
             if _type == EventType.KEY_DOWN:
                 symbol, mod = args[1:]
-                # -- switch to game, save edited level
+
                 if symbol == key.E and mod & key.MOD_CTRL:
                     self.editor.save()
                     self.state = GameState.RUNNING
-
 
     def update(self, dt):
         if self.state == GameState.MAINMENU:
@@ -1291,9 +1290,9 @@ class PauseMenu:
             font_size=48, x=window.width/2, y=window.height*.9,
             anchor_x='center', anchor_y='center')
 
-        # self.resume = text_button("Resume")
-        # self.quit = text_button("Quit")
-        # self.mainmenu = text_button("MainMenu")
+    def reload(self):
+        self.title.x = window.width/2
+        self.title.y = window.height*.9
 
     def draw(self):
         with reset_matrix():
@@ -1302,9 +1301,8 @@ class PauseMenu:
     def event(self, _type, *args, **kwargs):
         if _type == EventType.RESIZE:
             w, h = args
-
             self.title.x = w/2
-            self.title.y = h * .9
+            self.title.y = h*.9
 
     def update(self, dt):
         pass
