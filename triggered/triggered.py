@@ -125,6 +125,7 @@ class Game:
             # -- switch to editor
                 if args[1] == key.E:
                     self.editor.set(self.manager.current)
+                    self.editor.load()
                     self.state = GameState.EDITOR
 
         elif self.state == GameState.EDITOR:
@@ -135,10 +136,6 @@ class Game:
                 if args[1] == key.E:
                     self.editor.save()
                     self.state = GameState.RUNNING
-
-        # -- special case Resize event
-        if _type == EventType.RESIZE:
-            self.editor.event(*args, *kwargs)
 
 
     def update(self, dt):
@@ -1077,6 +1074,7 @@ class LevelEditor:
         self._level = None
         self.data = dict()
 
+    def load(self):
         self.toolbar = EditorToolbar(self.data)
         self.viewport = EditorViewport(self.data)
         self.properties = EditorToolprops()
