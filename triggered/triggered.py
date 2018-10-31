@@ -2415,5 +2415,5 @@ def on_update(dt):
 
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)
-    with profile(False):
+    with profile(DEBUG):
         pg.app.run()
