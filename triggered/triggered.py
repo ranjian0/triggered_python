@@ -988,9 +988,11 @@ class Level:
         # -- change level status
         if self.get_player().dead:
             self.status = LevelStatus.FAILED
+            print("Player Dead")
 
         if len(self.get_enemies()) == 0:
             self.status = LevelStatus.PASSED
+            print("level Finished")
 
         # show info panel
         self.show_info = KEYS[key.TAB]
@@ -1228,9 +1230,14 @@ class MainMenu:
             font_size=48, x=window.width/2, y=window.height*.9,
             anchor_x='center', anchor_y='center')
 
+        self.quit = pg.text.Label("QUIT",
+            bold=True, color=(255, 255, 255, 255),
+            font_size=32, x=window.width*.1, y=window.height*.1,
+            anchor_x='center', anchor_y='center')
+
         self.txt_height = 50
         self.level_batch = pg.graphics.Batch()
-        self.level_select = [
+        self.level_options = [
             pg.text.Label(level.name, bold=True, font_size=32,
                 x=window.width/4, y=(window.height*.8)-((idx+1)*self.txt_height),
                 anchor_x='center', anchor_y='center', batch=self.level_batch)
@@ -1240,6 +1247,7 @@ class MainMenu:
     def draw(self):
         with reset_matrix():
             self.title.draw()
+            self.quit.draw()
             self.level_batch.draw()
 
     def event(self, _type, *args, **kwargs):
@@ -1249,28 +1257,26 @@ class MainMenu:
             self.title.x = w/2
             self.title.y = h * .9
 
-            for idx, txt in enumerate(self.level_select):
+            for idx, txt in enumerate(self.level_options):
                 txt.x = window.width/4
                 txt.y = (window.height*.8)-((idx+1)*self.txt_height)
 
         elif _type == EventType.MOUSE_MOTION:
             x, y, *_ = args
 
-            for txt in self.level_select:
+            for txt in self.level_options + [self.quit]:
                 center = txt.x, txt.y
                 size = (200, self.txt_height)
 
                 if mouse_over_rect((x,y), center, size):
                     txt.color = (200, 0, 0, 255)
-                    # txt.set_style("underline", (255,)*4)
                 else:
                     txt.color = (255,)*4
-                    # txt.set_style("underline", None)
 
         elif _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
 
-            for txt in self.level_select:
+            for txt in self.level_options:
                 center = txt.x, txt.y
                 size = (200, self.txt_height)
 
@@ -1289,6 +1295,11 @@ class PauseMenu:
             bold=True, color=(255, 255, 0, 255),
             font_size=48, x=window.width/2, y=window.height*.9,
             anchor_x='center', anchor_y='center')
+
+        actions = ["Resume", "Restart", "MainMenu"]
+        self.options = [
+
+        ]
 
     def reload(self):
         self.title.x = window.width/2
