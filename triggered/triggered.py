@@ -2359,6 +2359,8 @@ window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 window.maximize()
 
+# -- BUG:: need to push twice
+window.push_handlers(KEYS)
 window.push_handlers(KEYS)
 
 # -- enemy collision - !! HACK !!
@@ -2390,12 +2392,9 @@ def on_key_press(symbol, modifiers):
             game.pause()
         elif game.state == GameState.PAUSED:
             game.start()
-        return True
+        game.event(EventType.KEY_DOWN, symbol, modifiers)
     elif symbol == key.ESCAPE:
         sys.exit()
-    game.event(EventType.KEY_DOWN, symbol, modifiers)
-
-    return pyglet.event.EVENT_HANDLED
 
 @window.event
 def on_key_release(symbol, modifiers):
