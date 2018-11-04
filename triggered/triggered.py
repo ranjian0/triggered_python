@@ -450,6 +450,7 @@ class EnemyState(Enum):
     ATTACK  = 3
 
 class Enemy:
+    COL_TYPES = []
 
     def __init__(self, position, size, image, waypoints, col_type, physics):
         self.batch = pg.graphics.Batch()
@@ -922,7 +923,7 @@ class Level:
 
             e = Enemy(point, (50, 50), Resources.instance.sprite("robot1_gun"),
                 path + reversed_midpath, COLLISION_MAP.get("EnemyType") + idx, self.phy)
-            ENEMY_TYPES.append(COLLISION_MAP.get("EnemyType") + idx)
+            Enemy.COL_TYPES.append(COLLISION_MAP.get("EnemyType") + idx)
 
             if DEBUG:
                 e.debug_data = (path, random_color())
@@ -2325,7 +2326,7 @@ def setup_collisions(space):
         pshape.body.position = eshape.body.position + (normal * (pshape.radius*2))
         return True
 
-    for etype in ENEMY_TYPES:
+    for etype in Enemy.COL_TYPES:
         handler = space.add_collision_handler(
                 COLLISION_MAP.get("PlayerType"), etype)
         handler.begin = player_enemy_solve
@@ -2345,7 +2346,7 @@ def setup_collisions(space):
         eshape.body.position = eshape1.body.position + (normal * (eshape.radius*2)) + perp_move
         return True
 
-    for etype1, etype2 in it.combinations(ENEMY_TYPES, 2):
+    for etype1, etype2 in it.combinations(Enemy.COL_TYPES, 2):
         handler = space.add_collision_handler(
                 etype1, etype2)
         handler.begin = enemy_enemy_solve
