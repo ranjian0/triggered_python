@@ -1230,19 +1230,29 @@ class MainMenu:
             font_size=48, x=window.width/2, y=window.height*.9,
             anchor_x='center', anchor_y='center')
 
-        self.quit = pg.text.Label("QUIT",
-            bold=True, color=(255, 255, 255, 255),
-            font_size=32, x=window.width*.1, y=window.height*.1,
-            anchor_x='center', anchor_y='center')
+        self.quit = TextButton("QUIT", bold=True, font_size=32,
+                                anchor_x='center', anchor_y='center')
+        self.quit.x = self.quit.content_width
+        self.quit.y = self.quit.content_height
+        self.quit.hover_color = (255, 255, 0, 255)
+        self.quit.on_click(lambda : sys.exit())
 
-        self.txt_height = 50
+        self.level_options = []
         self.level_batch = pg.graphics.Batch()
-        self.level_options = [
-            pg.text.Label(level.name, bold=True, font_size=32,
-                x=window.width/4, y=(window.height*.8)-((idx+1)*self.txt_height),
-                anchor_x='center', anchor_y='center', batch=self.level_batch)
-            for idx, level in enumerate(LevelManager.instance.levels)
-        ]
+        for idx, level in enumerate(LevelManager.instance.levels):
+            btn = TextButton(level.name, bold=True, font_size=28,
+                                anchor_x='center', anchor_y='center',
+                                batch=self.level_batch)
+            btn.x = window.width/4
+            btn.y = (window.height*.8)-((idx+1)*btn.content_height)
+            btn.hover_color = (200, 0, 0, 255)
+            btn.on_click(lambda : self.select_level(level.name))
+
+            self.level_options.append(btn)
+
+    def select_level(self, name):
+        LevelManager.instance.set(name)
+        game.start()
 
     def draw(self):
         with reset_matrix():
@@ -1251,39 +1261,24 @@ class MainMenu:
             self.level_batch.draw()
 
     def event(self, _type, *args, **kwargs):
+
         if _type == EventType.RESIZE:
             w, h = args
 
             self.title.x = w/2
-            self.title.y = h * .9
+            self.title.y = h*.9
+
+            self.quit.x = self.quit.content_width
+            self.quit.y = self.quit.content_height
 
             for idx, txt in enumerate(self.level_options):
                 txt.x = window.width/4
-                txt.y = (window.height*.8)-((idx+1)*self.txt_height)
+                txt.y = (window.height*.8)-((idx+1)*txt.content_height)
 
-        elif _type == EventType.MOUSE_MOTION:
-            x, y, *_ = args
+        self.quit.event(_type, *args, **kwargs)
+        for option in self.level_options:
+            option.event(_type, *args, **kwargs)
 
-            for txt in self.level_options + [self.quit]:
-                center = txt.x, txt.y
-                size = (200, self.txt_height)
-
-                if mouse_over_rect((x,y), center, size):
-                    txt.color = (200, 0, 0, 255)
-                else:
-                    txt.color = (255,)*4
-
-        elif _type == EventType.MOUSE_DOWN:
-            x, y, btn, mod = args
-
-            for txt in self.level_options:
-                center = txt.x, txt.y
-                size = (200, self.txt_height)
-
-                if btn == mouse.LEFT:
-                    if mouse_over_rect((x,y), center, size):
-                        LevelManager.instance.set(txt.text)
-                        game.start()
 
     def update(self, dt):
         pass
@@ -2139,6 +2134,64 @@ class TextInput:
         glColor4f(*color)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
+class Button(object):
+
+    def __init__(self):
+        self._callback = None
+
+    def on_click(self, action):
+        if callable(action):
+            self._callback = action
+
+    def hover(self, x, y):
+        return NotImplementedError()
+
+    def event(self, _type, *args, **kwargs):
+        if _type == EventType.MOUSE_MOTION:
+            x, y, *_ = args
+            self.hover(x,y)
+
+        elif _type == EventType.MOUSE_DOWN:
+            x, y, btn, mod = args
+
+            if btn == mouse.LEFT:
+                if self.hover(x,y):
+                    self._callback()
+
+
+class TextButton(pg.text.Label, Button):
+
+    def __init__(self, *args, **kwargs):
+        pg.text.Label.__init__(self, *args, **kwargs)
+        Button.__init__(self)
+
+        self._start_color = self.color
+        self._hover_color = (200, 0, 0, 255)
+
+    def _set_hcolor(self, val):
+        self._hover_color = val
+    hover_color = property(fset=_set_hcolor)
+
+    def get_size(self):
+        return self.content_width, self.content_height
+
+    def hover(self, x, y):
+        center = self.x, self.y
+        if mouse_over_rect((x,y), center, self.get_size()):
+            self.color = self._hover_color
+            return True
+
+        self.color = self._start_color
+        return False
+
+class ImageButton(Button):
+
+    def __init__(self, image):
+        Button.__init__(self)
+
+    def hover(self, x, y):
+        return False
+
 '''
 ============================================================
 ---   FUNCTIONS
@@ -2370,12 +2423,13 @@ fps  = pg.window.FPSDisplay(window)
 res  = Resources()
 game = Game()
 
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+glEnable(GL_BLEND)
+
 @window.event
 def on_draw():
     window.clear()
     glClearColor(.39, .39, .39, 1)
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     game.draw()
 
     if DEBUG and game.state == GameState.RUNNING:
