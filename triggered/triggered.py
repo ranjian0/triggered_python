@@ -1005,7 +1005,6 @@ class Level:
             if symbol == key.TAB:
                 self.show_info = True if (_type == EventType.KEY_DOWN) else False
 
-
 class LevelManager:
 
     # -- singleton
@@ -1281,25 +1280,52 @@ class PauseMenu:
             bold=True, color=(255, 255, 0, 255),
             font_size=48, x=window.width/2, y=window.height*.9,
             anchor_x='center', anchor_y='center')
+        actions = {"Resume":self.resume, "Restart":self.restart, "Mainmenu":self.mainmenu}
+        self.options = []
+        self.options_batch = pg.graphics.Batch()
+        for idx, (act, callback) in enumerate(actions.items()):
+            btn = TextButton(act, bold=True, font_size=32,
+                anchor_x='center', anchor_y='center',
+                batch=self.options_batch)
+            btn.x = window.width/2
+            btn.y = (window.height*.7) - (idx * btn.content_height)
 
-        actions = ["Resume", "Restart", "MainMenu"]
-        self.options = [
+            btn.hover_color = (255, 0, 0, 255)
+            btn.on_click(callback)
+            self.options.append(btn)
 
-        ]
+        pg.clock.schedule_once(self.reload, 3)
 
-    def reload(self):
+    def resume(self):
+        game.state = GameState.RUNNING
+
+    def restart(self):
+        LevelManager.instance.load()
+        game.state = GameState.RUNNING
+
+    def mainmenu(self):
+        game.state = GameState.MAINMENU
+
+    def reload(self, *args):
         self.title.x = window.width/2
         self.title.y = window.height*.9
+
+        for idx, opt in enumerate(self.options):
+            opt.x = window.width/2
+            opt.y = (window.height*.7) - (idx * opt.content_height)
 
     def draw(self):
         with reset_matrix():
             self.title.draw()
+            self.options_batch.draw()
 
     def event(self, _type, *args, **kwargs):
         if _type == EventType.RESIZE:
             w, h = args
-            self.title.x = w/2
-            self.title.y = h*.9
+            self.reload()
+
+        for opt in self.options:
+            opt.event(_type, *args, **kwargs)
 
     def update(self, dt):
         pass
@@ -2403,7 +2429,6 @@ window = pg.window.Window(*SIZE, resizable=True)
 window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 window.maximize()
-
 
 fps  = pg.window.FPSDisplay(window)
 res  = Resources()
