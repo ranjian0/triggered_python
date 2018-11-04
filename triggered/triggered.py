@@ -806,8 +806,9 @@ class Map:
                     background.blit_into(wall_image, offx, offy, 0)
 
         sp = pg.sprite.Sprite(background)
-        sp.scale_x = sx
-        sp.scale_y = sy
+        sc = min(sx, sy)
+        sp.scale_x = sc
+        sp.scale_y = sc
         return sp
 
     def draw(self):
