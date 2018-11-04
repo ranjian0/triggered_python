@@ -2405,9 +2405,6 @@ window.set_caption(CAPTION)
 window.maximize()
 
 
-# -- enemy collision - !! HACK !!
-ENEMY_TYPES = []
-
 fps  = pg.window.FPSDisplay(window)
 res  = Resources()
 game = Game()
