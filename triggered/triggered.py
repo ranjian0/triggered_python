@@ -995,8 +995,6 @@ class Level:
             self.status = LevelStatus.PASSED
             print("level Finished")
 
-        # show info panel
-        self.show_info = KEYS[key.TAB]
         if self.show_info:
             self.infopanel.update(dt)
 
@@ -1007,6 +1005,11 @@ class Level:
         for agent in self.agents:
             if hasattr(agent, 'event'):
                 agent.event(_type, *args, **kwargs)
+
+        if _type in (EventType.KEY_DOWN, EventType.KEY_UP):
+            symbol = args[0]
+            if symbol == key.TAB:
+                self.show_info = True if (_type == EventType.KEY_DOWN) else False
 
         if DEBUG:
             if _type == EventType.KEY_DOWN:
@@ -1054,6 +1057,7 @@ class LevelManager:
         for idx, level in enumerate(self.levels):
             if level.name == name:
                 self.index = idx
+                break
 
     def __iter__(self):
         for l in self.levels:
@@ -1236,7 +1240,7 @@ class MainMenu:
         self.quit.x = self.quit.content_width
         self.quit.y = self.quit.content_height
         self.quit.hover_color = (255, 255, 0, 255)
-        self.quit.on_click(lambda : sys.exit())
+        self.quit.on_click(sys.exit)
 
         self.level_options = []
         self.level_batch = pg.graphics.Batch()
@@ -1247,7 +1251,7 @@ class MainMenu:
             btn.x = window.width/4
             btn.y = (window.height*.8)-((idx+1)*btn.content_height)
             btn.hover_color = (200, 0, 0, 255)
-            btn.on_click(lambda : self.select_level(level.name))
+            btn.on_click(self.select_level, level.name)
 
             self.level_options.append(btn)
 
@@ -2139,10 +2143,12 @@ class Button(object):
 
     def __init__(self):
         self._callback = None
+        self._callback_args = ()
 
-    def on_click(self, action):
+    def on_click(self, action, *args):
         if callable(action):
             self._callback = action
+            self._callback_args = args
 
     def hover(self, x, y):
         return NotImplementedError()
@@ -2157,7 +2163,7 @@ class Button(object):
 
             if btn == mouse.LEFT:
                 if self.hover(x,y):
-                    self._callback()
+                    self._callback(*self._callback_args)
 
 
 class TextButton(pg.text.Label, Button):
@@ -2444,9 +2450,9 @@ def on_key_press(symbol, modifiers):
             game.pause()
         elif game.state == GameState.PAUSED:
             game.start()
-        game.event(EventType.KEY_DOWN, symbol, modifiers)
     elif symbol == key.ESCAPE:
         sys.exit()
+    game.event(EventType.KEY_DOWN, symbol, modifiers)
 
 @window.event
 def on_key_release(symbol, modifiers):
