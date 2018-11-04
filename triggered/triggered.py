@@ -23,7 +23,6 @@ SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
 
-KEYS   = key.KeyStateHandler()
 KEYMAP = {
     key.W : (0, 1),
     key.S : (0, -1),
@@ -295,7 +294,7 @@ class Physics:
         self.space.debug_draw(options)
 
 
-class Player:
+class Player(key.KeyStateHandler):
 
     def __init__(self, position, size, image, _map, physics):
         # --
@@ -422,12 +421,12 @@ class Player:
         # -- movements
         dx, dy = 0, 0
         for _key, _dir in KEYMAP.items():
-            if KEYS[_key]:
+            if self[_key]:
                 dx, dy = _dir
 
         # -- running
         speed = self.speed
-        if KEYS[key.RSHIFT] or KEYS[key.LSHIFT]:
+        if self[key.LSHIFT] or self[key.RSHIFT]:
             speed *= 2.5
 
         bx, by = self.body.position
@@ -913,6 +912,7 @@ class Level:
         self.agents.append(player)
         self.hud.add(player.healthbar)
         self.hud.add(player.ammobar)
+        window.push_handlers(player)
 
         # -- add enemies
         for idx, point in enumerate(self.data.enemies):
@@ -2412,9 +2412,6 @@ window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 window.maximize()
 
-# -- BUG:: need to push twice
-window.push_handlers(KEYS)
-window.push_handlers(KEYS)
 
 # -- enemy collision - !! HACK !!
 ENEMY_TYPES = []
