@@ -969,14 +969,7 @@ class Level:
     def update(self, dt):
         if not self.data: return
         self.phy.update(dt)
-
-        if DEBUG:
-            if hasattr(self, 'switch_view') and self.switch_view:
-                self.map.clamp_player(self.get_enemies()[0])
-            else:
-                self.map.clamp_player(self.get_player())
-        else:
-            self.map.clamp_player(self.get_player())
+        self.map.clamp_player(self.get_player())
 
         # -- remove dead enemies
         for agent in self.agents:
@@ -1011,14 +1004,6 @@ class Level:
             if symbol == key.TAB:
                 self.show_info = True if (_type == EventType.KEY_DOWN) else False
 
-        if DEBUG:
-            if _type == EventType.KEY_DOWN:
-                k = args[1]
-                if k == key.BACKSPACE:
-                    if hasattr(self, 'switch_view'):
-                        self.switch_view = not self.switch_view
-                    else:
-                        self.switch_view = True
 
 class LevelManager:
 
@@ -2164,7 +2149,6 @@ class Button(object):
             if btn == mouse.LEFT:
                 if self.hover(x,y):
                     self._callback(*self._callback_args)
-
 
 class TextButton(pg.text.Label, Button):
 
