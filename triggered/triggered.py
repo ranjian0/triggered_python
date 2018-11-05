@@ -50,6 +50,10 @@ class EventType(Enum):
     MOUSE_SCROLL = 7
     RESIZE = 8
 
+    TEXT = 9
+    TEXT_MOTION = 10
+    TEXT_MOTION_SELECT = 11
+
 Resource  = namedtuple("Resource", "name data")
 LevelData = namedtuple("LevelData",
             ["map",
@@ -2019,7 +2023,7 @@ class AddWaypointTool(EditorTool):
 class ObjectivesTool(EditorTool):
     def __init__(self):
         opts = {
-            "Objectives" : Resources.instance.sprite("tool_waypoint"),
+            "Objectives" : Resources.instance.sprite("tool_objectives"),
         }
         super(ObjectivesTool, self).__init__(opts)
 
@@ -2037,42 +2041,30 @@ class ObjectivesTool(EditorTool):
         hoff = py + (len(self.input_fields) * h)
         for idx in range(self.num_inputs - len(self.input_fields)):
             self.input_fields.append(
-                TextInput("Enter Objective", (px, hoff+(idx*h)), (w, h), {'color':(0, 0, 0, 255), 'font_size':fs})
+                TextInput("Enter Objective", px, hoff+(idx*h), w) #(w, h), {'color':(0, 0, 0, 255), 'font_size':fs})
             )
 
     def _remove_fields(self):
         if len(self.input_fields) >  self.num_inputs:
             del self.input_fields[self.num_inputs:]
 
-    def _clear_handlers(self):
-        for field in self.input_fields:
-            field.remove_handler()
-
     def event(self, _type, *args, **kwargs):
         super(ObjectivesTool, self).event(_type, *args, **kwargs)
         if self.is_active:
+            for field in self.input_fields:
+                field.event(_type, *args, **kwargs)
+
             if _type == EventType.KEY_DOWN:
                 symbol, mod = args
                 if symbol == key.RETURN:
-                    self.num_inputs += 1
-                    self._add_fields()
-
-            if _type == EventType.MOUSE_DOWN:
-                x, y, but, mod = args
-                if but == mouse.LEFT:
-                    activated = False
-                    # - check if we clicked on an input field and add caret
-                    for idx, field in enumerate(self.input_fields):
-                        if field.mouse_hover(x, y):
-                            self.active_field = idx
-
-                            self._clear_handlers()
-                            self.input_fields[self.active_field].add_handler()
-                            break
+                    if mod & key.MOD_CTRL:
+                        self.num_inputs = max(1, self.num_inputs-1)
+                        self._remove_fields()
                     else:
-                    # - no field selected, clear all carets
-                        self.active_field = None
-                        self._clear_handlers()
+                        self.num_inputs += 1
+                        self._add_fields()
+
+                    self.input_fields[self.num_inputs-1].set_focus()
 
     def draw(self):
         super(ObjectivesTool, self).draw()
@@ -2083,73 +2075,85 @@ class ObjectivesTool(EditorTool):
 
 class TextInput:
 
-    def __init__(self, prompt, position, size, style=None, *args, **kwargs):
-        self.text = prompt
-        self.position = position
-        self.size = size
-        self.style = style or dict()
+    def __init__(self, text, x, y, width):
+        self.batch = pg.graphics.Batch()
 
-        # - document
-        self.m_document = document.FormattedDocument(prompt)
-        self.m_document.set_style(0, len(self.m_document.text), style)
+        self.document = pyglet.text.document.UnformattedDocument(text)
+        self.document.set_style(0, len(self.document.text), dict(color=(0, 0, 0, 255)))
+        font = self.document.get_font()
+        height = font.ascent - font.descent
 
-        # - layout
-        px, py = position
-        self.m_layout = layout.IncrementalTextLayout(self.m_document, *size)
-        self.m_layout.selection_color = None
-        self.m_layout.x = px
-        self.m_layout.y = py
+        self.layout = pyglet.text.layout.IncrementalTextLayout(
+            self.document, width, height, multiline=False, batch=self.batch)
+        self.caret = pyglet.text.caret.Caret(self.layout)
 
-        # - caret
-        self.m_caret = caret.Caret(self.m_layout, color=(255, 0, 0))
-        self.m_caret.position = len(self.m_document.text)
+        self.layout.x = x
+        self.layout.y = y
 
-    def add_handler(self):
-        self.m_caret.visible = True
-        window.push_handlers(self.m_caret)
+        # Rectangular outline
+        pad = 2
+        self.add_background(x - pad, y - pad,
+                            x + width + pad, y + height + pad)
 
-    def remove_handler(self):
-        self.m_caret.visible = False
-        window.remove_handlers(self.m_caret)
+        self.text_cursor = window.get_system_mouse_cursor('text')
+        self.set_focus()
 
-    def mouse_hover(self, mx, my):
-        x, y = self.m_layout.x, self.m_layout.y
-        w, h = self.m_layout.width, self.m_layout.height
+    def hit_test(self, x, y):
+        return (0 < x - self.layout.x < self.layout.width and
+                0 < y - self.layout.y < self.layout.height)
 
-        center = (x + w/2, y + h/2)
-        return mouse_over_rect((mx, my), center, (w, h))
+    def add_background(self, x1, y1, x2, y2):
+        vert_list = self.batch.add(4, pyglet.gl.GL_QUADS, None,
+                                     ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
+                                     ('c4B', [200, 200, 220, 255] * 4))
 
     def draw(self):
-        self._draw_background()
-        self.m_layout.draw()
+        self.batch.draw()
 
-    def _draw_background(self, color=(255, 255, 255, 255)):
-        x, y = self.m_layout.x, self.m_layout.y
-        w, h = self.m_layout.width, self.m_layout.height
-        verts = [
-            (x, y),
-            (x+w, y),
-            (x+w, y+h),
-            (x, y+h)
-        ]
+    def event(self, _type, *args, **kwargs):
+        type_map = {
+            EventType.MOUSE_MOTION : self._on_mouse_motion,
+            EventType.MOUSE_DOWN : self._on_mouse_press,
+            EventType.MOUSE_DRAG : self._on_mouse_drag,
+            EventType.TEXT : self._on_text,
+            EventType.TEXT_MOTION : self._on_text_motion,
+            EventType.TEXT_MOTION_SELECT : self._on_text_motion_select
+        }
+        if _type in type_map.keys():
+            type_map[_type](*args, **kwargs)
 
-        poly_modes = [GL_FILL, GL_LINE]
-        colors = (color, (0, 0, 0, 255))
-        for c, mode in zip(colors, poly_modes):
-            glPolygonMode(GL_FRONT, mode)
-            glColor4f(*c)
-            if mode == GL_LINE:
-                glLineWidth(3)
+    def _on_mouse_motion(self, x, y, dx, dy):
+        if self.hit_test(x, y):
+            window.set_mouse_cursor(self.text_cursor)
+        else:
+            window.set_mouse_cursor(None)
 
-            glBegin(GL_QUADS)
-            for v in verts:
-                glVertex2f(*v)
-            glEnd()
+    def _on_mouse_press(self, x, y, button, modifiers):
+        if self.hit_test(x, y):
+            self.set_focus()
+            self.caret.on_mouse_press(x, y, button, modifiers)
+        else:
+            self.set_focus(False)
 
-        # -- reset gl state
-        glLineWidth(1)
-        glColor4f(*color)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    def _on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        if self.hit_test(x, y):
+            self.caret.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
+
+    def _on_text(self, text):
+        self.caret.on_text(text)
+
+    def _on_text_motion(self, motion):
+        self.caret.on_text_motion(motion)
+
+    def _on_text_motion_select(self, motion):
+        self.caret.on_text_motion_select(motion)
+
+    def set_focus(self, focus=True):
+        if focus:
+            self.caret.visible = True
+        else:
+            self.caret.visible = False
+            self.caret.mark = self.caret.position = 0
 
 class Button(object):
 
@@ -2484,6 +2488,18 @@ def on_mouse_drag(x, y, dx, dy, button, modifiers):
 @window.event
 def on_mouse_scroll(x, y, scroll_x, scroll_y):
     game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
+
+@window.event
+def on_text(text):
+    game.event(EventType.TEXT, text)
+
+@window.event
+def on_text_motion(motion):
+    game.event(EventType.TEXT_MOTION, motion)
+
+@window.event
+def on_text_motion_select(motion):
+    game.event(EventType.TEXT_MOTION_SELECT, motion)
 
 def on_update(dt):
     game.update(dt)
