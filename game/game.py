@@ -1,5 +1,20 @@
+import enum
+import pyglet as pg
+from pyglet.window import key
 
-class GameState(Enum):
+from .resource  import Resources
+from .editor    import LevelEditor
+from .core      import EventType, profile
+from .gui       import MainMenu, PauseMenu
+from .level     import Level, LevelManager
+
+FPS        = 60
+DEBUG      = 1
+SIZE       = (800, 600)
+CAPTION    = "Triggered"
+BACKGROUND = (100, 100, 100)
+
+class GameState(enum.Enum):
     MAINMENU = 1
     RUNNING  = 2
     PAUSED   = 3
@@ -81,8 +96,6 @@ class Game:
             self.pausemenu.update(dt)
         elif self.state == GameState.EDITOR:
             self.editor.update(dt)
-
-
 
 # -- create window
 window = pg.window.Window(*SIZE, resizable=True)

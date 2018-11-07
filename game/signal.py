@@ -1,3 +1,4 @@
+import operaator as op
 
 class Signal(object):
     # -- list of all signals

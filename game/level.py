@@ -1,5 +1,5 @@
 from enum import Enum
-
+from .resource import Resources
 
 class LevelStatus(Enum):
     RUNNING = 1
@@ -179,3 +179,5 @@ class LevelManager:
         if self.current:
             self.current.event(*args, **kwargs)
 
+def get_current_level():
+    return LevelManager.instance.current

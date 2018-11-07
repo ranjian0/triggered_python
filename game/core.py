@@ -1,10 +1,14 @@
+import io
+import math
+import pstats
+import random
+import cProfile
+import pyglet as pg
 
-
-FPS        = 60
-DEBUG      = 1
-SIZE       = (800, 600)
-CAPTION    = "Triggered"
-BACKGROUND = (100, 100, 100)
+from enum import Enum
+from pyglet.gl import *
+from collections import namedtuple
+from contextlib import contextmanager
 
 
 class EventType(Enum):
@@ -23,7 +27,6 @@ class EventType(Enum):
     TEXT_MOTION        = 10
     TEXT_MOTION_SELECT = 11
 
-Resource  = namedtuple("Resource", "name data")
 LevelData = namedtuple("LevelData",
             ["map",
              "player",
@@ -55,7 +58,6 @@ def set_flag(name, value, items):
 @contextmanager
 def profile(perform=True):
     if perform:
-        import cProfile, pstats, io
         s = io.StringIO()
         pr = cProfile.Profile()
 
@@ -65,18 +67,17 @@ def profile(perform=True):
 
         ps = pstats.Stats(pr, stream=s)
         ps.sort_stats('cumtime')
-        # ps.strip_dirs()
         ps.print_stats()
 
-        all_stats = s.getvalue().split('\n')
-        self_stats = "".join([line+'\n' for idx, line in enumerate(all_stats)
-            if ('triggered' in  line) or (idx <= 4)])
-        print(self_stats)
+        all_stats = s.getvalue()
+        print(all_stats)
     else:
         yield
 
 @contextmanager
 def reset_matrix():
+    window = get_window()
+
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()
@@ -92,61 +93,19 @@ def reset_matrix():
     glMatrixMode(GL_MODELVIEW)
     glPopMatrix()
 
+def get_window():
+    return list(pg.app.windows)[-1]
+
 def distance_sqr(p1, p2):
     dx = p2[0] - p1[0]
     dy = p2[1] - p1[1]
     return dx**2 + dy**2
-
-def add_wall(space, pos, size):
-    shape = pm.Poly.create_box(space.static_body, size=size)
-    shape.collision_type = COLLISION_MAP.get("WallType")
-    shape.body.position = pos
-    space.add(shape)
-
-def heuristic(a, b):
-    (x1, y1) = a
-    (x2, y2) = b
-    return abs(x1 - x2) + abs(y1 - y2)
 
 def random_color():
     r = random.random()
     g = random.random()
     b = random.random()
     return (r, g, b, 1)
-
-def a_star_search(graph, start, goal):
-    frontier = PriorityQueue()
-    frontier.put(start, 0)
-    came_from = {}
-    cost_so_far = {}
-    came_from[start] = None
-    cost_so_far[start] = 0
-
-    while not frontier.empty():
-        current = frontier.get()
-
-        if current == goal:
-            break
-
-        for next in graph.neighbours(current):
-            new_cost = cost_so_far[current] + graph.cost(current, next)
-            if next not in cost_so_far or new_cost < cost_so_far[next]:
-                cost_so_far[next] = new_cost
-                priority = new_cost + heuristic(goal, next)
-                frontier.put(next, priority)
-                came_from[next] = current
-
-    return came_from, cost_so_far
-
-def reconstruct_path(came_from, start, goal):
-    current = goal
-    path = [current]
-    while current != start:
-        current = came_from[current]
-        path.append(current)
-    path.append(start)
-    path.reverse()
-    return path
 
 def setup_collisions(space):
 
@@ -235,6 +194,3 @@ def mouse_over_rect(mouse, center, size):
     if dx < tsx/2 and dy < tsy/2:
         return True
     return False
-
-def get_current_level():
-    return LevelManager.instance.current

@@ -1,5 +1,5 @@
 import pyglet as pg
-
+import itertools as it
 
 class EnemyState(Enum):
     IDLE    = 0

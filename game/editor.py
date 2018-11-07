@@ -1,3 +1,25 @@
+import pyglet as pg
+from pyglet.gl import *
+from pyglet.window import mouse
+from contextlib import contextmanager
+
+from .resource import Resources
+from .core import (
+    set_flag,
+    LevelData,
+    EventType,
+    draw_path,
+    draw_point,
+    get_window,
+    image_set_size,
+    image_set_anchor_center)
+
+from .editor_tool import (
+    AddTileTool,
+    AddAgentTool,
+    AddWaypointTool,
+    ObjectivesTool
+)
 
 class LevelEditor:
 
@@ -58,12 +80,12 @@ class LevelEditor:
         self.toolbar.event(*args, **kwargs)
         self.viewport.event(*args, **kwargs)
 
-
-
 class EditorToolbar:
     WIDTH = 60
 
     def __init__(self, data):
+        window = get_window()
+
         # -- toolbar
         self.toolbar_settings = {
             "size" : (self.WIDTH, window.height),
@@ -105,8 +127,10 @@ class EditorToolbar:
             tool.size = self.tool_settings.get("size")
 
     def get_rect(self):
-        center = (self.WIDTH/2, window.height/2)
-        size = (self.WIDTH, window.height)
+        winw, winh = get_window().get_size()
+
+        center = (self.WIDTH/2, winh/2)
+        size = (self.WIDTH, winh)
         return [center, size]
 
     def draw(self):
@@ -195,9 +219,11 @@ class EditorViewport:
         self = EditorViewport(self.data)
 
     def get_rect(self):
-        width = window.width - EditorToolbar.WIDTH
-        size = (width, window.height)
-        center = (width/2 + EditorToolbar.WIDTH, window.height/2)
+        winw, winh = get_window()
+
+        width = winw - EditorToolbar.WIDTH
+        size = (width, winh)
+        center = (width/2 + EditorToolbar.WIDTH, winh/2)
         return [center, size]
 
     def get_transform(self):
