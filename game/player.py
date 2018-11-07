@@ -1,4 +1,6 @@
 import math
+import pyglet as pg
+import pymunk as pm
 from  pyglet.window import key
 
 from .base      import Entity
@@ -11,6 +13,7 @@ from .core      import (
     EventType,
     normalize,
     get_window,
+    reset_matrix,
     image_set_size)
 
 KEYMAP = {

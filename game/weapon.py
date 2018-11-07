@@ -1,6 +1,7 @@
 import math
 import pyglet as pg
 
+from .core      import angle
 from .signal    import Signal
 from .resource  import Resources
 from .base      import Drawable, Collider

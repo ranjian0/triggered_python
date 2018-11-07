@@ -1,0 +1,15 @@
+FPS    = 60
+DEBUG  = 1
+
+LEVELS = [
+    #  name                file
+    ("Kill them all",   "level_one"),
+    ("Extraction",      "level_two")
+]
+
+EDITOR_TOOLBAR_WIDTH = 60
+
+EDITOR_VIEWPORT_LINE_WIDTH   = 2
+EDITOR_VIEWPORT_GRID_SPACING = 100
+EDITOR_VIEWPORT_GRID_SIZE    = 20000
+EDITOR_VIEWPORT_OFFSET       = (EDITOR_TOOLBAR_WIDTH + EDITOR_VIEWPORT_LINE_WIDTH, EDITOR_VIEWPORT_LINE_WIDTH)

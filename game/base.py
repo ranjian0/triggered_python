@@ -50,10 +50,11 @@ class Drawable(Object):
     def __init__(self, image=None, batch=None, *args, **kwargs):
         Object.__init__(self, *args, **kwargs)
         self.batch = batch or pg.graphics.Batch()
-        image_set_size(image, *self.size)
-        image_set_anchor_center(image)
 
         self.image = image
+        image_set_size(self.image, *self.size)
+        image_set_anchor_center(self.image)
+
         self.sprite = pg.sprite.Sprite(self.image, x=self.x, y=self.y, batch=self.batch)
 
     def draw(self):
@@ -65,9 +66,8 @@ class Drawable(Object):
 
     def destroy(self):
         Object.destroy(self)
-        del self.batch
-        del self.image
         self.sprite.delete()
+        del self.image
         del self.sprite
 
 class PhysicsObject(Object):
@@ -103,9 +103,9 @@ class PhysicsObject(Object):
 
     def destroy(self):
         Object.destroy(self)
+        self.physics.remove(self.body, self.shape)
         del self.speed
         del self.velocity
-        self.physics.remove(self.body, self.shape)
         del self.body
         del self.shape
 
@@ -144,6 +144,11 @@ class Collider(PhysicsObject):
         self.on_collision_exit(other, *args)
         return True
 
+    def destroy(self):
+        PhysicsObject.destroy(self)
+        del self.on_collision_enter
+        del self.on_collision_exit
+
 class Entity(Drawable, Collider):
 
     def __init__(self, *args, **kwargs):
@@ -164,10 +169,6 @@ class Entity(Drawable, Collider):
         if self.health <= 0:
             self.dead = True
 
-    def _get_alive(self):
-        return not self.dead
-    alive = property(_get_alive)
-
     def draw(self):
         Drawable.draw(self)
 
@@ -183,7 +184,5 @@ class Entity(Drawable, Collider):
         del self.health
         del self.damage
         del self.max_health
-
-        self.on_damage.disconnect(self._damage)
         del self.on_damage
 

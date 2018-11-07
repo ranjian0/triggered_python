@@ -1,5 +1,8 @@
 import pymunk as pm
+import itertools as it
 from pymunk import pyglet_util as putils
+
+from .settings import FPS
 
 RAYCAST_FILTER = 0x1
 RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)

@@ -4,6 +4,11 @@ from pyglet.window import mouse
 from contextlib import contextmanager
 
 from .resource import Resources
+from .editor_tool import (
+    AddTileTool,
+    AddAgentTool,
+    AddWaypointTool,
+    ObjectivesTool)
 from .core import (
     set_flag,
     LevelData,
@@ -11,14 +16,10 @@ from .core import (
     draw_path,
     draw_point,
     get_window,
+    reset_matrix,
     image_set_size,
+    mouse_over_rect,
     image_set_anchor_center)
-
-from .editor_tool import (
-    AddTileTool,
-    AddAgentTool,
-    AddWaypointTool,
-    ObjectivesTool)
 
 class LevelEditor:
 
@@ -29,7 +30,6 @@ class LevelEditor:
     def load(self, level):
         self.toolbar = EditorToolbar(self.data)
         self.viewport = EditorViewport(self.data)
-        self.properties = EditorToolprops()
 
         self._level = level
         if level.data:
@@ -218,7 +218,7 @@ class EditorViewport:
         self = EditorViewport(self.data)
 
     def get_rect(self):
-        winw, winh = get_window()
+        winw, winh = get_window().get_size()
 
         width = winw - EditorToolbar.WIDTH
         size = (width, winh)

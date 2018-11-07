@@ -3,13 +3,17 @@ import pyglet as pg
 from pyglet.window import mouse
 from pyglet.text import layout, caret, document
 
-from .level     import LevelManager
+from .enemy     import Enemy
+from .settings  import LEVELS
+from .resource  import Resources
 from .signal    import emit_signal, create_signal
 from .core      import (
     EventType,
     get_window,
     reset_matrix,
-    mouse_over_rect)
+    image_set_size,
+    mouse_over_rect,
+    image_set_anchor_center)
 
 class MainMenu:
 
@@ -30,22 +34,21 @@ class MainMenu:
 
         self.level_options = []
         self.level_batch = pg.graphics.Batch()
-        for idx, level in enumerate(LevelManager.instance.levels):
-            btn = TextButton(level.name, bold=True, font_size=28,
+        for idx, (level_name, _) in enumerate(LEVELS):
+            btn = TextButton(level_name, bold=True, font_size=28,
                                 anchor_x='center', anchor_y='center',
                                 batch=self.level_batch)
             btn.x = window.width/4
             btn.y = (window.height*.8)-((idx+1)*btn.content_height)
             btn.hover_color = (200, 0, 0, 255)
-            btn.on_click(self.select_level, level.name)
+            btn.on_click(self.select_level, level_name)
 
             self.level_options.append(btn)
 
         create_signal("start_game")
 
     def select_level(self, name):
-        LevelManager.instance.set(name)
-        emit_signal("start_game")
+        emit_signal("start_game", name)
 
     def draw(self):
         with reset_matrix():
@@ -197,13 +200,13 @@ class InfoPanel:
             self.reload()
 
     def create_panel(self):
-        w, h = window.get_size()
+        w, h = get_window().get_size()
         img = pg.image.SolidColorImagePattern((100, 100, 100, 200))
         panel_background = img.create_image(w, h)
         return panel_background
 
     def create_title(self):
-        w, h = window.get_size()
+        w, h = get_window().get_size()
         level_name = pg.text.Label(self.level_name.title(), color=(255, 0, 0, 200),
             font_size=24, x=w/2, y=h*.95, anchor_x='center', anchor_y='center', bold=True)
         return level_name
@@ -211,13 +214,13 @@ class InfoPanel:
     def create_objectives(self):
         txt_objs = "".join(["- "+obj+'\n' for obj in self.objectives])
         text = f"""Objectives:\n {txt_objs}"""
-        w, h = window.get_size()
+        w, h = get_window().get_size()
 
         return pg.text.Label(text, color=(255, 255, 255, 200), width=w/3,
             font_size=16, x=15, y=h*.9, anchor_y='top', multiline=True, italic=True)
 
     def create_minimap(self):
-        w, h = window.get_size()
+        w, h = get_window().get_size()
 
         msx, msy = w*.75, h*.9
         minimap = self.map.make_minimap((msx, msy), (255, 255, 255, 150))
@@ -242,14 +245,14 @@ class TextInput:
     def __init__(self, text, x, y, width):
         self.batch = pg.graphics.Batch()
 
-        self.document = pyglet.text.document.UnformattedDocument(text)
+        self.document = pg.text.document.UnformattedDocument(text)
         self.document.set_style(0, len(self.document.text), dict(color=(0, 0, 0, 255)))
         font = self.document.get_font()
         height = font.ascent - font.descent
 
-        self.layout = pyglet.text.layout.IncrementalTextLayout(
+        self.layout = pg.text.layout.IncrementalTextLayout(
             self.document, width, height, multiline=False, batch=self.batch)
-        self.caret = pyglet.text.caret.Caret(self.layout)
+        self.caret = pg.text.caret.Caret(self.layout)
 
         self.layout.x = x
         self.layout.y = y
@@ -259,7 +262,7 @@ class TextInput:
         self.add_background(x - pad, y - pad,
                             x + width + pad, y + height + pad)
 
-        self.text_cursor = window.get_system_mouse_cursor('text')
+        self.text_cursor = get_window().get_system_mouse_cursor('text')
         self.set_focus()
 
     def hit_test(self, x, y):
@@ -267,7 +270,7 @@ class TextInput:
                 0 < y - self.layout.y < self.layout.height)
 
     def add_background(self, x1, y1, x2, y2):
-        vert_list = self.batch.add(4, pyglet.gl.GL_QUADS, None,
+        vert_list = self.batch.add(4, pg.gl.GL_QUADS, None,
                                      ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
                                      ('c4B', [200, 200, 220, 255] * 4))
 

@@ -10,9 +10,8 @@ from .editor    import LevelEditor
 from .core      import EventType, profile
 from .gui       import MainMenu, PauseMenu
 from .level     import Level, LevelManager
+from .settings  import FPS, LEVELS, DEBUG
 
-FPS        = 60
-DEBUG      = 1
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -31,8 +30,7 @@ class Game:
         self.editor = LevelEditor()
         self.manager = LevelManager()
         self.manager.add([
-                Level("Kill them all", "level_one"),
-                Level("Extraction", "level_two")
+                Level(name, file) for name, file in LEVELS
             ])
 
         self.mainmenu = MainMenu()
@@ -40,7 +38,8 @@ class Game:
 
         connect("start_game", self, "start")
 
-    def start(self):
+    def start(self, level_name):
+        self.manager.set(level_name)
         self.manager.load()
         self.state = GameState.RUNNING
 

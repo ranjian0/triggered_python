@@ -7,7 +7,7 @@ from pyglet.gl import *
 from .resource  import Resources
 from .physics   import COLLISION_MAP
 from .signal    import connect, create_signal
-from .core      import get_window, distance_sqr
+from .core      import get_window, distance_sqr, image_set_size
 
 class Map:
 

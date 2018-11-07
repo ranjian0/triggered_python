@@ -1,5 +1,16 @@
-from .resource import Resources
-from .core import image_set_anchor_center
+from pyglet.window import key, mouse
+
+from .gui       import TextInput
+from .resource  import Resources
+from .core      import (
+    EventType,
+    mouse_over_rect,
+    image_set_anchor_center)
+from .settings  import (
+    EDITOR_TOOLBAR_WIDTH,
+    EDITOR_VIEWPORT_OFFSET,
+    EDITOR_VIEWPORT_GRID_SPACING
+    )
 
 class EditorTool:
 
@@ -57,7 +68,7 @@ class EditorTool:
     def mouse_pos_to_viewport(self, x, y):
         # -- convert mouse position to viewport position
         # -- subtract editor offset
-        ox, oy = EditorViewport.OFFSET
+        ox, oy = EDITOR_VIEWPORT_OFFSET
         px, py = x-ox, y-oy
 
         # -- transform viewport pan
@@ -72,7 +83,7 @@ class EditorTool:
     def mouse_pos_to_map(self, x, y):
         # -- convert mouse position to map array indices
         vx, vy = self.mouse_pos_to_viewport(x, y)
-        gs = EditorViewport.GRID_SPACING
+        gs = EDITOR_VIEWPORT_GRID_SPACING
         return int(vx) // gs, int(vy) // gs
 
     def draw(self):
@@ -211,7 +222,7 @@ class AddTileTool(EditorTool):
         if _type == EventType.MOUSE_DRAG or _type == EventType.MOUSE_DOWN:
             x,y,*_,but,mod = args
             # -- ensure mouse if over viewport
-            if x < EditorToolbar.WIDTH: return
+            if x < EDITOR_TOOLBAR_WIDTH: return
 
             if but == mouse.LEFT:
                 # -- if we are showing tool options for other tools, return
@@ -235,8 +246,7 @@ class AddAgentTool(EditorTool):
     def __init__(self):
         opts = {
             "Player" : Resources.instance.sprite("tool_player"),
-            "Enemy" : Resources.instance.sprite("tool_enemy"),
-            # "NPC" : Resources.instance.sprite("tool_npc")
+            "Enemy" : Resources.instance.sprite("tool_enemy")
         }
         super(AddAgentTool, self).__init__(opts)
 
@@ -247,7 +257,7 @@ class AddAgentTool(EditorTool):
         if _type == EventType.MOUSE_DOWN:
             x, y, but, mod = args
             # -- ensure mouse if over viewport
-            if x < EditorToolbar.WIDTH: return
+            if x < EDITOR_TOOLBAR_WIDTH: return
 
             if but == mouse.LEFT:
                 px, py = self.mouse_pos_to_viewport(x, y)
@@ -259,7 +269,7 @@ class AddAgentTool(EditorTool):
                         enemies = self.level_data['enemies']
                         waypoints = self.level_data['waypoints']
                         for idx, en in enumerate(enemies):
-                            if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
+                            if mouse_over_rect((px,py), en, (EDITOR_VIEWPORT_GRID_SPACING*.75,)*2):
                                 self.level_data['enemies'].remove(en)
                                 self.level_data['waypoints'].remove(waypoints[idx])
                     else:
@@ -282,7 +292,7 @@ class AddWaypointTool(EditorTool):
             px, py = self.mouse_pos_to_viewport(x, y)
 
             # -- ensure mouse if over viewport
-            if x < EditorToolbar.WIDTH: return
+            if x < EDITOR_TOOLBAR_WIDTH: return
 
             # -- create waypoint
             if but == mouse.LEFT:
@@ -341,7 +351,7 @@ class ObjectivesTool(EditorTool):
 
     def _add_fields(self):
         pad = (5, 5)
-        px, py = [ox+px for ox,px in zip(EditorViewport.OFFSET, pad)]
+        px, py = [ox+px for ox,px in zip(EDITOR_VIEWPORT_OFFSET, pad)]
 
         w, h, fs = 400, 35, 18
         hoff = py + (len(self.input_fields) * h)

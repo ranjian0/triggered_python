@@ -3,11 +3,12 @@ from enum import Enum
 from pyglet.window import key
 
 from .map       import Map
+from .settings  import DEBUG
 from .enemy     import Enemy
-from .player    import HUD, Player
 from .physics   import Physics
+from .gui       import InfoPanel
 from .resource  import Resources
-# from .gui       import InfoPanel
+from .player    import HUD, Player
 from .core      import (
     EventType,
     draw_path,
@@ -74,7 +75,7 @@ class Level:
             self.agents.append(e)
 
         # -- register collision types
-        setup_collisions(self.phy.space)
+        # setup_collisions(self.phy.space)
 
         # -- create infopanel
         self.infopanel = InfoPanel(self.name, self.data.objectives, self.map, self.agents)
