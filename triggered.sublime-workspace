@@ -1,0 +1,1667 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"get",
+				"get_window"
+			],
+			[
+				"draw",
+				"draw_point"
+			],
+			[
+				"ima",
+				"image_set_anchor_center"
+			],
+			[
+				"set",
+				"set_flag"
+			],
+			[
+				"Leve",
+				"LevelData"
+			],
+			[
+				"O",
+				"ObjectivesTool"
+			],
+			[
+				"Ad",
+				"AddWaypointTool"
+			],
+			[
+				"def",
+				"defaultdict"
+			],
+			[
+				"name",
+				"namedtuple"
+			],
+			[
+				"res",
+				"Resources"
+			],
+			[
+				"En",
+				"Entity"
+			],
+			[
+				"if",
+				"ifmain\tif __name__ == '__main__'"
+			],
+			[
+				"set_coll",
+				"set_collision_filter"
+			],
+			[
+				"coll",
+				"collision_filter"
+			],
+			[
+				"collisio",
+				"collision_type"
+			],
+			[
+				"bu",
+				"bullets"
+			],
+			[
+				"Bu",
+				"bullet"
+			],
+			[
+				"bul",
+				"bullet"
+			],
+			[
+				"on_",
+				"on_collision_enter"
+			],
+			[
+				"PLA",
+				"PlayerType"
+			],
+			[
+				"on_col",
+				"on_collision"
+			],
+			[
+				"dest",
+				"destroy"
+			],
+			[
+				"set_col",
+				"set_collision_filter"
+			],
+			[
+				"colli",
+				"collision_type"
+			],
+			[
+				"bull",
+				"bullets"
+			],
+			[
+				"clam",
+				"clamped_offset"
+			],
+			[
+				"scree",
+				"screen_position"
+			],
+			[
+				"am",
+				"ammobar"
+			],
+			[
+				"MOU",
+				"MOUSE_DOWN"
+			],
+			[
+				"muz",
+				"muzzle_offset"
+			],
+			[
+				"create_",
+				"create_signal"
+			],
+			[
+				"of",
+				"offy"
+			],
+			[
+				"scre",
+				"screen_position"
+			],
+			[
+				"D",
+				"DEFFERED"
+			],
+			[
+				"signal",
+				"signal_name"
+			],
+			[
+				"app",
+				"append"
+			],
+			[
+				"heal",
+				"health"
+			],
+			[
+				"pla",
+				"player_pos"
+			],
+			[
+				"player",
+				"player_pos"
+			],
+			[
+				"conta",
+				"contact_point_set"
+			],
+			[
+				"Wall",
+				"WallType"
+			],
+			[
+				"COL",
+				"COLLISION_MAP"
+			],
+			[
+				"emit",
+				"emit_signal"
+			],
+			[
+				"Ene",
+				"EnemyBulletType"
+			],
+			[
+				"on",
+				"on_collision_enter"
+			],
+			[
+				"col",
+				"collide_with"
+			],
+			[
+				"set_co",
+				"set_collision_filter"
+			],
+			[
+				"Phy",
+				"PhysicsObject"
+			],
+			[
+				"prop",
+				"property"
+			],
+			[
+				"image",
+				"image_set_anchor_center"
+			],
+			[
+				"wd",
+				"window"
+			],
+			[
+				"_p",
+				"_percent_health"
+			],
+			[
+				"_ma",
+				"_max_health"
+			],
+			[
+				"health",
+				"healthbar"
+			],
+			[
+				"on_e",
+				"on_exit_collision"
+			],
+			[
+				"handler_",
+				"handler_separate"
+			],
+			[
+				"other",
+				"other_type"
+			],
+			[
+				"_col",
+				"_collision_type"
+			],
+			[
+				"conn",
+				"connect"
+			],
+			[
+				"dama",
+				"damage_factor"
+			],
+			[
+				"max",
+				"max_health"
+			],
+			[
+				"inp",
+				"input_fields"
+			],
+			[
+				"TEXT",
+				"TEXT_MOTION_SELECT"
+			],
+			[
+				"T",
+				"TEXT"
+			],
+			[
+				"_on_text_mo",
+				"_on_text_motion_select"
+			],
+			[
+				"_on",
+				"_on_text_motion"
+			],
+			[
+				"hit",
+				"hit_test"
+			],
+			[
+				"MOUSE",
+				"MOUSE_DRAG"
+			],
+			[
+				"type",
+				"type_map"
+			],
+			[
+				"EV",
+				"EventType"
+			],
+			[
+				"add",
+				"add_background"
+			],
+			[
+				"op",
+				"options_batch"
+			],
+			[
+				"_cal",
+				"_callback_args"
+			],
+			[
+				"sho",
+				"show_info"
+			],
+			[
+				"cont",
+				"content_height"
+			],
+			[
+				"text",
+				"TextButton"
+			],
+			[
+				"sele",
+				"select_level"
+			],
+			[
+				"level",
+				"level_options"
+			],
+			[
+				"call",
+				"callable"
+			],
+			[
+				"cal",
+				"callback"
+			],
+			[
+				"hover",
+				"hover_color"
+			],
+			[
+				"conte",
+				"content_width"
+			],
+			[
+				"with",
+				"width"
+			],
+			[
+				"PA",
+				"PAUSED"
+			],
+			[
+				"spac",
+				"space_size"
+			],
+			[
+				"fnt",
+				"fnt_spc"
+			],
+			[
+				"Level",
+				"LevelManager"
+			],
+			[
+				"Text",
+				"TextButton"
+			],
+			[
+				"glyp",
+				"glyph"
+			],
+			[
+				"font",
+				"font_size"
+			],
+			[
+				"sy",
+				"symbol"
+			],
+			[
+				"m_",
+				"m_caret"
+			],
+			[
+				"reset",
+				"reset_matrix"
+			],
+			[
+				"acti",
+				"active_field"
+			],
+			[
+				"act",
+				"active_field"
+			],
+			[
+				"mouse",
+				"mouse_over_rect"
+			],
+			[
+				"fields",
+				"input_fields"
+			],
+			[
+				"remove",
+				"remove_handler"
+			],
+			[
+				"_ac",
+				"_activate_field"
+			],
+			[
+				"ac",
+				"active_field"
+			],
+			[
+				"pop",
+				"pop_handlers"
+			],
+			[
+				"gene",
+				"_generate_fields"
+			],
+			[
+				"Edi",
+				"EditorViewport"
+			],
+			[
+				"Obj",
+				"ObjectivesTool"
+			],
+			[
+				"MAI",
+				"MAINMENU"
+			],
+			[
+				"Game",
+				"GameState"
+			],
+			[
+				"file",
+				"filename"
+			],
+			[
+				"inst",
+				"instances"
+			],
+			[
+				"bule",
+				"bullets"
+			],
+			[
+				"in",
+				"instances"
+			],
+			[
+				"back",
+				"background_color"
+			],
+			[
+				"des",
+				"destroy"
+			],
+			[
+				"cls",
+				"cls_object"
+			],
+			[
+				"rev",
+				"reversed_midpath"
+			],
+			[
+				"phy",
+				"physics"
+			],
+			[
+				"snap",
+				"snap_pos"
+			],
+			[
+				"MOUS",
+				"MOUSE_MOTION"
+			],
+			[
+				"E",
+				"EditorViewport"
+			],
+			[
+				"glPo",
+				"glPopMatrix"
+			],
+			[
+				"_zo",
+				"_zoom"
+			],
+			[
+				"stat",
+				"static_body"
+			],
+			[
+				"sel",
+				"selected"
+			],
+			[
+				"amm",
+				"ammo_img"
+			],
+			[
+				"enem",
+				"enemy_image"
+			],
+			[
+				"MI",
+				"MINIMAP_AGENT_SIZE"
+			],
+			[
+				"R",
+				"RUNNING"
+			],
+			[
+				"gl",
+				"glVertex2f"
+			],
+			[
+				"GL_P",
+				"GL_POINTS"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "main.py",
+			"settings":
+			{
+				"buffer_size": 60,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "game/level.py",
+			"settings":
+			{
+				"buffer_size": 5109,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "game/resource.py",
+			"settings":
+			{
+				"buffer_size": 3341,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/blender-dev.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Java/Ant.sublime-build",
+					""
+				],
+				[
+					"Packages/Java/JavaC.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Java/JavaC.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Unittest Discover"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/User/blender-dev.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/User/C-single-file.sublime-build",
+					""
+				],
+				[
+					"Packages/User/C-single-file.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/User/C-single-file.sublime-build",
+				"Run"
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 342.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"add",
+				"Git: Add..."
+			],
+			[
+				"git cus",
+				"Git: Custom Command"
+			],
+			[
+				"git ",
+				"Git: Open..."
+			],
+			[
+				"folder",
+				"Project: Add Folder"
+			],
+			[
+				"git",
+				"Git: Init"
+			],
+			[
+				"cha",
+				"Git: Change Branch"
+			],
+			[
+				"new",
+				"Git: New Branch"
+			],
+			[
+				"mer",
+				"Git: Merge Branch"
+			],
+			[
+				"ch",
+				"Git: Change Branch"
+			],
+			[
+				"sta",
+				"Git: Stash Apply"
+			],
+			[
+				"bra",
+				"Git: Change Branch"
+			],
+			[
+				"dele",
+				"Git: Delete Branch"
+			],
+			[
+				"chan",
+				"Git: Change Branch"
+			],
+			[
+				"merg",
+				"Git: Merge Branch"
+			],
+			[
+				"git sta",
+				"Git: Stash List"
+			],
+			[
+				"br",
+				"Git: Merge Branch"
+			],
+			[
+				"diff",
+				"Git: Diff All Files"
+			],
+			[
+				"branch",
+				"Git: Change Branch"
+			],
+			[
+				"reset",
+				"Git: Reset (hard) HEAD"
+			],
+			[
+				"remo",
+				"Package Control: Remove Package"
+			],
+			[
+				"termi",
+				"Terminal View: Open Bash Terminal"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"git re",
+				"Git: Reset (hard) HEAD"
+			],
+			[
+				"add cu",
+				"Git: Add Current File"
+			],
+			[
+				"dif",
+				"Git: Diff All Files"
+			],
+			[
+				"rena",
+				"ANF: Rename File"
+			],
+			[
+				"bran",
+				"Git: New Branch"
+			],
+			[
+				"new ",
+				"Git: New Branch"
+			],
+			[
+				"di",
+				"Git: Diff All Files"
+			],
+			[
+				"doc",
+				"AutoDocstring: Current"
+			],
+			[
+				"push",
+				"Git: Push"
+			],
+			[
+				"merge",
+				"Git: Merge Branch"
+			],
+			[
+				"add al",
+				"Git: Add All"
+			],
+			[
+				"add a",
+				"Git: Add All"
+			],
+			[
+				"git add",
+				"Git: Add Current File"
+			],
+			[
+				"quick",
+				"Git: Quick Commit (repo)"
+			],
+			[
+				"git a",
+				"Git: Add All"
+			],
+			[
+				"git che",
+				"Git: Change Branch"
+			],
+			[
+				"git br",
+				"Git: New Branch"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"open",
+				"Open IPython Notebook"
+			],
+			[
+				"in",
+				"Package Control: Install Package"
+			],
+			[
+				"qui",
+				"Git: Quick Commit (repo)"
+			],
+			[
+				"log",
+				"Git: Log All"
+			],
+			[
+				"qiuck",
+				"Git: Quick Commit (repo)"
+			],
+			[
+				"git st",
+				"Git: Status"
+			],
+			[
+				"git com",
+				"Git: Commit"
+			],
+			[
+				"resou",
+				"PackageResourceViewer: Open Resource"
+			],
+			[
+				"prv",
+				"PackageResourceViewer: Open Resource"
+			],
+			[
+				"packagere",
+				"PackageResourceViewer: Extract Package"
+			],
+			[
+				"rem",
+				"Package Control: Remove Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"materi",
+				"Material Theme: Advanced configuration"
+			]
+		],
+		"width": 478.0
+	},
+	"console":
+	{
+		"height": 158.0,
+		"history":
+		[
+			"sublime.log_commands(False)",
+			"sublime.log_commands(True)",
+			"sublime.log_commands(False)",
+			"sublime.log_commands(True)",
+			"sublime.log_commands(False)",
+			"sublime.log_commands(True)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/media/ranjian0/Backup/Projects/triggered"
+	],
+	"file_history":
+	[
+		"/media/ranjian0/Backup/Projects/triggered/res/levels/level_one.level",
+		"/media/ranjian0/Backup/Projects/triggered/res/levels/level_two.level",
+		"/media/ranjian0/Backup/Projects/triggered/game/enemy.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/signal.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/map.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/level.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/resource.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/physics.py",
+		"/media/ranjian0/Backup/Projects/triggered/res/__init__.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/player.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/gui.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/core.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/__init__.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/game.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/editor.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/weapon.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/base.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/editor_tool.py",
+		"/media/ranjian0/Backup/Projects/triggered/.gitignore",
+		"/media/ranjian0/Backup/Projects/triggered/main.py",
+		"/media/ranjian0/Backup/Projects/triggered/game/resources.py",
+		"/media/ranjian0/Backup/Projects/mini-games/triggered/res/levels/level_one.level",
+		"/media/ranjian0/Backup/Projects/mini-games/triggered/res/sprites/tool_objectives.png",
+		"/media/ranjian0/Backup/Projects/mini-games/triggered/triggered.py",
+		"/home/ranjian0/Data.py",
+		"/media/ranjian0/Backup/Projects/mini-games/triggered/res/levels/level_two.level",
+		"/home/ranjian0/Desktop/Oldies/20 - Un-Break My Heart.mp3",
+		"/home/ranjian0/core",
+		"/home/ranjian0/Desktop/raytracer.cpp",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/presets/keyconfig/blender_27x.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/presets/keyconfig/maya.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/presets/keyconfig/3dsmax.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_info/info_report.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_action/action_select.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/windowmanager/intern/wm_operator_props.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_view3d/view3d_edit.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_view3d/view3d_select.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_view3d/view3d_header.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_view3d/view3d_intern.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/animation/anim_channels_edit.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_graph/graph_select.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_nla/nla_select.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesdna/DNA_windowmanager_types.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/transform/transform_ops.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/windowmanager/intern/wm_operator_type.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesrna/intern/rna_access.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesrna/RNA_access.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/include/ED_transform.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender-dev.sublime-project",
+		"/home/ranjian0/.config/sublime-text-3/Packages/User/blender-dev.sublime-build",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/modules/bpy/utils/__init__.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/windowmanager/intern/wm_toolsystem.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/addons/uv_magic_uv/ui/view3d_uv_manipulation.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/addons/archipack/archipack_manipulator.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/addons/space_view3d_spacebar_menu.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/addons/pie_menus_official/pie_manipulator_of.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/addons_contrib/space_view3d_manipulator_Menu.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesdna/DNA_space_types.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/windowmanager/intern/wm_files_link.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/windowmanager/intern/wm_keymap.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/presets/interaction/maya.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/lattice/editlattice_tools.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenkernel/BKE_layer.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesdna/DNA_object_enums.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenkernel/BKE_context.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesdna/DNA_object_types.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/lattice/editlattice_select.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenkernel/intern/context.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/depsgraph/intern/depsgraph_tag.cc",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/depsgraph/DEG_depsgraph.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/windowmanager/WM_api.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/windowmanager/WM_types.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/sculpt_paint/paint_ops.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/include/ED_screen.h",
+		"/media/ranjian0/Backup/Projects/cynthia-dev/CODE/v0.6/DESIGN.txt",
+		"/media/ranjian0/Backup/Projects/cynthia-dev/CODE/v0.6/README.md",
+		"/media/ranjian0/Backup/Projects/cynthia-dev/CODE/v0.6/core/rails/rails_types.py",
+		"/media/ranjian0/Backup/Projects/cynthia-dev/CODE/v0.6/core/rails/rails.py",
+		"/media/ranjian0/Backup/Projects/cynthia-dev/CODE/v0.6/core/rails/rails_ops.py",
+		"/media/ranjian0/Backup/Projects/cynthia-dev/CODE/v0.6/utils/util_mesh.py",
+		"/media/ranjian0/Backup/Projects/cynthia-dev/CODE/v0.6/core/floorplan/floorplan_ops.py",
+		"/home/ranjian0/.config/sublime-text-3/Packages/TerminalView/README.md",
+		"/home/ranjian0/Desktop/random_building.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/mesh/editmesh_select.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenlib/intern/winstuff_dir.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenkernel/intern/lattice.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_text/text_draw.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesdna/DNA_lattice_types.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/makesdna/DNA_meshdata_types.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/depsgraph/intern/depsgraph.cc",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/addons/add_advanced_objects_menu/mesh_easylattice.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/object/object_vgroup.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenkernel/intern/object_deform.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenkernel/intern/deform.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/blenlib/intern/listbase.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/intern/cycles/render/object.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_topbar/space_topbar.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/release/scripts/startup/bl_ui/space_topbar.py",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_info/info_draw.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/blender-dev/blender/source/blender/editors/space_outliner/outliner_tools.c",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/scene/resources/shader.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/editor/plugins/material_editor_plugin.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/editor/plugins/material_editor_plugin.cpp",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/servers/visual/visual_server_raster.cpp",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/main/main.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/main/main.cpp",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/core/rid.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/core/list.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/editor/code_editor.cpp",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/core/os/os.h",
+		"/media/ranjian0/Backup/SourceCode/DEV/godot=dev/godot/core/variant.h",
+		"/media/ranjian0/Backup/SourceCode/PYTHON/MODULES/mini_games/triggered.py",
+		"/media/ranjian0/Backup/SourceCode/PYTHON/MODULES/mini_games/snake.py",
+		"/media/ranjian0/Backup/SourceCode/PYTHON/MODULES/mini_games/2048-v2.py",
+		"/media/ranjian0/Backup/Projects/BubbleShoot/src/editor.py",
+		"/home/ranjian0/.config/sublime-text-3/Packages/User/Gist.sublime-settings",
+		"/home/ranjian0/.config/sublime-text-3/Packages/Gist/Gist.sublime-settings",
+		"/home/ranjian0/Desktop/dummy_test.txt",
+		"/home/ranjian0/Desktop/tk_test.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/entities.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/fluid_demo.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/bitmaps.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/sprite_demo.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/poly_demo.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/make_movie.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/geometry.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/gel_demo.py",
+		"/media/ranjian0/Backup/Downloads/permafacture-pyglet-pymunk-demo-e7142e0d9beb/deformable_demo.py"
+	],
+	"find":
+	{
+		"height": 36.0
+	},
+	"find_in_files":
+	{
+		"height": 100.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "main.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 60,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"git_gutter_is_enabled": true,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "game/level.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5109,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								22,
+								22
+							]
+						],
+						"settings":
+						{
+							"git_gutter_is_enabled": true,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "game/resource.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3341,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								121,
+								121
+							]
+						],
+						"settings":
+						{
+							"git_gutter_is_enabled": true,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 24.0
+	},
+	"input":
+	{
+		"height": 32.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 144.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.git":
+	{
+		"height": 86.0
+	},
+	"output.help":
+	{
+		"height": 22.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "triggered.sublime-project",
+	"replace":
+	{
+		"height": 44.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"level",
+				"game/level.py"
+			],
+			[
+				"en\t",
+				"game/enemy.py"
+			],
+			[
+				"phy",
+				"game/physics.py"
+			],
+			[
+				"map",
+				"game/map.py"
+			],
+			[
+				"si",
+				"game/signal.py"
+			],
+			[
+				"ma",
+				"main.py"
+			],
+			[
+				"leve",
+				"game/level.py"
+			],
+			[
+				"re",
+				"game/resource.py"
+			],
+			[
+				"edi\t",
+				"game/editor.py"
+			],
+			[
+				"gam",
+				"game/game.py"
+			],
+			[
+				"manipula",
+				"release/scripts/addons/uv_magic_uv/ui/view3d_uv_manipulation.py"
+			],
+			[
+				"maya",
+				"release/scripts/presets/keyconfig/maya.py"
+			],
+			[
+				"bke_la",
+				"source/blender/blenkernel/BKE_layer.h"
+			],
+			[
+				"",
+				"source/blender/makesdna/DNA_object_types.h"
+			],
+			[
+				"space_text",
+				"source/blender/editors/space_text/text_draw.c"
+			],
+			[
+				"lattice",
+				"source/blender/editors/lattice/editlattice_tools.c"
+			],
+			[
+				"editla",
+				"source/blender/editors/lattice/editlattice_select.c"
+			],
+			[
+				"topbar",
+				"source/blender/editors/space_topbar/space_topbar.c"
+			],
+			[
+				"topba",
+				"release/scripts/startup/bl_ui/space_topbar.py"
+			],
+			[
+				"editor_info",
+				"source/blender/editors/space_info/info_draw.c"
+			],
+			[
+				"editmeshsele",
+				"source/blender/editors/mesh/editmesh_select.c"
+			],
+			[
+				"latticese",
+				"source/blender/editors/lattice/editlattice_select.c"
+			],
+			[
+				"list",
+				"core/list.h"
+			],
+			[
+				"main",
+				"main/main.cpp"
+			],
+			[
+				"code",
+				"editor/code_editor.cpp"
+			],
+			[
+				"st",
+				"core/stairs/stairs.py"
+			],
+			[
+				"ba",
+				"core/balcony/balcony_types.py"
+			],
+			[
+				"bal",
+				"core/balcony/balcony_ops.py"
+			],
+			[
+				"balco",
+				"core/balcony/balcony_props.py"
+			],
+			[
+				"__ini",
+				"core/balcony/__init__.py"
+			],
+			[
+				"regi",
+				"core/register.py"
+			],
+			[
+				"rail",
+				"core/rails/rails_types.py"
+			],
+			[
+				"floor",
+				"core/floor/floor.py"
+			],
+			[
+				"floorpla",
+				"core/floorplan/floorplan_ops.py"
+			],
+			[
+				"gene",
+				"core/generic.py"
+			],
+			[
+				"doo",
+				"core/door/door_props.py"
+			],
+			[
+				"floorpl",
+				"core/floorplan/floorplan_props.py"
+			],
+			[
+				"win",
+				"core/window/window.py"
+			],
+			[
+				"window",
+				"core/window/window_ops.py"
+			],
+			[
+				"door",
+				"core/door/door_types.py"
+			],
+			[
+				"to",
+				"TODO.txt"
+			],
+			[
+				"__",
+				"__init__.py"
+			],
+			[
+				"up",
+				"core/update.py"
+			],
+			[
+				"__i",
+				"__init__.py"
+			],
+			[
+				"update",
+				"core/update.py"
+			],
+			[
+				"ops",
+				"core/floorplan/floorplan_ops.py"
+			],
+			[
+				"uti",
+				"utils/util_cynthia.py"
+			],
+			[
+				"floor_",
+				"core/floorplan/floorplan_props.py"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 342.0,
+		"last_filter": "select_all",
+		"selected_items":
+		[
+			[
+				"select_all",
+				"ACTION_OT_select_all"
+			],
+			[
+				"VIEW3D_OT_render",
+				"VIEW3D_OT_render_border"
+			],
+			[
+				"render_border",
+				"VIEW3D_OT_render_border"
+			],
+			[
+				"VIEW3D_OT_sele",
+				"VIEW3D_OT_select_border"
+			],
+			[
+				"VIEW3D_OT_sel",
+				"VIEW3D_OT_select_border"
+			],
+			[
+				"VIEW3D_OT_layer",
+				"VIEW3D_OT_layers"
+			],
+			[
+				"view3dlayers",
+				"VIEW3D_OT_layers"
+			],
+			[
+				"view3d_ot_m",
+				"VIEW3D_OT_move"
+			],
+			[
+				"select_border",
+				"VIEW3D_OT_select_border"
+			],
+			[
+				"keymap",
+				"wmKeyMapItem"
+			],
+			[
+				"NLA_OT_sel",
+				"NLA_OT_select_all"
+			],
+			[
+				"transform_ot_tra",
+				"TRANSFORM_OT_translate"
+			],
+			[
+				"Graselect_all",
+				"GRAPH_OT_select_all"
+			],
+			[
+				"channels_select_",
+				"ANIM_OT_channels_select_all"
+			],
+			[
+				"channels_sele",
+				"ANIM_OT_channels_setting_toggle"
+			],
+			[
+				"VIEW3D_OT_vie",
+				"VIEW3D_OT_view_all"
+			],
+			[
+				"transform_tra",
+				"TRANSFORM_OT_translate"
+			],
+			[
+				"toolsys",
+				"toolsystem_default_tool"
+			],
+			[
+				"tool_move",
+				"WM_toolsystem_update_from_context_view3d"
+			],
+			[
+				"mani",
+				"Manipulator"
+			],
+			[
+				"view3dmanipula",
+				"VIEW3D_MT_ManipulatorMenu1"
+			],
+			[
+				"view3dManip",
+				"VIEW3D_MT_ManipulatorMenu"
+			],
+			[
+				"VIEW3D manipula",
+				"VIEW3D_manipulator_set_of"
+			],
+			[
+				"VIEW3D_MT_Mani",
+				"VIEW3D_MT_ManipulatorMenu"
+			],
+			[
+				"keymap_new",
+				"wm_keymap_new"
+			],
+			[
+				"KeyMap",
+				"wmKeyMap"
+			],
+			[
+				"space_type",
+				"eSpace_Type"
+			],
+			[
+				"WM_OT",
+				"WM_OT_append"
+			],
+			[
+				"WM_OT_app",
+				"WM_OT_append"
+			],
+			[
+				"objectmode",
+				"eObjectMode"
+			],
+			[
+				"OB_MODE",
+				"OB_MODE_ACTIVE"
+			],
+			[
+				"OB_MODE_OBJECT",
+				"ED_workspace_object_mode_sync_from_object"
+			],
+			[
+				"raili",
+				"make_railing"
+			],
+			[
+				"split",
+				"split"
+			],
+			[
+				"vertexgroup_add",
+				"OBJECT_OT_vertex_group_add"
+			],
+			[
+				"vertexgr",
+				"createVertexGroup"
+			],
+			[
+				"view3d add",
+				"VIEW3D_MT_AddMenu"
+			],
+			[
+				"Group Instance",
+				"group_instance_cb"
+			],
+			[
+				"Shader",
+				"Shader"
+			],
+			[
+				"RID_Owner",
+				"RID_OwnerBase"
+			],
+			[
+				"get_sin",
+				"get_singleton"
+			],
+			[
+				"spl",
+				"split_quad"
+			]
+		],
+		"width": 565.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 244.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

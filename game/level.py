@@ -1,5 +1,19 @@
+import pickle
 from enum import Enum
-from .resource import Resources
+from pyglet.window import key
+
+from .map       import Map
+from .enemy     import Enemy
+from .player    import HUD, Player
+from .physics   import Physics
+from .resource  import Resources
+# from .gui       import InfoPanel
+from .core      import (
+    EventType,
+    draw_path,
+    draw_point,
+    get_window,
+    setup_collisions)
 
 class LevelStatus(Enum):
     RUNNING = 1
@@ -42,7 +56,7 @@ class Level:
         self.agents.append(player)
         self.hud.add(player.healthbar)
         self.hud.add(player.ammobar)
-        window.push_handlers(player)
+        get_window().push_handlers(player)
 
         # -- add enemies
         for idx, point in enumerate(self.data.enemies):

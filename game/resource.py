@@ -2,7 +2,6 @@ import os
 import pickle
 import pyglet as pg
 
-from res import RESOURCE_DIR
 from collections import namedtuple, defaultdict
 
 Resource  = namedtuple("Resource", "name data")
@@ -18,9 +17,7 @@ class Resources:
 
     def __init__(self, root_dir="res"):
         self.root = root_dir
-        pg.resource.path = [
-            RESOURCE_DIR
-        ]
+        pg.resource.path = [os.path.abspath(root_dir)]
         pg.resource.reindex()
 
         abspath = os.path.abspath

@@ -1,12 +1,21 @@
+import sys
 import pyglet as pg
+from pyglet.window import mouse
 from pyglet.text import layout, caret, document
 
-from .level import LevelManager
-from .core import EventType, reset_matrix
+from .level     import LevelManager
+from .signal    import emit_signal, create_signal
+from .core      import (
+    EventType,
+    get_window,
+    reset_matrix,
+    mouse_over_rect)
 
 class MainMenu:
 
     def __init__(self):
+        window = get_window()
+
         self.title = pg.text.Label("TRIGGERED",
             bold=True, color=(255, 255, 0, 255),
             font_size=48, x=window.width/2, y=window.height*.9,
@@ -32,9 +41,11 @@ class MainMenu:
 
             self.level_options.append(btn)
 
+        create_signal("start_game")
+
     def select_level(self, name):
         LevelManager.instance.set(name)
-        game.start()
+        emit_signal("start_game")
 
     def draw(self):
         with reset_matrix():
@@ -43,6 +54,7 @@ class MainMenu:
             self.level_batch.draw()
 
     def event(self, _type, *args, **kwargs):
+        window = get_window()
 
         if _type == EventType.RESIZE:
             w, h = args
@@ -68,6 +80,8 @@ class MainMenu:
 class PauseMenu:
 
     def __init__(self):
+        window = get_window()
+
         self.title = pg.text.Label("PAUSED",
             bold=True, color=(255, 255, 0, 255),
             font_size=48, x=window.width/2, y=window.height*.9,
@@ -97,6 +111,8 @@ class PauseMenu:
         game.state = GameState.MAINMENU
 
     def reload(self, *args):
+        window = get_window()
+
         self.title.x = window.width/2
         self.title.y = window.height*.9
 
@@ -271,6 +287,7 @@ class TextInput:
             type_map[_type](*args, **kwargs)
 
     def _on_mouse_motion(self, x, y, dx, dy):
+        window = get_window()
         if self.hit_test(x, y):
             window.set_mouse_cursor(self.text_cursor)
         else:

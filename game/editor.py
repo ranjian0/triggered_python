@@ -18,8 +18,7 @@ from .editor_tool import (
     AddTileTool,
     AddAgentTool,
     AddWaypointTool,
-    ObjectivesTool
-)
+    ObjectivesTool)
 
 class LevelEditor:
 

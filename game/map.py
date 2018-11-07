@@ -3,8 +3,11 @@ import pymunk as pm
 import pyglet as pg
 
 from pyglet.gl import *
-from .core import get_window
-from .resource import Resources
+
+from .resource  import Resources
+from .physics   import COLLISION_MAP
+from .signal    import connect, create_signal
+from .core      import get_window, distance_sqr
 
 class Map:
 
@@ -53,7 +56,7 @@ class Map:
     def clamp_player(self, player_pos):
         # -- calculate player offset
         px, py = player_pos
-        w, h = window.get_size()
+        w, h = get_window().get_size()
         player_off =  -px + w/2, -py + h/2
 
         # -- keep player within map bounds

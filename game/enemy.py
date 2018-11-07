@@ -1,7 +1,15 @@
+import math
+import enum
 import pyglet as pg
 import itertools as it
 
-class EnemyState(Enum):
+from .weapon    import Bullet
+from .signal    import connect
+# from .level     import get_current_level
+from .physics   import RAYCAST_FILTER, COLLISION_MAP
+from .core      import angle, distance_sqr, normalize
+
+class EnemyState(enum.Enum):
     IDLE    = 0
     PATROL  = 1
     CHASE   = 2
@@ -67,7 +75,6 @@ class Enemy:
                 COLLISION_MAP.get("PlayerBulletType"),
                 handler_begin = self.collide_player_bullet
             )
-
 
         connect("on_player_move", self, "_player_moved")
 

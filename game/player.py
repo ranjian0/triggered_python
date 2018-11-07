@@ -1,7 +1,17 @@
+import math
 from  pyglet.window import key
 
-from .base import Entity
-from .weapon import Weapon
+from .base      import Entity
+from .weapon    import Weapon
+from .resource  import Resources
+from .signal    import emit_signal
+# from .level     import get_current_level
+from .physics   import RAYCAST_FILTER, COLLISION_MAP
+from .core      import (
+    EventType,
+    normalize,
+    get_window,
+    image_set_size)
 
 KEYMAP = {
     key.W : (0, 1),
@@ -21,6 +31,8 @@ class Player(Entity, key.KeyStateHandler):
         self.set_collision_filter(pm.ShapeFilter(categories=RAYCAST_FILTER))
         self.collide_with(COLLISION_MAP.get("EnemyBulletType"))
         self.on_collision_enter.connect(self.on_collision)
+
+        window = get_window()
 
         # Player Health
         self.healthbar = HealthBar((10, window.height))
@@ -42,7 +54,7 @@ class Player(Entity, key.KeyStateHandler):
     def screen_position(self):
         # -- player offset
         px, py = self.position
-        w, h = window.get_size()
+        w, h = get_window().get_size()
         player_off =  -px + w/2, -py + h/2
 
         _map = get_current_level().map

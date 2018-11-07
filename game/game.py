@@ -1,7 +1,10 @@
+import sys
 import enum
 import pyglet as pg
+from pyglet.gl import *
 from pyglet.window import key
 
+from .signal    import connect
 from .resource  import Resources
 from .editor    import LevelEditor
 from .core      import EventType, profile
@@ -34,6 +37,8 @@ class Game:
 
         self.mainmenu = MainMenu()
         self.pausemenu = PauseMenu()
+
+        connect("start_game", self, "start")
 
     def start(self):
         self.manager.load()
@@ -96,6 +101,10 @@ class Game:
             self.pausemenu.update(dt)
         elif self.state == GameState.EDITOR:
             self.editor.update(dt)
+
+
+def start_game():
+    game.start()
 
 # -- create window
 window = pg.window.Window(*SIZE, resizable=True)
