@@ -1,3 +1,15 @@
+import pymunk as pm
+
+RAYCAST_FILTER = 0x1
+RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
+COLLISION_MAP = {
+    "PlayerType" : 1,
+    "WallType"   : 2,
+    "PlayerBulletType" : 3,
+    "EnemyBulletType"  : 4,
+    "EnemyType" : 100
+}
+
 
 class Physics:
 
