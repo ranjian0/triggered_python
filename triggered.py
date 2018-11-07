@@ -7,6 +7,7 @@ import pickle
 import pprint as pp
 import pyglet as pg
 import pymunk as pm
+import operator as op
 import itertools as it
 
 from enum import Enum
@@ -18,7 +19,7 @@ from pyglet.text import layout, caret, document
 from collections import defaultdict, namedtuple
 
 FPS        = 60
-DEBUG      = 0
+DEBUG      = 1
 SIZE       = (800, 600)
 CAPTION    = "Triggered"
 BACKGROUND = (100, 100, 100)
@@ -300,12 +301,24 @@ class Physics:
 class Signal(object):
     # -- list of all signals
     DB = []
+    # -- deffered signals i.e signals connected to before creation
+    DEFFERED = []
 
-    def __init__(self, name):
+    def __init__(self, name, instance=True):
         self.name = name
         self.slots = []
 
-        Signal.DB.append(self)
+        if not instance:
+            if name not in [s.name for s in Signal.DB]:
+                Signal.DB.append(self)
+                self._connect_deffered(name)
+
+
+    def _connect_deffered(self, name):
+        if name in map(op.itemgetter(0), Signal.DEFFERED):
+            sname, target, meth = [sig for sig in Signal.DEFFERED
+                                    if sig[0] == name][-1]
+            self.connect(getattr(target, meth))
 
     def connect(self, slot):
         "slot: is a function / method"
@@ -320,10 +333,15 @@ class Signal(object):
         for slot in self.slots:
             slot(*args, **kwargs)
 
+    def __del__(self):
+        self.slots.clear()
+        if self in Signal.DB:
+            Signal.DB.remove(self)
+
 def create_signal(name):
     """ create a signal"""
     if name not in [s.name for s in Signal.DB]:
-        return Signal(name)
+        return Signal(name, False)
 
 def connect(signal_name, target, method):
     """ connect the method contained in target to a signal with signal_name"""
@@ -331,6 +349,8 @@ def connect(signal_name, target, method):
         if signal.name == signal_name:
             signal.connect(getattr(target, method))
             break
+    else:
+        Signal.DEFFERED.append((signal_name, target, method))
 
 def disconnect(signal_name, target, method):
     """ disconnect the method contained in target to a signal with signal_name"""
@@ -346,154 +366,359 @@ def emit_signal(signal_name, *args, **kwargs):
             signal(*args, **kwargs)
 
 
-class Player(key.KeyStateHandler):
+class Object:
 
-    def __init__(self, position, size, image, _map, physics):
-        # --
-        self.batch = pg.graphics.Batch()
-        self.map = _map
-        self.physics = physics
+    def __init__(self, size=(1,1), position=(0, 0),  rotation=0, *args, **kwargs):
+        self.size = size
+        self.position = position
+        self.rotation = rotation
 
-        # -- movement properties
-        self.pos    = position
-        self.size   = size
-        self.angle  = 0
-        self.speed  = 100
-        # -- health properties
-        self.dead = False
-        self.max_health = 900
-        self.health = 900
-        self.damage = 5
-        self.healthbar = HealthBar((10, window.height))
-        # -- weapon properties
-        self.ammo   = 350
-        self.bullets = []
-        self.muzzle_offset = (self.size[0]/2+Bullet.SIZE/2, -self.size[1]*.21)
-        self.muzzle_mag = math.sqrt(distance_sqr((0, 0), self.muzzle_offset))
-        self.muzzle_angle = angle(self.muzzle_offset)
-        self.ammobar = AmmoBar((10, window.height - (AmmoBar.AMMO_IMG_HEIGHT*1.5)), self.ammo)
+    def _get_x(self):
+        return self.position[0]
+    def _set_x(self, val):
+        self.position = (val, self.position[1])
+    x = property(_get_x, _set_x)
 
-        # Create Player Image
+    def _get_y(self):
+        return self.position[1]
+    def _set_y(self, val):
+        self.position = (self.position[0], val)
+    y = property(_get_y, _set_y)
+
+    def _get_width(self):
+        return self.size[0]
+    def _set_width(self, val):
+        self.size = (val, self.size[1])
+    width = property(_get_width, _set_width)
+
+    def _get_height(self):
+        return self.size[1]
+    def _set_height(self, val):
+        self.size = (self.size[0], val)
+    height = property(_get_height, _set_height)
+
+    def destroy(self):
+        try:
+            del self.size
+            del self.position
+            del self.rotation
+        except AttributeError:
+            pass
+
+class Drawable(Object):
+
+    def __init__(self, image=None, batch=None, *args, **kwargs):
+        Object.__init__(self, *args, **kwargs)
+        self.batch = batch or pg.graphics.Batch()
+        image_set_size(image, *self.size)
+        image_set_anchor_center(image)
+
         self.image = image
-        self.image.width = size[0]
-        self.image.height = size[1]
-        self.image.anchor_x = size[0]/2
-        self.image.anchor_y = size[1]/2
-        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1],
-            batch=self.batch)
+        self.sprite = pg.sprite.Sprite(self.image, x=self.x, y=self.y, batch=self.batch)
 
-        # player physics
-        self.body = pm.Body(1, pm.inf)
-        self.body.position = self.pos
-        self.shape = pm.Circle(self.body, size[0]*.45)
-        self.shape.collision_type = COLLISION_MAP.get("PlayerType")
-        self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
-        physics.add(self.body, self.shape)
+    def draw(self):
+        self.batch.draw()
 
-        # -- collision handlers
-        physics.add_collision_handler(
-                COLLISION_MAP.get("PlayerType"),
-                COLLISION_MAP.get("EnemyBulletType"),
-                handler_begin = self.collide_enemy_bullet
+    def update(self, dt):
+        self.sprite.set_position(self.x, self.y)
+        self.sprite.update(rotation=self.rotation)
+
+    def destroy(self):
+        Object.destroy(self)
+        del self.batch
+        del self.image
+        self.sprite.delete()
+        del self.sprite
+
+class PhysicsObject(Object):
+
+    def __init__(self, physics=None, mass=1, moment=0, body_type=pm.Body.DYNAMIC,
+                    speed=0, velocity=(0, 0), *args, **kwargs):
+        Object.__init__(self, *args, **kwargs)
+        self.speed = speed
+        self.physics = physics
+        self.velocity = velocity
+
+        self.body = pm.Body(mass, moment, body_type)
+        self.body.position = self.position
+        self.shape = pm.Circle(self.body, min(*self.size)*.45)
+        self.physics.add(self.body, self.shape)
+
+    def set_speed(self, val):
+        self.speed = val
+
+    def set_velocity(self, val):
+        self.velocity = val
+
+    def update(self, dt):
+        px, py = self.position
+        vx, vy = self.velocity
+
+        px += vx * dt
+        py += vy * dt
+
+        self.position = (px, py)
+        self.body.position = self.position
+        self.physics.space.reindex_shapes_for_body(self.body)
+
+    def destroy(self):
+        Object.destroy(self)
+        del self.speed
+        del self.velocity
+        self.physics.remove(self.body, self.shape)
+        del self.body
+        del self.shape
+
+class Collider(PhysicsObject):
+
+    def __init__(self, collision_type=None, collision_filter=None, *args, **kwargs):
+        PhysicsObject.__init__(self, *args, **kwargs)
+
+        self.on_collision_enter = Signal("on_collision_enter")
+        self.on_collision_exit = Signal("on_collision_exit")
+
+        if collision_type:
+            self.set_collision_type(collision_type)
+        if collision_filter:
+            self.set_collision_filter(collision_filter)
+
+    def set_collision_type(self, col_type):
+        self.shape.collision_type = col_type
+
+    def set_collision_filter(self, col_flt):
+        self.shape.filter = col_flt
+
+    def collide_with(self, _type):
+        self.physics.add_collision_handler(
+                self.shape.collision_type,
+                _type,
+                handler_begin = lambda *col_args: self._on_col_enter(_type, *col_args),
+                handler_separate = lambda *col_args: self._on_col_exit(_type, *col_args)
             )
 
-    def collide_enemy_bullet(self, arbiter, space, data):
-        bullet = arbiter.shapes[1]
-        bullet.cls_object.destroy()
-        space.remove(bullet.body, bullet)
-        self.do_damage()
-        return False
+    def _on_col_enter(self, other, *args):
+        self.on_collision_enter(other, *args)
+        return True
 
-    def do_damage(self):
-        self.health -= self.damage
-        if self.health < 0: return
-        if self.health > 0:
-            self.healthbar.set_value(self.health / self.max_health)
-        if self.health == 0:
-            self.physics.remove(self.body, self.shape)
-            self.bullets.clear()
-            self.sprite.batch = None
+    def _on_col_exit(self, other, *args):
+        self.on_collision_exit(other, *args)
+        return True
+
+class Entity(Drawable, Collider):
+
+    def __init__(self, *args, **kwargs):
+        Drawable.__init__(self, *args, **kwargs)
+        Collider.__init__(self, *args, **kwargs)
+
+        # -- health properties
+        self.dead = False
+        self.health = 100
+        self.damage = 5
+        self.max_health = 100
+
+        self.on_damage = Signal("on_entity_damage")
+        self.on_damage.connect(self._damage)
+
+    def _damage(self):
+        self.health = max(0, self.health-self.damage)
+        if self.health <= 0:
             self.dead = True
 
-    def offset(self):
-        # -- calculate distance of player from window center
-        # -- usefull for screen scrolling to keep player at center of view
-        px, py = self.pos
-        w, h = window.get_size()
-        return -px + w/2, -py + h/2
+    def _get_alive(self):
+        return not self.dead
+    alive = property(_get_alive)
 
-    def screen_coords(self):
-        # -- convert player coordinates into screen coordinates
-        ox, oy = self.map.clamped_offset(*self.offset())
-        px, py = self.pos
+    def draw(self):
+        Drawable.draw(self)
 
-        cx, cy = px + ox, py + oy
-        return cx, cy
+    def update(self, dt):
+        Drawable.update(self, dt)
+        Collider.update(self, dt)
 
-    def shoot(self, _dir):
-        # -- reduce ammo
+    def destroy(self):
+        Drawable.destroy(self)
+        Collider.destroy(self)
+
+        del self.dead
+        del self.health
+        del self.damage
+        del self.max_health
+
+        self.on_damage.disconnect(self._damage)
+        del self.on_damage
+
+
+class Weapon:
+
+    def __init__(self, size, ammo=350, *args, **kwargs):
+        self.ammo = ammo
+        self.bullets = []
+        self.batch = pg.graphics.Batch()
+
+        self.muzzle_offset = (size[0]/2+Bullet.SIZE/2, -size[1]*.21)
+        self.muzzle_mag = math.hypot(*self.muzzle_offset) + 4
+        self.muzzle_angle = angle(self.muzzle_offset)
+
+        self.on_fire = Signal("on_fire")
+        self.on_fire.connect(self._fire)
+
+    def _fire(self, position, rotation, direction, collision, physics):
+        # -- check ammo and decrement
         if self.ammo <= 0: return
         self.ammo -= 1
-        self.ammobar.set_value(self.ammo)
 
         # -- eject bullet
-        px, py = self.pos
-        angle = self.muzzle_angle - self.angle
+        px, py = position
+        angle = self.muzzle_angle - rotation
         dx, dy = math.cos(math.radians(angle)), math.sin(math.radians(angle))
         px += dx * self.muzzle_mag
         py += dy * self.muzzle_mag
 
-        b = Bullet((px, py), _dir, self.batch, collision_type=COLLISION_MAP.get("PlayerBulletType"), physics=self.physics)
+        b = Bullet(direction, position=(px, py), batch=self.batch,
+                    physics=physics,
+                    collision_type=collision,
+                    collision_filter=pm.ShapeFilter(categories=RAYCAST_FILTER))
+
+        b.on_collision_enter.connect(lambda *args : self.bullets.remove(b))
         self.bullets.append(b)
 
     def draw(self):
         self.batch.draw()
 
-    def event(self, type, *args, **kwargs):
-        if type == EventType.MOUSE_MOTION:
+    def update(self, dt):
+        for bullet in self.bullets:
+            bullet.update(dt)
+
+class Bullet(Drawable, Collider):
+    SIZE = 12
+
+    def __init__(self, direction, *args, **kwargs):
+        Drawable.__init__(self, image=Resources.instance.sprite("bullet"), *args, **kwargs)
+        Collider.__init__(self, mass=1, moment=100, speed=500, *args, **kwargs)
+
+        # -  movement
+        dx, dy = direction
+        self.set_velocity((dx*self.speed, dy*self.speed))
+        self.rotation = math.degrees(-math.atan2(dy, dx))
+        self.sprite.update(rotation=self.rotation)
+
+        # - collision
+        self.collide_with(COLLISION_MAP.get("WallType"))
+        self.on_collision_enter.connect(self.on_collision)
+
+    def on_collision(self, other, *args):
+        arbiter, space, data = args
+        if other == COLLISION_MAP.get("WallType"):
+            self.destroy()
+
+    def update(self, dt):
+        Drawable.update(self, dt)
+        Collider.update(self, dt)
+
+    def destroy(self):
+        Drawable.destroy(self)
+        Collider.destroy(self)
+
+
+class Player(Entity, key.KeyStateHandler):
+
+    def __init__(self, *args, **kwargs):
+        Entity.__init__(self, *args, **kwargs)
+        self.set_speed(100)
+
+        # Player Collision
+        self.set_collision_type(COLLISION_MAP.get("PlayerType"))
+        self.set_collision_filter(pm.ShapeFilter(categories=RAYCAST_FILTER))
+        self.collide_with(COLLISION_MAP.get("EnemyBulletType"))
+        self.on_collision_enter.connect(self.on_collision)
+
+        # Player Health
+        self.healthbar = HealthBar((10, window.height))
+        self.on_damage.connect(self.update_damage)
+
+        # Player Weapon
+        self.weapon = Weapon(self.size)
+        self.ammobar = AmmoBar((10, window.height - (AmmoBar.AMMO_IMG_HEIGHT*1.5)), self.weapon.ammo)
+        self.weapon.on_fire.connect(self.update_weapon)
+
+    def update_damage(self):
+        self.healthbar.set_value(self.health / self.max_health)
+        if self.dead:
+            self.destroy()
+
+    def update_weapon(self, *args):
+        self.ammobar.set_value(self.weapon.ammo)
+
+    def screen_position(self):
+        # -- player offset
+        px, py = self.position
+        w, h = window.get_size()
+        player_off =  -px + w/2, -py + h/2
+
+        _map = get_current_level().map
+        ox, oy = _map.clamped_offset(*player_off)
+        px, py = self.position
+        return px + ox, py + oy
+
+    def on_collision(self, other, *args):
+        arbiter, space, data = args
+        if other == COLLISION_MAP.get("EnemyBulletType"):
+            # emit damage signal
+            self.on_damage()
+
+            # destroy bullet
+            bullet = arbiter.shapes[1]
+            bullet.cls_object.destroy()
+            space.remove(bullet.body, bullet)
+
+        elif other == COLLISION_MAP.get("WallType"):
+            pass
+
+    def event(self, _type, *args, **kwargs):
+        if _type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
-            px, py = self.screen_coords()
-            self.angle = math.degrees(-math.atan2(y - py, x - px))
-            self.sprite.update(rotation=self.angle)
+            px, py = self.screen_position()
+            self.rotation = math.degrees(-math.atan2(y - py, x - px))
 
-        elif type == EventType.MOUSE_DOWN:
+        elif _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
-
             if btn == mouse.LEFT:
-                px, py = self.screen_coords()
+                px, py = self.screen_position()
                 direction = normalize((x - px, y - py))
-                self.shoot(direction)
+                self.weapon.on_fire(self.position, self.rotation, direction,
+                    COLLISION_MAP.get("PlayerBulletType"), self.physics)
 
         elif type == EventType.RESIZE:
             w, h = args
             self.healthbar.set_pos((10, h))
             self.ammobar.set_pos((10, h - (AmmoBar.AMMO_IMG_HEIGHT*1.5)))
 
+    def draw(self):
+        Entity.draw(self)
+        self.weapon.draw()
+
     def update(self, dt):
-        # -- movements
+        Entity.update(self, dt)
+        self.weapon.update(dt)
+        # -- movement
         dx, dy = 0, 0
         for _key, _dir in KEYMAP.items():
             if self[_key]:
                 dx, dy = _dir
 
-        # -- running
-        speed = self.speed
-        if self[key.LSHIFT] or self[key.RSHIFT]:
-            speed *= 2.5
+        speed = self.speed*2.5 if any([self[key.LSHIFT], self[key.RSHIFT]]) else self.speed
+        self.set_velocity((dx*speed, dy*speed))
 
-        bx, by = self.body.position
-        bx += dx * dt * speed
-        by += dy * dt * speed
+        # -- signal position change
+        emit_signal("on_player_move", self.position)
 
-        self.pos = (bx, by)
-        self.body.position = self.pos
-        self.physics.space.reindex_shapes_for_body(self.body)
-        self.sprite.set_position(self.body.position.x, self.body.position.y)
+    def destroy(self):
+        Entity.destroy(self)
+        del self.healthbar
+        del self.ammobar
 
-        # -- update bullets
-        self.bullets = [b for b in self.bullets if not b.destroyed]
-        for bullet in self.bullets:
-            bullet.update(dt)
+        level = get_current_level()
+        level.remove(self)
 
 class EnemyState(Enum):
     IDLE    = 0
@@ -553,7 +778,7 @@ class Enemy:
         physics.add(self.body, self.shape)
 
         self.map = None
-        self.player_target = None
+        self.player_position = (0, 0)
 
         # collision handlers
         physics.add_collision_handler(
@@ -561,6 +786,12 @@ class Enemy:
                 COLLISION_MAP.get("PlayerBulletType"),
                 handler_begin = self.collide_player_bullet
             )
+
+
+        connect("on_player_move", self, "_player_moved")
+
+    def _player_moved(self, pos):
+        self.player_position = pos
 
     def collide_player_bullet(self, arbiter, space, data):
         bullet = arbiter.shapes[1]
@@ -580,9 +811,6 @@ class Enemy:
             self.sprite.batch = None
             self.dead = True
 
-    def watch(self, player):
-        self.player_target = player
-
     def set_map(self, _map):
         self.map = _map
 
@@ -601,14 +829,14 @@ class Enemy:
         self.batch.draw()
 
     def update(self, dt):
-        player = self.player_target
+        player = get_current_level().get_player()
 
-        if not player.dead:
-            player_distance = distance_sqr(player.pos, self.pos)
+        if not player:
+            player_distance = distance_sqr(self.player_position, self.pos)
             previous_state = self.state
 
             if player_distance < self.chase_radius**2:
-                hit = self.physics.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
+                hit = self.physics.raycast(self.pos, self.player_position, 1, RAYCAST_MASK)
                 if hit:
                     self.state = EnemyState.PATROL
                 else:
@@ -616,7 +844,7 @@ class Enemy:
             else:
                 #self.state = EnemyState.PATROL
                 if previous_state == EnemyState.CHASE:
-                    hit = self.physics.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
+                    hit = self.physics.raycast(self.pos, self.player_position, 1, RAYCAST_MASK)
                     if hit:
                         self.state = EnemyState.PATROL
                         # -- renavigate to current patrol target if its not in our line of sight
@@ -642,7 +870,7 @@ class Enemy:
             else:
                 self.patrol(dt)
         elif self.state == EnemyState.CHASE:
-            self.chase(player.pos, dt)
+            self.chase(self.player_position, dt)
 
         # -- update bullets
         self.bullets = [b for b in self.bullets if not b.destroyed]
@@ -707,68 +935,6 @@ class Enemy:
             self.sprite.position = (bx, by)
             self.pos = (bx, by)
 
-class Bullet:
-    SIZE = 12
-    HANDLER_TYPES = []
-
-    def __init__(self, position, direction, batch, speed=500, collision_type=None, physics=None):
-        self.physics = physics
-        self.pos = position
-        self.dir = direction
-        self.speed = speed
-        self.batch = batch
-        self.destroyed = False
-
-        # image
-        self.image = Resources.instance.sprite("bullet")
-        image_set_size(self.image, self.SIZE, self.SIZE)
-        image_set_anchor_center(self.image)
-        self.sprite = pg.sprite.Sprite(self.image, x=position[0], y=position[1],
-            batch=self.batch)
-
-        angle = math.degrees(-math.atan2(direction[1], direction[0]))
-        self.sprite.update(rotation=angle)
-
-        # Bullet physics
-        self.body = pm.Body(1, 100)
-        self.body.position = self.pos
-        self.shape = pm.Circle(self.body, 10)
-        self.shape.collision_type = collision_type
-        self.shape.filter = pm.ShapeFilter(categories=RAYCAST_FILTER)
-        physics.add(self.body, self.shape)
-
-        self.shape.cls_object = self
-        if collision_type not in self.HANDLER_TYPES:
-            physics.add_collision_handler(
-                collision_type,
-                COLLISION_MAP.get("WallType"),
-                handler_begin = self.collide_wall)
-
-            self.HANDLER_TYPES.append(collision_type)
-
-    def collide_wall(self, arbiter, space, data):
-        bullet = arbiter.shapes[0]
-        bullet.cls_object.destroy()
-
-        space.remove(bullet.body, bullet)
-        return False
-
-    def destroy(self):
-        self.sprite.batch = None
-        self.destroyed = True
-
-    def update(self, dt):
-        bx, by = self.pos
-        dx, dy = self.dir
-
-        bx += dx * dt * self.speed
-        by += dy * dt * self.speed
-
-        self.pos = (bx, by)
-        self.body.position = self.pos
-        self.physics.space.reindex_shapes_for_body(self.body)
-        self.sprite.set_position(self.body.position.x, self.body.position.y)
-
 class Map:
 
     def __init__(self, data,
@@ -790,6 +956,9 @@ class Map:
 
         self.pathfinder = PathFinder(self.data, node_size)
 
+        create_signal("on_player_move")
+        connect("on_player_move", self, "clamp_player")
+
     def make_map(self, physics):
         bg = pg.graphics.OrderedGroup(0)
         fg = pg.graphics.OrderedGroup(1)
@@ -810,9 +979,14 @@ class Map:
                     self.sprites.append(sp)
                     add_wall(physics.space, (offx + nsx/2, offy + nsy/2), (nsx, nsy))
 
-    def clamp_player(self, player):
+    def clamp_player(self, player_pos):
+        # -- calculate player offset
+        px, py = player_pos
+        w, h = window.get_size()
+        player_off =  -px + w/2, -py + h/2
+
         # -- keep player within map bounds
-        offx, offy = self.clamped_offset(*player.offset())
+        offx, offy = self.clamped_offset(*player_off)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -946,6 +1120,10 @@ class Level:
         self.agents = []
         self.status = LevelStatus.RUNNING
 
+    def remove(self, obj):
+        if isinstance(obj, (Player, Enemy)):
+            self.agents.remove(obj)
+
     def save(self):
         if self.data:
             f = open(self.file, 'wb')
@@ -961,8 +1139,8 @@ class Level:
         self.map = Map(self.data.map, physics=self.phy)
 
         # -- add player
-        player = Player(self.data.player, (50, 50),
-            Resources.instance.sprite("hitman1_gun"), self.map, self.phy)
+        player = Player(position=self.data.player, size=(50, 50),
+            image=Resources.instance.sprite("hitman1_gun"), map=self.map, physics=self.phy)
         self.agents.append(player)
         self.hud.add(player.healthbar)
         self.hud.add(player.ammobar)
@@ -980,7 +1158,6 @@ class Level:
 
             if DEBUG:
                 e.debug_data = (path, random_color())
-            e.watch(player)
             e.set_map(self.map)
             self.agents.append(e)
 
@@ -1022,24 +1199,16 @@ class Level:
     def update(self, dt):
         if not self.data: return
         self.phy.update(dt)
-        self.map.clamp_player(self.get_player())
-
-        # -- remove dead enemies
-        for agent in self.agents:
-            if isinstance(agent, Enemy) and agent.dead:
-                self.agents.remove(agent)
 
         for agent in self.agents:
             agent.update(dt)
 
         # -- change level status
-        if self.get_player().dead:
+        if self.get_player():
             self.status = LevelStatus.FAILED
-            print("Player Dead")
 
         if len(self.get_enemies()) == 0:
             self.status = LevelStatus.PASSED
-            print("level Finished")
 
         if self.show_info:
             self.infopanel.update(dt)
@@ -2467,6 +2636,10 @@ def mouse_over_rect(mouse, center, size):
     if dx < tsx/2 and dy < tsy/2:
         return True
     return False
+
+def get_current_level():
+    return LevelManager.instance.current
+
 
 '''
 ============================================================
