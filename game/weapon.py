@@ -1,5 +1,6 @@
 import math
 import pyglet as pg
+import pymunk as pm
 
 from .core      import angle
 from .signal    import Signal

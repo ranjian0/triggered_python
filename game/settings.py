@@ -1,5 +1,5 @@
 FPS    = 60
-DEBUG  = 1
+DEBUG  = 0
 
 LEVELS = [
     #  name                file

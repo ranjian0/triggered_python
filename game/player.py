@@ -1,13 +1,12 @@
 import math
 import pyglet as pg
 import pymunk as pm
-from  pyglet.window import key
+from  pyglet.window import key, mouse
 
 from .base      import Entity
 from .weapon    import Weapon
 from .resource  import Resources
-from .signal    import emit_signal
-# from .level     import get_current_level
+from .signal    import emit_signal, create_signal
 from .physics   import RAYCAST_FILTER, COLLISION_MAP
 from .core      import (
     EventType,
@@ -46,6 +45,9 @@ class Player(Entity, key.KeyStateHandler):
         self.ammobar = AmmoBar((10, window.height - (AmmoBar.AMMO_IMG_HEIGHT*1.5)), self.weapon.ammo)
         self.weapon.on_fire.connect(self.update_weapon)
 
+        create_signal("request_player_offset")
+        create_signal("request_player_deletion")
+
     def update_damage(self):
         self.healthbar.set_value(self.health / self.max_health)
         if self.dead:
@@ -55,13 +57,7 @@ class Player(Entity, key.KeyStateHandler):
         self.ammobar.set_value(self.weapon.ammo)
 
     def screen_position(self):
-        # -- player offset
-        px, py = self.position
-        w, h = get_window().get_size()
-        player_off =  -px + w/2, -py + h/2
-
-        _map = get_current_level().map
-        ox, oy = _map.clamped_offset(*player_off)
+        ox, oy = self.requested_offset
         px, py = self.position
         return px + ox, py + oy
 
@@ -82,6 +78,7 @@ class Player(Entity, key.KeyStateHandler):
     def event(self, _type, *args, **kwargs):
         if _type == EventType.MOUSE_MOTION:
             x, y, dx, dy = args
+            emit_signal("request_player_offset", self)
             px, py = self.screen_position()
             self.rotation = math.degrees(-math.atan2(y - py, x - px))
 
@@ -121,10 +118,7 @@ class Player(Entity, key.KeyStateHandler):
         Entity.destroy(self)
         del self.healthbar
         del self.ammobar
-
-        level = get_current_level()
-        level.remove(self)
-
+        emit_signal("request_player_deletion", self)
 
 
 class HUD:

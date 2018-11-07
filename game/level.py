@@ -5,6 +5,7 @@ from pyglet.window import key
 from .map       import Map
 from .settings  import DEBUG
 from .enemy     import Enemy
+from .signal    import connect
 from .physics   import Physics
 from .gui       import InfoPanel
 from .resource  import Resources
@@ -32,6 +33,8 @@ class Level:
         self.map = None
         self.agents = []
         self.status = LevelStatus.RUNNING
+
+        connect("request_player_deletion", self, "remove")
 
     def remove(self, obj):
         if isinstance(obj, (Player, Enemy)):

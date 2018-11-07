@@ -56,6 +56,8 @@ class Physics:
         if handler_separate:
             handler.separate = handler_separate
 
+        return handler
+
     def debug_draw(self):
         options = putils.DrawOptions()
         self.space.debug_draw(options)

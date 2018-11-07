@@ -113,7 +113,6 @@ class Collider(PhysicsObject):
 
     def __init__(self, collision_type=None, collision_filter=None, *args, **kwargs):
         PhysicsObject.__init__(self, *args, **kwargs)
-
         self.on_collision_enter = Signal("on_collision_enter")
         self.on_collision_exit = Signal("on_collision_exit")
 
@@ -146,8 +145,6 @@ class Collider(PhysicsObject):
 
     def destroy(self):
         PhysicsObject.destroy(self)
-        del self.on_collision_enter
-        del self.on_collision_exit
 
 class Entity(Drawable, Collider):
 

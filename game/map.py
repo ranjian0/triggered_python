@@ -32,6 +32,7 @@ class Map:
 
         create_signal("on_player_move")
         connect("on_player_move", self, "clamp_player")
+        connect("request_player_offset", self, "calculate_player_offset")
 
     def make_map(self, physics):
         bg = pg.graphics.OrderedGroup(0)
@@ -52,6 +53,12 @@ class Map:
                     sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch, group=fg)
                     self.sprites.append(sp)
                     add_wall(physics.space, (offx + nsx/2, offy + nsy/2), (nsx, nsy))
+
+    def calculate_player_offset(self, player):
+        px, py = player.position
+        w, h = get_window().get_size()
+        player_off =  -px + w/2, -py + h/2
+        player.requested_offset = self.clamped_offset(*player_off)
 
     def clamp_player(self, player_pos):
         # -- calculate player offset
