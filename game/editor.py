@@ -4,6 +4,12 @@ from pyglet.window import mouse
 from contextlib import contextmanager
 
 from .resource import Resources
+from .settings import (
+    EDITOR_TOOLBAR_WIDTH,
+    EDITOR_VIEWPORT_OFFSET,
+    EDITOR_VIEWPORT_GRID_SIZE,
+    EDITOR_VIEWPORT_LINE_WIDTH,
+    EDITOR_VIEWPORT_GRID_SPACING)
 from .editor_tool import (
     AddTileTool,
     AddAgentTool,
@@ -80,7 +86,7 @@ class LevelEditor:
         self.viewport.event(*args, **kwargs)
 
 class EditorToolbar:
-    WIDTH = 60
+    WIDTH = EDITOR_TOOLBAR_WIDTH
 
     def __init__(self, data):
         window = get_window()
@@ -176,11 +182,11 @@ class EditorToolbar:
                     set_flag('activated', False, self.tools)
 
 class EditorViewport:
-    LINE_WIDTH = 2
-    OFFSET = (EditorToolbar.WIDTH+LINE_WIDTH, LINE_WIDTH)
+    OFFSET = EDITOR_VIEWPORT_OFFSET
+    LINE_WIDTH = EDITOR_VIEWPORT_LINE_WIDTH
 
-    GRID_SIZE = 20000
-    GRID_SPACING = 100
+    GRID_SIZE = EDITOR_VIEWPORT_GRID_SIZE
+    GRID_SPACING = EDITOR_VIEWPORT_GRID_SPACING
 
     def __init__(self, data):
         self.data = data
