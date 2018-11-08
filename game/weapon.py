@@ -40,6 +40,7 @@ class Weapon:
                     collision_type=collision,
                     collision_filter=pm.ShapeFilter(categories=RAYCAST_FILTER))
 
+        print(Bullet.__mro__)
         b.request_deletion.connect(self._remove)
         self.bullets.append(b)
 
@@ -58,8 +59,7 @@ class Bullet(Drawable, Collider):
     SIZE = 12
 
     def __init__(self, direction, *args, **kwargs):
-        Drawable.__init__(self, image=Resources.instance.sprite("bullet"), *args, **kwargs)
-        Collider.__init__(self, mass=1, moment=100, speed=500, *args, **kwargs)
+        super(Bullet, self).__init__(image=Resources.instance.sprite("bullet"), *args, **kwargs)
 
         # -  movement
         dx, dy = direction
@@ -80,10 +80,7 @@ class Bullet(Drawable, Collider):
             self.destroy()
 
     def update(self, dt):
-        Drawable.update(self, dt)
-        Collider.update(self, dt)
+        super(Bullet, self).update(dt)
 
     def destroy(self):
-        Drawable.destroy(self)
-        Collider.destroy(self)
-
+        super(Bullet, self).destroy()

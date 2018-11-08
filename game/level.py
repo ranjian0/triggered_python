@@ -7,9 +7,9 @@ from .settings  import DEBUG
 from .enemy     import Enemy
 from .player    import Player
 from .signal    import connect
-from .physics   import Physics
 from .gui       import InfoPanel
 from .resource  import Resources
+from .physics   import Physics, COLLISION_MAP
 from .core      import (
     EventType,
     draw_path,

@@ -38,17 +38,14 @@ class Object:
     height = property(_get_height, _set_height)
 
     def destroy(self):
-        try:
-            del self.size
-            del self.position
-            del self.rotation
-        except AttributeError:
-            pass
+        del self.size
+        del self.position
+        del self.rotation
 
 class Drawable(Object):
 
     def __init__(self, image=None, batch=None, *args, **kwargs):
-        Object.__init__(self, *args, **kwargs)
+        super(Drawable, self).__init__(*args, **kwargs)
         self.batch = batch or pg.graphics.Batch()
 
         self.image = image
@@ -65,7 +62,7 @@ class Drawable(Object):
         self.sprite.update(rotation=self.rotation)
 
     def destroy(self):
-        Object.destroy(self)
+        super(Drawable, self).destroy()
         self.sprite.delete()
         del self.image
         del self.sprite
@@ -74,7 +71,8 @@ class PhysicsObject(Object):
 
     def __init__(self, physics=None, mass=1, moment=0, body_type=pm.Body.DYNAMIC,
                     speed=0, velocity=(0, 0), *args, **kwargs):
-        Object.__init__(self, *args, **kwargs)
+        super(PhysicsObject, self).__init__(*args, **kwargs)
+
         self.speed = speed
         self.physics = physics
         self.velocity = velocity
@@ -83,9 +81,6 @@ class PhysicsObject(Object):
         self.body.position = self.position
         self.shape = pm.Circle(self.body, min(*self.size)*.45)
         self.physics.add(self.body, self.shape)
-
-        print(self.physics.space.bodies)
-        print(self.physics.space.shapes)
 
     def set_speed(self, val):
         self.speed = val
@@ -105,7 +100,7 @@ class PhysicsObject(Object):
         self.physics.space.reindex_shapes_for_body(self.body)
 
     def destroy(self):
-        Object.destroy(self)
+        super(PhysicsObject, self).destroy()
         self.physics.remove(self.body, self.shape)
         del self.speed
         del self.velocity
@@ -115,7 +110,7 @@ class PhysicsObject(Object):
 class Collider(PhysicsObject):
 
     def __init__(self, collision_type=None, collision_filter=None, *args, **kwargs):
-        PhysicsObject.__init__(self, *args, **kwargs)
+        super(Collider, self).__init__(*args, **kwargs)
         self.on_collision_enter = Signal("on_collision_enter")
         self.on_collision_exit = Signal("on_collision_exit")
 
@@ -146,14 +141,10 @@ class Collider(PhysicsObject):
         self.on_collision_exit(other, *args)
         return True
 
-    def destroy(self):
-        PhysicsObject.destroy(self)
-
 class Entity(Drawable, Collider):
 
     def __init__(self, *args, **kwargs):
-        Drawable.__init__(self, *args, **kwargs)
-        Collider.__init__(self, *args, **kwargs)
+        super(Entity, self).__init__(*args, **kwargs)
 
         # -- health properties
         self.dead = False
@@ -170,15 +161,13 @@ class Entity(Drawable, Collider):
             self.dead = True
 
     def draw(self):
-        Drawable.draw(self)
+        super(Entity, self).draw()
 
     def update(self, dt):
-        Drawable.update(self, dt)
-        Collider.update(self, dt)
+        super(Entity, self).update(dt)
 
     def destroy(self):
-        Drawable.destroy(self)
-        Collider.destroy(self)
+        super(Entity, self).destroy()
 
         del self.dead
         del self.health
