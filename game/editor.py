@@ -16,6 +16,7 @@ from .editor_tool import (
     AddWaypointTool,
     ObjectivesTool)
 from .core import (
+    clamp,
     set_flag,
     LevelData,
     EventType,

@@ -1,5 +1,9 @@
-FPS    = 60
-DEBUG  = 1
+DEBUG      = 0
+FPS        = 60
+SIZE       = (800, 600)
+CAPTION    = "Triggered"
+BACKGROUND = (100, 100, 100)
+
 
 LEVELS = [
     #  name                file
