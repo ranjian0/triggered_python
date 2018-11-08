@@ -27,14 +27,13 @@ class Player(Entity, key.KeyStateHandler):
     def __init__(self, *args, **kwargs):
         Entity.__init__(self, *args, **kwargs)
         self.set_speed(100)
+        window = get_window()
 
         # Player Collision
         self.set_collision_type(COLLISION_MAP.get("PlayerType"))
         self.set_collision_filter(pm.ShapeFilter(categories=RAYCAST_FILTER))
         self.collide_with(COLLISION_MAP.get("EnemyBulletType"))
         self.on_collision_enter.connect(self.on_collision)
-
-        window = get_window()
 
         # Player Health
         self.healthbar = HealthBar((10, window.height))
@@ -45,12 +44,19 @@ class Player(Entity, key.KeyStateHandler):
         self.ammobar = AmmoBar((10, window.height - (AmmoBar.AMMO_IMG_HEIGHT*1.5)), self.weapon.ammo)
         self.weapon.on_fire.connect(self.update_weapon)
 
-        create_signal("request_player_offset")
-        create_signal("request_player_deletion")
+        # Player HUD
+        self.hud = HUD()
+        self.hud.add(self.healthbar)
+        self.hud.add(self.ammobar)
+
+        # global signals
+        create_signal("request_player_offset")      # -> map
+        create_signal("request_player_deletion")    # -> level
 
     def update_damage(self):
         self.healthbar.set_value(self.health / self.max_health)
         if self.dead:
+            emit_signal("request_player_deletion", self)
             self.destroy()
 
     def update_weapon(self, *args):
@@ -98,6 +104,7 @@ class Player(Entity, key.KeyStateHandler):
     def draw(self):
         Entity.draw(self)
         self.weapon.draw()
+        self.hud.draw()
 
     def update(self, dt):
         Entity.update(self, dt)
@@ -118,7 +125,6 @@ class Player(Entity, key.KeyStateHandler):
         Entity.destroy(self)
         del self.healthbar
         del self.ammobar
-        emit_signal("request_player_deletion", self)
 
 
 class HUD:

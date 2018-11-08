@@ -84,6 +84,9 @@ class PhysicsObject(Object):
         self.shape = pm.Circle(self.body, min(*self.size)*.45)
         self.physics.add(self.body, self.shape)
 
+        print(self.physics.space.bodies)
+        print(self.physics.space.shapes)
+
     def set_speed(self, val):
         self.speed = val
 

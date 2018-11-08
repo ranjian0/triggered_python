@@ -1,7 +1,7 @@
 import operator as op
 
 class Signal(object):
-    # -- list of all signals
+    # -- global signal database
     DB = []
     # -- deffered signals i.e signals connected to before creation
     DEFFERED = []
@@ -15,7 +15,6 @@ class Signal(object):
                 Signal.DB.append(self)
                 self._connect_deffered(name)
 
-
     def _connect_deffered(self, name):
         if name in map(op.itemgetter(0), Signal.DEFFERED):
             sname, target, meth = [sig for sig in Signal.DEFFERED
@@ -23,7 +22,7 @@ class Signal(object):
             self.connect(getattr(target, meth))
 
     def connect(self, slot):
-        "slot: is a function / method"
+        """slot: is a function / method"""
         assert callable(slot)
         self.slots.append(slot)
 
@@ -31,7 +30,7 @@ class Signal(object):
         self.slots.remove(slot)
 
     def __call__(self, *args, **kwargs):
-        "Fire the signal to connected slots"
+        """Fire the signal to connected slots"""
         for slot in self.slots:
             slot(*args, **kwargs)
 

@@ -31,7 +31,8 @@ class Game:
         self.mainmenu = MainMenu()
         self.pausemenu = PauseMenu()
 
-        connect("start_game", self, "start")
+        # global signals
+        connect("start_game", self, "start")    # -> MainMenu
 
     def start(self, level_name):
         self.manager.set(level_name)

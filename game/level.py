@@ -5,11 +5,11 @@ from pyglet.window import key
 from .map       import Map
 from .settings  import DEBUG
 from .enemy     import Enemy
+from .player    import Player
 from .signal    import connect
 from .physics   import Physics
 from .gui       import InfoPanel
 from .resource  import Resources
-from .player    import HUD, Player
 from .core      import (
     EventType,
     draw_path,
@@ -34,6 +34,7 @@ class Level:
         self.agents = []
         self.status = LevelStatus.RUNNING
 
+        # global signals
         connect("request_player_deletion", self, "remove")
 
     def remove(self, obj):
@@ -50,16 +51,13 @@ class Level:
         self.agents.clear()
         self.phy.clear()
 
-        # -- create HUD and Map
-        self.hud = HUD()
+        # -- create Map
         self.map = Map(self.data.map, physics=self.phy)
 
         # -- add player
         player = Player(position=self.data.player, size=(50, 50),
             image=Resources.instance.sprite("hitman1_gun"), map=self.map, physics=self.phy)
         self.agents.append(player)
-        self.hud.add(player.healthbar)
-        self.hud.add(player.ammobar)
         get_window().push_handlers(player)
 
         # -- add enemies
@@ -99,7 +97,6 @@ class Level:
         self.map.draw()
         for agent in self.agents:
             agent.draw()
-        self.hud.draw()
 
         if self.show_info:
             self.infopanel.draw()
