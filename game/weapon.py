@@ -40,8 +40,12 @@ class Weapon:
                     collision_type=collision,
                     collision_filter=pm.ShapeFilter(categories=RAYCAST_FILTER))
 
-        b.on_collision_enter.connect(lambda *args : self.bullets.remove(b))
+        b.request_deletion.connect(self._remove)
         self.bullets.append(b)
+
+    def _remove(self, bullet):
+        if bullet in self.bullets:
+            self.bullets.remove(bullet)
 
     def draw(self):
         self.batch.draw()
@@ -67,9 +71,12 @@ class Bullet(Drawable, Collider):
         self.collide_with(COLLISION_MAP.get("WallType"))
         self.on_collision_enter.connect(self.on_collision)
 
+        self.request_deletion = Signal("request_deletion")
+
     def on_collision(self, other, *args):
         arbiter, space, data = args
         if other == COLLISION_MAP.get("WallType"):
+            self.request_deletion(self)
             self.destroy()
 
     def update(self, dt):
