@@ -25,8 +25,8 @@ class Game:
         self.editor = LevelEditor()
         self.manager = LevelManager()
         self.manager.add([
-                Level(name, file) for name, file in LEVELS
-            ])
+            Level(name, file) for name, file in LEVELS
+        ])
 
         self.mainmenu = MainMenu()
         self.pausemenu = PauseMenu()
@@ -51,23 +51,26 @@ class Game:
         elif self.state == GameState.EDITOR:
             self.editor.draw()
 
-    def event(self, *args, **kwargs):
-        _type = args[0]
+    def event(self, _type, *args, **kwargs):
 
         if self.state == GameState.MAINMENU:
-            self.mainmenu.event(*args, **kwargs)
+            self.mainmenu.event(_type, *args, **kwargs)
 
         elif self.state == GameState.PAUSED:
-            self.pausemenu.event(*args, **kwargs)
+            self.pausemenu.event(_type, *args, **kwargs)
+
             if _type == EventType.KEY_DOWN:
-                if args[1] == key.P:
+                symbol, mod = args
+
+                if symbol == key.P:
                     self.state = GameState.RUNNING
 
         elif self.state == GameState.RUNNING:
-            self.manager.event(*args, **kwargs)
+            self.manager.event(_type, *args, **kwargs)
 
             if _type == EventType.KEY_DOWN:
-                symbol, mod = args[1:]
+                symbol, mod = args
+
                 if symbol == key.P:
                     self.pausemenu.reload()
                     self.state = GameState.PAUSED
@@ -77,10 +80,10 @@ class Game:
                     self.state = GameState.EDITOR
 
         elif self.state == GameState.EDITOR:
-            self.editor.event(*args, **kwargs)
+            self.editor.event(_type, *args, **kwargs)
 
             if _type == EventType.KEY_DOWN:
-                symbol, mod = args[1:]
+                symbol, mod = args
 
                 if symbol == key.E and mod & key.MOD_CTRL:
                     self.editor.save()
