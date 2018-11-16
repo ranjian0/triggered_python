@@ -297,54 +297,6 @@ class Physics:
         options = putils.DrawOptions()
         self.space.debug_draw(options)
 
-class Signal(object):
-    # -- list of all signals
-    DB = []
-
-    def __init__(self, name):
-        self.name = name
-        self.slots = []
-
-        Signal.DB.append(self)
-
-    def connect(self, slot):
-        "slot: is a function / method"
-        assert callable(slot)
-        self.slots.append(slot)
-
-    def disconnect(self, slot):
-        self.slots.remove(slot)
-
-    def __call__(self, *args, **kwargs):
-        "Fire the signal to connected slots"
-        for slot in self.slots:
-            slot(*args, **kwargs)
-
-def create_signal(name):
-    """ create a signal"""
-    if name not in [s.name for s in Signal.DB]:
-        return Signal(name)
-
-def connect(signal_name, target, method):
-    """ connect the method contained in target to a signal with signal_name"""
-    for signal in Signal.DB:
-        if signal.name == signal_name:
-            signal.connect(getattr(target, method))
-            break
-
-def disconnect(signal_name, target, method):
-    """ disconnect the method contained in target to a signal with signal_name"""
-    for signal in Signal.DB:
-        if signal.name == signal_name:
-            signal.disconnect(getattr(target, method))
-            break
-
-def emit_signal(signal_name, *args, **kwargs):
-    """ emit the signal called signal_name """
-    for signal in Signal.DB:
-        if signal.name == signal_name:
-            signal(*args, **kwargs)
-
 
 class Player(key.KeyStateHandler):
 
@@ -488,7 +440,7 @@ class Player(key.KeyStateHandler):
         self.pos = (bx, by)
         self.body.position = self.pos
         self.physics.space.reindex_shapes_for_body(self.body)
-        self.sprite.set_position(self.body.position.x, self.body.position.y)
+        self.sprite.position = (self.body.position.x, self.body.position.y)
 
         # -- update bullets
         self.bullets = [b for b in self.bullets if not b.destroyed]
@@ -767,7 +719,7 @@ class Bullet:
         self.pos = (bx, by)
         self.body.position = self.pos
         self.physics.space.reindex_shapes_for_body(self.body)
-        self.sprite.set_position(self.body.position.x, self.body.position.y)
+        self.sprite.position = (self.body.position.x, self.body.position.y)
 
 class Map:
 
