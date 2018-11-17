@@ -214,12 +214,12 @@ class Resources:
             # -- filename does not exit, create level file
             fn = name + '.level'
             path = os.path.join(self._levels, fn)
-            with open(path, 'w') as _:
+            with open(path, 'wb') as _:
                 pass
 
             # -- create level resource
             pg.resource.reindex()
-            lvl = pg.resource.file('levels/' + fn, 'r')
+            lvl = pg.resource.file('levels/' + fn)
 
             # -- add resource to database
             self._data['levels'].append(Resource(name,lvl))
@@ -227,8 +227,7 @@ class Resources:
             return self._parse_level(lvl)
 
     def levels(self):
-        return self._parse_level(self._data['levels'][0].data)
-        # return [self._parse_level(res.data) for res in self._data['levels']]
+        return [self._parse_level(res.data) for res in self._data['levels']]
 
     def _load(self):
 
@@ -254,8 +253,8 @@ class Resources:
         try:
             return pickle.load(file)
         except EOFError as e:
-            print(e)
-            return None
+            # -- file object already consumed
+            return pickle.load(open(file.name, 'rb'))
 
 class Physics:
 
@@ -1383,28 +1382,20 @@ class Editor:
 
     def __init__(self):
         self.levels = Resources.instance.levels()
-        self.current = 0
+        self.current = self.levels[0]
         self.data = dict()
-        print(self.levels)
 
-        # self.load()
+        self.load()
 
-    def load(self, level):
+    def load(self):
+        # -- load current leveldata
+        for key, val in self.current._asdict().items():
+            self.data[key] = val
+
+        self.topbar = EditorTopbar(self.levels)
         self.toolbar = EditorToolbar(self.data)
         self.viewport = EditorViewport(self.data)
-        self.properties = EditorToolprops()
 
-        self._level = level
-        if level.data:
-            # -- load leveldata
-            for key, val in level.data._asdict().items():
-                self.data[key] = val
-        else:
-            # -- initialize data with default values
-            keys = LevelData._fields
-            defaults = ([[]], (-10000, -10000), [], [], [], [])
-            for k,v in zip(keys, defaults):
-                self.data[k] = v
 
     def save(self):
         # -- remove temp data from self.data
@@ -1429,6 +1420,7 @@ class Editor:
         with reset_matrix():
             self.viewport.draw()
             self.toolbar.draw()
+            self.topbar.draw()
 
     def update(self, dt):
         self.toolbar.update(dt)
@@ -1439,8 +1431,61 @@ class Editor:
             tool.set_viewport_transform(self.viewport.get_transform())
 
     def event(self, *args, **kwargs):
+        self.topbar.event(*args, **kwargs)
         self.toolbar.event(*args, **kwargs)
         self.viewport.event(*args, **kwargs)
+
+class EditorTopbar:
+    HEIGHT = 40
+
+    def __init__(self, levels):
+        self.levels = levels
+
+        # -- topbar
+        self.topbar_settings = {
+            "size" : (window.width, self.HEIGHT),
+            "color" : (110, 100, 100, 255)
+        }
+        self.topbar = pg.image.SolidColorImagePattern(
+            self.topbar_settings.get("color"))
+        self.topbar_image = self.topbar.create_image(
+            *self.topbar_settings.get("size"))
+
+        # -- tabs
+        self.tabs = [
+            TextButton(f"level {idx+1}", bold=True, font_size=18)
+            for idx, level in enumerate(self.levels)
+        ]
+
+        self.init_tabs()
+
+    def init_tabs(self):
+        loc_y = window.height - self.HEIGHT
+        start_x = EditorToolbar.WIDTH
+
+        for idx, tab in enumerate(self.tabs):
+            tab.x = start_x + (idx * 100)
+            tab.y = loc_y
+        pass
+
+    def draw(self):
+        self.topbar_image.blit(EditorToolbar.WIDTH, window.height-self.HEIGHT)
+        for tab in self.tabs:
+            tab.draw()
+
+
+    def event(self, *args, **kwargs):
+
+        # -- handle resize
+        _type = args[0]
+        if _type == EventType.RESIZE:
+            _,w,h = args
+            self.init_tabs()
+
+            self.topbar_settings['size'] = (w, self.HEIGHT)
+            self.topbar_image = self.topbar.create_image(
+                *self.topbar_settings.get("size"))
+
 
 class EditorToolbar:
     WIDTH = 60
@@ -1697,9 +1742,6 @@ class EditorViewport:
             # -- clamp zoom to (0.2, 10.0) and round to  d.p
             self._zoom = tuple(map(lambda x: clamp(x, 0.2, 10.0), self._zoom))
             self._zoom = tuple(map(lambda x: round(x, 1), self._zoom))
-
-class EditorToolprops:
-    pass
 
 
 class EditorTool:
@@ -2440,7 +2482,6 @@ def mouse_over_rect(mouse, center, size):
 window = pg.window.Window(*SIZE, resizable=True)
 window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
-window.maximize()
 
 class AppMode(Enum):
     GAME = 1
@@ -2477,6 +2518,7 @@ def on_resize(w, h):
 
 @window.event
 def on_key_press(symbol, modifiers):
+    global app_mode
     if symbol == key.E and modifiers & key.MOD_CTRL:
         app_mode = AppMode.GAME if app_mode == AppMode.EDITOR else AppMode.EDITOR
 
@@ -2506,7 +2548,6 @@ def on_mouse_press(x, y, button, modifiers):
         game.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
     else:
         editor.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
-
 
 @window.event
 def on_mouse_release(x, y, button, modifiers):
@@ -2543,7 +2584,6 @@ def on_text(text):
         game.event(EventType.TEXT, text)
     else:
         editor.event(EventType.TEXT, text)
-
 
 @window.event
 def on_text_motion(motion):
