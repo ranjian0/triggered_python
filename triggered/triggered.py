@@ -72,14 +72,14 @@ class GameState(Enum):
     MAINMENU = 1
     RUNNING  = 2
     PAUSED   = 3
-    EDITOR   = 4
+    # EDITOR   = 4
 
 class Game:
 
     def __init__(self):
         self.state = GameState.MAINMENU
 
-        self.editor = LevelEditor()
+        # self.editor = LevelEditor()
         self.manager = LevelManager()
         self.manager.add([
                 Level("Kill them all", "level_one"),
@@ -103,8 +103,8 @@ class Game:
             self.pausemenu.draw()
         elif self.state == GameState.RUNNING:
             self.manager.draw()
-        elif self.state == GameState.EDITOR:
-            self.editor.draw()
+        # elif self.state == GameState.EDITOR:
+        #     self.editor.draw()
 
     def event(self, *args, **kwargs):
         _type = args[0]
@@ -127,19 +127,19 @@ class Game:
                     self.pausemenu.reload()
                     self.state = GameState.PAUSED
 
-                if symbol == key.E and mod & key.MOD_CTRL:
-                    self.editor.load(self.manager.current)
-                    self.state = GameState.EDITOR
+                # if symbol == key.E and mod & key.MOD_CTRL:
+                #     self.editor.load(self.manager.current)
+                #     self.state = GameState.EDITOR
 
-        elif self.state == GameState.EDITOR:
-            self.editor.event(*args, **kwargs)
+        # elif self.state == GameState.EDITOR:
+        #     self.editor.event(*args, **kwargs)
 
-            if _type == EventType.KEY_DOWN:
-                symbol, mod = args[1:]
+        #     if _type == EventType.KEY_DOWN:
+        #         symbol, mod = args[1:]
 
-                if symbol == key.E and mod & key.MOD_CTRL:
-                    self.editor.save()
-                    self.state = GameState.RUNNING
+        #         if symbol == key.E and mod & key.MOD_CTRL:
+        #             self.editor.save()
+        #             self.state = GameState.RUNNING
 
     def update(self, dt):
         if self.state == GameState.MAINMENU:
@@ -226,6 +226,10 @@ class Resources:
             print(f"Created new level {name}")
             return self._parse_level(lvl)
 
+    def levels(self):
+        return self._parse_level(self._data['levels'][0].data)
+        # return [self._parse_level(res.data) for res in self._data['levels']]
+
     def _load(self):
 
         # -- load sprites
@@ -249,7 +253,8 @@ class Resources:
     def _parse_level(self, file):
         try:
             return pickle.load(file)
-        except EOFError:
+        except EOFError as e:
+            print(e)
             return None
 
 class Physics:
@@ -1064,65 +1069,6 @@ class LevelManager:
         if self.current:
             self.current.event(*args, **kwargs)
 
-class LevelEditor:
-
-    def __init__(self):
-        self._level = None
-        self.data = dict()
-
-    def load(self, level):
-        self.toolbar = EditorToolbar(self.data)
-        self.viewport = EditorViewport(self.data)
-        self.properties = EditorToolprops()
-
-        self._level = level
-        if level.data:
-            # -- load leveldata
-            for key, val in level.data._asdict().items():
-                self.data[key] = val
-        else:
-            # -- initialize data with default values
-            keys = LevelData._fields
-            defaults = ([[]], (-10000, -10000), [], [], [], [])
-            for k,v in zip(keys, defaults):
-                self.data[k] = v
-
-    def save(self):
-        # -- remove temp data from self.data
-        tmp_items = [key for key,v in self.data.items() if key.startswith('_')]
-        tmp_data = [v for key,v in self.data.items() if key.startswith('_')]
-        for it in tmp_items:
-            del self.data[it]
-
-        # -- update level data and reload level
-        self._level.data = LevelData(**self.data)
-        self._level.save()
-        self._level.reload()
-
-        # -- restore temp data from self.data
-        for key,val in zip(tmp_items, tmp_data):
-            self.data[key] = val
-
-        # --  update viewport
-        self.viewport.reload()
-
-    def draw(self):
-        with reset_matrix():
-            self.viewport.draw()
-            self.toolbar.draw()
-
-    def update(self, dt):
-        self.toolbar.update(dt)
-        self.viewport.update(dt)
-
-        # -- update tools for viewport transform
-        for tool in self.toolbar.tools:
-            tool.set_viewport_transform(self.viewport.get_transform())
-
-    def event(self, *args, **kwargs):
-        self.toolbar.event(*args, **kwargs)
-        self.viewport.event(*args, **kwargs)
-
 
 class HUD:
 
@@ -1432,6 +1378,69 @@ class InfoPanel:
                 self.minimap_enemies[e_idx].draw()
                 e_idx += 1
 
+
+class Editor:
+
+    def __init__(self):
+        self.levels = Resources.instance.levels()
+        self.current = 0
+        self.data = dict()
+        print(self.levels)
+
+        # self.load()
+
+    def load(self, level):
+        self.toolbar = EditorToolbar(self.data)
+        self.viewport = EditorViewport(self.data)
+        self.properties = EditorToolprops()
+
+        self._level = level
+        if level.data:
+            # -- load leveldata
+            for key, val in level.data._asdict().items():
+                self.data[key] = val
+        else:
+            # -- initialize data with default values
+            keys = LevelData._fields
+            defaults = ([[]], (-10000, -10000), [], [], [], [])
+            for k,v in zip(keys, defaults):
+                self.data[k] = v
+
+    def save(self):
+        # -- remove temp data from self.data
+        tmp_items = [key for key,v in self.data.items() if key.startswith('_')]
+        tmp_data = [v for key,v in self.data.items() if key.startswith('_')]
+        for it in tmp_items:
+            del self.data[it]
+
+        # -- update level data and reload level
+        self._level.data = LevelData(**self.data)
+        self._level.save()
+        self._level.reload()
+
+        # -- restore temp data from self.data
+        for key,val in zip(tmp_items, tmp_data):
+            self.data[key] = val
+
+        # --  update viewport
+        self.viewport.reload()
+
+    def draw(self):
+        with reset_matrix():
+            self.viewport.draw()
+            self.toolbar.draw()
+
+    def update(self, dt):
+        self.toolbar.update(dt)
+        self.viewport.update(dt)
+
+        # -- update tools for viewport transform
+        for tool in self.toolbar.tools:
+            tool.set_viewport_transform(self.viewport.get_transform())
+
+    def event(self, *args, **kwargs):
+        self.toolbar.event(*args, **kwargs)
+        self.viewport.event(*args, **kwargs)
 
 class EditorToolbar:
     WIDTH = 60
@@ -2217,6 +2226,7 @@ class ImageButton(Button):
 ---   FUNCTIONS
 ============================================================
 '''
+
 def clamp(x, _min, _max):
     return max(_min, min(_max, x))
 
@@ -2432,9 +2442,16 @@ window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 window.maximize()
 
+class AppMode(Enum):
+    GAME = 1
+    EDITOR = 2
+
 fps  = pg.window.FPSDisplay(window)
 res  = Resources()
 game = Game()
+
+editor   = Editor()
+app_mode = AppMode.GAME
 
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 glEnable(GL_BLEND)
@@ -2443,64 +2460,110 @@ glEnable(GL_BLEND)
 def on_draw():
     window.clear()
     glClearColor(.39, .39, .39, 1)
-    game.draw()
 
-    if DEBUG and game.state == GameState.RUNNING:
-        fps.draw()
+    if app_mode == AppMode.GAME:
+        game.draw()
+        if DEBUG and game.state == GameState.RUNNING:
+            fps.draw()
+    else:
+        editor.draw()
 
 @window.event
 def on_resize(w, h):
-    game.event(EventType.RESIZE, w, h)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.RESIZE, w, h)
+    else:
+        editor.event(EventType.RESIZE, w, h)
 
 @window.event
 def on_key_press(symbol, modifiers):
-    if symbol == key.ESCAPE and game.state in (GameState.RUNNING, GameState.PAUSED):
-        if game.state == GameState.RUNNING:
-            game.pause()
-        elif game.state == GameState.PAUSED:
-            game.start()
-    elif symbol == key.ESCAPE:
-        sys.exit()
-    game.event(EventType.KEY_DOWN, symbol, modifiers)
+    if symbol == key.E and modifiers & key.MOD_CTRL:
+        app_mode = AppMode.GAME if app_mode == AppMode.EDITOR else AppMode.EDITOR
+
+    if app_mode == AppMode.GAME:
+        if symbol == key.ESCAPE and game.state in (GameState.RUNNING, GameState.PAUSED):
+            if game.state == GameState.RUNNING:
+                game.pause()
+            elif game.state == GameState.PAUSED:
+                game.start()
+        elif symbol == key.ESCAPE:
+            sys.exit()
+        game.event(EventType.KEY_DOWN, symbol, modifiers)
+
+    else:
+        editor.event(EventType.KEY_DOWN, symbol, modifiers)
 
 @window.event
 def on_key_release(symbol, modifiers):
-    game.event(EventType.KEY_UP, symbol, modifiers)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.KEY_UP, symbol, modifiers)
+    else:
+        editor.event(EventType.KEY_UP, symbol, modifiers)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
-    game.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
+    else:
+        editor.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
+
 
 @window.event
 def on_mouse_release(x, y, button, modifiers):
-    game.event(EventType.MOUSE_UP, x, y, button, modifiers)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.MOUSE_UP, x, y, button, modifiers)
+    else:
+        editor.event(EventType.MOUSE_UP, x, y, button, modifiers)
 
 @window.event
 def on_mouse_motion(x, y, dx, dy):
-    game.event(EventType.MOUSE_MOTION, x, y, dx, dy)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.MOUSE_MOTION, x, y, dx, dy)
+    else:
+        editor.event(EventType.MOUSE_MOTION, x, y, dx, dy)
 
 @window.event
 def on_mouse_drag(x, y, dx, dy, button, modifiers):
-    game.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
+    else:
+        editor.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
+
 
 @window.event
 def on_mouse_scroll(x, y, scroll_x, scroll_y):
-    game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
+    else:
+        editor.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
 
 @window.event
 def on_text(text):
-    game.event(EventType.TEXT, text)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.TEXT, text)
+    else:
+        editor.event(EventType.TEXT, text)
+
 
 @window.event
 def on_text_motion(motion):
-    game.event(EventType.TEXT_MOTION, motion)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.TEXT_MOTION, motion)
+    else:
+        editor.event(EventType.TEXT_MOTION, motion)
 
 @window.event
 def on_text_motion_select(motion):
-    game.event(EventType.TEXT_MOTION_SELECT, motion)
+    if app_mode == AppMode.GAME:
+        game.event(EventType.TEXT_MOTION_SELECT, motion)
+    else:
+        editor.event(EventType.TEXT_MOTION_SELECT, motion)
 
 def on_update(dt):
-    game.update(dt)
+    if app_mode == AppMode.GAME:
+        game.update(dt)
+    else:
+        editor.update(dt)
 
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)
