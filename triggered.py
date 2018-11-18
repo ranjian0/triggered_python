@@ -1428,6 +1428,15 @@ class Editor:
         self.viewport.update(dt)
 
         # -- check selected tab in topbar
+        if self.topbar.tab_switched:
+            self.current = self.levels[self.topbar.active_level]
+            self.data.clear()
+
+            for key, val in self.current._asdict().items():
+                self.data[key] = val
+
+            self.topbar.tab_switched = False
+
         # -- update tools for viewport transform
         for tool in self.toolbar.tools:
             tool.set_viewport_transform(self.viewport.get_transform())
@@ -1442,6 +1451,7 @@ class EditorTopbar:
 
     def __init__(self, levels):
         self.levels = levels
+        self.active_level = 0
 
         # -- topbar
         self.topbar_settings = {
@@ -1456,7 +1466,7 @@ class EditorTopbar:
         # -- tabs
         self.tabs_batch = pg.graphics.Batch()
         self.tabs = [
-            TextButton(f"level one", bold=True, font_size=14, color=(50, 50, 50, 200),
+            TextButton(f"level {idx+1}", bold=True, font_size=14, color=(50, 50, 50, 200),
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
             for idx, level in enumerate(self.levels)
         ]
@@ -1465,8 +1475,12 @@ class EditorTopbar:
         for idx, tab in enumerate(self.tabs):
             tab.on_click(self.switch_level, idx)
 
+        # - tab switching flags
+        self.tab_switched = False
+
     def switch_level(self, level_idx):
-        pass
+        self.tab_switched = True
+        self.active_level = level_idx
 
     def init_tabs(self):
         margin_x = 15
