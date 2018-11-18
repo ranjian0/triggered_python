@@ -1456,7 +1456,7 @@ class EditorTopbar:
         # -- tabs
         self.tabs_batch = pg.graphics.Batch()
         self.tabs = [
-            TextButton(f"level one", bold=True, font_size=14,
+            TextButton(f"level one", bold=True, font_size=14, color=(50, 50, 50, 200),
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
             for idx, level in enumerate(self.levels)
         ]
@@ -1476,7 +1476,7 @@ class EditorTopbar:
         for idx, tab in enumerate(self.tabs):
             w, h = tab.get_size()
 
-            tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin_x)
+            tab.x = start_x + (w/2) + (idx*w) + (idx * margin_x) + (margin_x/2)
             tab.y = start_y
 
     def draw(self):
@@ -1492,8 +1492,8 @@ class EditorTopbar:
         for idx, tab in enumerate(self.tabs):
             w, h = tab.get_size()
 
-            px = start_x + w + (idx*w) + ((idx+1) * margin_x) + (margin_x/2)
-            draw_line((px, window.height), (px, start_y), color=(.1, .1, .1, .5), width=5)
+            px = start_x + w + (idx*w) + (idx*margin_x) + margin_x
+            draw_line((px, window.height), (px, start_y), color=(.1, .1, .1, .5), width=3)
 
     def update(self, dt):
         pass
