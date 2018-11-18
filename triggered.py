@@ -261,7 +261,7 @@ class Resources:
                 return pickle.load(open(file.name, 'rb'))
             except EOFError as e:
                 # -- file is actually empty, return default data
-                return LevelData([], (100, 100), [], [], [], [])
+                return LevelData([[]], (100, 100), [], [], [], [])
 
 class Physics:
 
@@ -1419,7 +1419,7 @@ class Editor:
             self.data[key] = val
 
         # # --  update viewport
-        self.viewport.reload()
+        self.viewport.reload(self.data)
         print("Saved -- > ", self.current)
 
     def draw(self):
@@ -1475,12 +1475,14 @@ class EditorTopbar:
 
         # -- tabs
         self.tabs_batch = pg.graphics.Batch()
+        self.inactive_color = (50, 50, 50, 200)
         self.tabs = [
-            TextButton(os.path.basename(level), bold=True, font_size=14, color=(50, 50, 50, 200),
+            TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
             for idx, level in enumerate(list(self.levels))
         ]
 
+        self.tabs[self.active_level].bold = True
         self.init_tabs()
         for idx, tab in enumerate(self.tabs):
             tab.on_click(self.switch_level, idx)
@@ -1492,6 +1494,14 @@ class EditorTopbar:
         self.tab_switched = True
         self.active_level = level_idx
 
+        # -- set clicked tab to underline
+        for idx, tab in enumerate(self.tabs):
+            if idx == level_idx:
+                tab.bold = True
+            else:
+                tab.bold = False
+
+
     def init_tabs(self):
         margin_x = 15
         start_x = EditorToolbar.WIDTH
@@ -1500,7 +1510,7 @@ class EditorTopbar:
         for idx, tab in enumerate(self.tabs):
             w, h = tab.get_size()
 
-            tab.x = start_x + (w/2) + (idx*w) + (idx * margin_x) + (margin_x/2)
+            tab.x = start_x + (w/2) + (idx*w) + (idx * margin_x) + (margin_x/2 if idx == 0 else margin_x)
             tab.y = start_y
 
     def draw(self):
@@ -1521,8 +1531,8 @@ class EditorTopbar:
         for idx, tab in enumerate(self.tabs):
             w, h = tab.get_size()
 
-            px = start_x + w + (idx*w) + (idx*margin_x) + margin_x
-            draw_line((px, window.height), (px, start_y), color=(.1, .1, .1, .5), width=3)
+            px = start_x + ((idx+1)*w) + (idx*(margin_x*2))
+            # draw_line((px, window.height), (px, start_y), color=(.1, .1, .1, .5), width=3)
 
     def update(self, dt):
         pass
@@ -1589,7 +1599,7 @@ class EditorToolbar:
 
     def get_rect(self):
         center = (self.WIDTH/2, window.height/2)
-        size = (self.WIDTH, window.height)
+        size = (self.WIDTH, window.height-EditorTopbar.HEIGHT)
         return [center, size]
 
     def draw(self):
@@ -1674,8 +1684,9 @@ class EditorViewport:
         image_set_size(self.enemy_target, *(EditorViewport.GRID_SPACING,)*2)
         image_set_anchor_center(self.enemy_target)
 
-    def reload(self):
-        self = EditorViewport(self.data)
+    def reload(self, data):
+        self.data = data
+        self = EditorViewport(data)
 
     def get_rect(self):
         width = window.width - EditorToolbar.WIDTH
