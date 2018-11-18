@@ -1423,9 +1423,11 @@ class Editor:
             self.topbar.draw()
 
     def update(self, dt):
+        self.topbar.update(dt)
         self.toolbar.update(dt)
         self.viewport.update(dt)
 
+        # -- check selected tab in topbar
         # -- update tools for viewport transform
         for tool in self.toolbar.tools:
             tool.set_viewport_transform(self.viewport.get_transform())
@@ -1452,30 +1454,50 @@ class EditorTopbar:
             *self.topbar_settings.get("size"))
 
         # -- tabs
+        self.tabs_batch = pg.graphics.Batch()
         self.tabs = [
-            TextButton(f"level {idx+1}", bold=True, font_size=18)
+            TextButton(f"level one", bold=True, font_size=14,
+                        anchor_x='center', anchor_y='center', batch=self.tabs_batch)
             for idx, level in enumerate(self.levels)
         ]
 
         self.init_tabs()
+        for idx, tab in enumerate(self.tabs):
+            tab.on_click(self.switch_level, idx)
+
+    def switch_level(self, level_idx):
+        pass
 
     def init_tabs(self):
-        loc_y = window.height - self.HEIGHT
+        margin_x = 15
         start_x = EditorToolbar.WIDTH
+        start_y = window.height - self.HEIGHT/2
 
         for idx, tab in enumerate(self.tabs):
-            tab.x = start_x + (idx * 100)
-            tab.y = loc_y
-        pass
+            w, h = tab.get_size()
+
+            tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin_x)
+            tab.y = start_y
 
     def draw(self):
         self.topbar_image.blit(EditorToolbar.WIDTH, window.height-self.HEIGHT)
-        for tab in self.tabs:
-            tab.draw()
+        self.tabs_batch.draw()
 
+        # -- draw tab separators
+        margin_x = 15
+        start_x = EditorToolbar.WIDTH
+        start_y = window.height - self.HEIGHT
+
+        for idx, tab in enumerate(self.tabs):
+            w, h = tab.get_size()
+
+            px = start_x + w + (idx*w) + ((idx+1) * margin_x) + (margin_x/2)
+            draw_line((px, window.height), (px, start_y), color=(.1, .1, .1, .5), width=5)
+
+    def update(self, dt):
+        pass
 
     def event(self, *args, **kwargs):
-
         # -- handle resize
         _type = args[0]
         if _type == EventType.RESIZE:
@@ -1486,6 +1508,8 @@ class EditorTopbar:
             self.topbar_image = self.topbar.create_image(
                 *self.topbar_settings.get("size"))
 
+        for tab in self.tabs:
+            tab.event(*args, **kwargs)
 
 class EditorToolbar:
     WIDTH = 60
@@ -2492,7 +2516,7 @@ res  = Resources()
 game = Game()
 
 editor   = Editor()
-app_mode = AppMode.GAME
+app_mode = AppMode.EDITOR
 
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 glEnable(GL_BLEND)
@@ -2569,7 +2593,6 @@ def on_mouse_drag(x, y, dx, dy, button, modifiers):
         game.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
     else:
         editor.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
-
 
 @window.event
 def on_mouse_scroll(x, y, scroll_x, scroll_y):
