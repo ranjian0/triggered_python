@@ -1470,7 +1470,7 @@ class EditorTopbar:
 
     def init_tabs(self):
         margin_x = 15
-        start_x = 0
+        start_x = EditorToolbar.WIDTH
         start_y = window.height - self.HEIGHT/2
 
         for idx, tab in enumerate(self.tabs):
@@ -1486,9 +1486,9 @@ class EditorTopbar:
 
         # -- draw tab separators
         margin_x = 15
-        start_x = 0
+        start_x = EditorToolbar.WIDTH
         start_y = window.height - self.HEIGHT
-
+        draw_line((start_x, window.height), (start_x, start_y), color=(.1, .1, .1, .5), width=3)
         for idx, tab in enumerate(self.tabs):
             w, h = tab.get_size()
 
