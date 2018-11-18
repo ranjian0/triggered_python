@@ -1446,7 +1446,7 @@ class EditorTopbar:
         # -- topbar
         self.topbar_settings = {
             "size" : (window.width, self.HEIGHT),
-            "color" : (110, 100, 100, 255)
+            "color" : (207, 188, 188, 255)
         }
         self.topbar = pg.image.SolidColorImagePattern(
             self.topbar_settings.get("color"))
@@ -1470,7 +1470,7 @@ class EditorTopbar:
 
     def init_tabs(self):
         margin_x = 15
-        start_x = EditorToolbar.WIDTH
+        start_x = 0
         start_y = window.height - self.HEIGHT/2
 
         for idx, tab in enumerate(self.tabs):
@@ -1480,12 +1480,13 @@ class EditorTopbar:
             tab.y = start_y
 
     def draw(self):
-        self.topbar_image.blit(EditorToolbar.WIDTH, window.height-self.HEIGHT)
+        self.topbar_image.blit(0, window.height-self.HEIGHT)
+        draw_line((0, window.height-self.HEIGHT), (window.width, window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
         self.tabs_batch.draw()
 
         # -- draw tab separators
         margin_x = 15
-        start_x = EditorToolbar.WIDTH
+        start_x = 0
         start_y = window.height - self.HEIGHT
 
         for idx, tab in enumerate(self.tabs):
@@ -1533,7 +1534,7 @@ class EditorToolbar:
             ObjectivesTool()
         ]
 
-        self.tool_start_loc = (0, window.height)
+        self.tool_start_loc = (0, window.height - EditorTopbar.HEIGHT)
         self.tool_settings = {
             "size" : (50, 50),
             "border" : (5, 5),
@@ -1561,7 +1562,7 @@ class EditorToolbar:
         return [center, size]
 
     def draw(self):
-        self.toolbar_image.blit(0, 0)
+        self.toolbar_image.blit(0, -EditorTopbar.HEIGHT)
         for tool in self.tools:
             tool.draw()
 
@@ -1585,7 +1586,7 @@ class EditorToolbar:
         _type = args[0]
         if _type == EventType.RESIZE:
             _,_,h = args
-            self.tool_start_loc = (0, h)
+            self.tool_start_loc = (0, h- EditorTopbar.HEIGHT)
             self.init_tools()
 
             self.toolbar_settings['size'] = (self.WIDTH, h)
