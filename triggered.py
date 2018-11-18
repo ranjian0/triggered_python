@@ -227,7 +227,10 @@ class Resources:
             return self._parse_level(lvl)
 
     def levels(self):
-        return [self._parse_level(res.data) for res in self._data['levels']]
+        level_data = {}
+        for res in self._data['levels']:
+            level_data[res.data.name] = self._parse_level(res.data)
+        return level_data
 
     def _load(self):
 
@@ -254,7 +257,11 @@ class Resources:
             return pickle.load(file)
         except EOFError as e:
             # -- file object already consumed
-            return pickle.load(open(file.name, 'rb'))
+            try:
+                return pickle.load(open(file.name, 'rb'))
+            except EOFError as e:
+                # -- file is actually empty, return default data
+                return LevelData([], (100, 100), [], [], [], [])
 
 class Physics:
 
@@ -902,11 +909,6 @@ class Level:
         self.agents = []
         self.status = LevelStatus.RUNNING
 
-    def save(self):
-        if self.data:
-            f = open(self.file, 'wb')
-            pickle.dump(self.data, f)
-
     def reload(self):
         if not self.data: return
         self.agents.clear()
@@ -1382,19 +1384,22 @@ class Editor:
 
     def __init__(self):
         self.levels = Resources.instance.levels()
-        self.current = self.levels[0]
+        self.current = list(self.levels)[0]
         self.data = dict()
 
         self.load()
 
     def load(self):
         # -- load current leveldata
-        for key, val in self.current._asdict().items():
+        for key, val in self.levels[self.current]._asdict().items():
             self.data[key] = val
 
         self.topbar = EditorTopbar(self.levels)
         self.toolbar = EditorToolbar(self.data)
         self.viewport = EditorViewport(self.data)
+
+        # -- hook save event
+        self.topbar.save_btn.on_click(self.save)
 
 
     def save(self):
@@ -1404,17 +1409,18 @@ class Editor:
         for it in tmp_items:
             del self.data[it]
 
-        # -- update level data and reload level
-        self._level.data = LevelData(**self.data)
-        self._level.save()
-        self._level.reload()
+        # -- save data
+        ldata = LevelData(**self.data)
+        f = open(self.current, 'wb')
+        pickle.dump(ldata, f)
 
         # -- restore temp data from self.data
         for key,val in zip(tmp_items, tmp_data):
             self.data[key] = val
 
-        # --  update viewport
+        # # --  update viewport
         self.viewport.reload()
+        print("Saved -- > ", self.current)
 
     def draw(self):
         with reset_matrix():
@@ -1429,10 +1435,11 @@ class Editor:
 
         # -- check selected tab in topbar
         if self.topbar.tab_switched:
-            self.current = self.levels[self.topbar.active_level]
+            self.current = list(self.levels)[self.topbar.active_level]
             self.data.clear()
 
-            for key, val in self.current._asdict().items():
+            # -- change level
+            for key, val in self.levels[self.current]._asdict().items():
                 self.data[key] = val
 
             self.topbar.tab_switched = False
@@ -1463,12 +1470,15 @@ class EditorTopbar:
         self.topbar_image = self.topbar.create_image(
             *self.topbar_settings.get("size"))
 
+        # -- save button
+        self.save_btn = ImageButton("save", (EditorToolbar.WIDTH/2, window.height - self.HEIGHT/2))
+
         # -- tabs
         self.tabs_batch = pg.graphics.Batch()
         self.tabs = [
-            TextButton(f"level {idx+1}", bold=True, font_size=14, color=(50, 50, 50, 200),
+            TextButton(os.path.basename(level), bold=True, font_size=14, color=(50, 50, 50, 200),
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
-            for idx, level in enumerate(self.levels)
+            for idx, level in enumerate(list(self.levels))
         ]
 
         self.init_tabs()
@@ -1494,10 +1504,15 @@ class EditorTopbar:
             tab.y = start_y
 
     def draw(self):
+        # -- draw background
         self.topbar_image.blit(0, window.height-self.HEIGHT)
         draw_line((0, window.height-self.HEIGHT), (window.width, window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
-        self.tabs_batch.draw()
 
+        # -- draw save
+        self.save_btn.draw()
+
+        # -- draw tabs
+        self.tabs_batch.draw()
         # -- draw tab separators
         margin_x = 15
         start_x = EditorToolbar.WIDTH
@@ -1518,11 +1533,13 @@ class EditorTopbar:
         if _type == EventType.RESIZE:
             _,w,h = args
             self.init_tabs()
+            self.save_btn.update(EditorToolbar.WIDTH/2, window.height - self.HEIGHT/2)
 
             self.topbar_settings['size'] = (w, self.HEIGHT)
             self.topbar_image = self.topbar.create_image(
                 *self.topbar_settings.get("size"))
 
+        self.save_btn.event(*args, **kwargs)
         for tab in self.tabs:
             tab.event(*args, **kwargs)
 
@@ -2296,11 +2313,27 @@ class TextButton(pg.text.Label, Button):
 
 class ImageButton(Button):
 
-    def __init__(self, image):
+    def __init__(self, image, position):
         Button.__init__(self)
+        self.image = Resources.instance.sprite(image)
+        image_set_anchor_center(self.image)
+
+        self.x, self.y = position
+        self.sprite = pg.sprite.Sprite(self.image, x=self.x, y=self.y)
+
+    def update(self, px, py):
+        self.sprite.update(x=px, y=py)
 
     def hover(self, x, y):
+        center = self.x, self.y
+        size = self.sprite.width, self.sprite.height
+
+        if mouse_over_rect((x,y), center, size):
+            return True
         return False
+
+    def draw(self):
+        self.sprite.draw()
 
 '''
 ============================================================
