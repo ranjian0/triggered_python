@@ -79,7 +79,6 @@ class Game:
     def __init__(self):
         self.state = GameState.MAINMENU
 
-        # self.editor = LevelEditor()
         self.manager = LevelManager()
         self.manager.add([
                 Level("Kill them all", "level_one"),
@@ -103,8 +102,6 @@ class Game:
             self.pausemenu.draw()
         elif self.state == GameState.RUNNING:
             self.manager.draw()
-        # elif self.state == GameState.EDITOR:
-        #     self.editor.draw()
 
     def event(self, *args, **kwargs):
         _type = args[0]
@@ -126,20 +123,6 @@ class Game:
                 if symbol == key.P:
                     self.pausemenu.reload()
                     self.state = GameState.PAUSED
-
-                # if symbol == key.E and mod & key.MOD_CTRL:
-                #     self.editor.load(self.manager.current)
-                #     self.state = GameState.EDITOR
-
-        # elif self.state == GameState.EDITOR:
-        #     self.editor.event(*args, **kwargs)
-
-        #     if _type == EventType.KEY_DOWN:
-        #         symbol, mod = args[1:]
-
-        #         if symbol == key.E and mod & key.MOD_CTRL:
-        #             self.editor.save()
-        #             self.state = GameState.RUNNING
 
     def update(self, dt):
         if self.state == GameState.MAINMENU:
