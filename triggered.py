@@ -9,11 +9,13 @@ import pyglet as pg
 import pymunk as pm
 import itertools as it
 
+from utils import *
 from enum import Enum
 from pyglet.gl import *
 from pyglet.window import key, mouse
 from contextlib import contextmanager
 from pymunk import pyglet_util as putils
+from resources import Resources, LevelData
 from pyglet.text import layout, caret, document
 from collections import defaultdict, namedtuple
 
@@ -39,20 +41,6 @@ COLLISION_MAP = {
     "EnemyBulletType"  : 4,
     "EnemyType" : 100
 }
-
-class EventType(Enum):
-    KEY_DOWN     = 1
-    KEY_UP       = 2
-    MOUSE_DOWN   = 3
-    MOUSE_UP     = 4
-    MOUSE_MOTION = 5
-    MOUSE_DRAG   = 6
-    MOUSE_SCROLL = 7
-    RESIZE = 8
-
-    TEXT = 9
-    TEXT_MOTION = 10
-    TEXT_MOTION_SELECT = 11
 
 
 '''
@@ -634,7 +622,7 @@ class Map:
                 if data == "#":
                     sp = pg.sprite.Sprite(self.wall_img, x=offx, y=offy, batch=self.batch, group=fg)
                     self.sprites.append(sp)
-                    add_wall(physics.space, (offx + nsx/2, offy + nsy/2), (nsx, nsy))
+                    add_wall(physics.space, (offx + nsx/2, offy + nsy/2), (nsx, nsy), COLLISION_MAP.get("WallType"))
 
     def clamp_player(self, player):
         # -- keep player within map bounds
@@ -806,7 +794,7 @@ class Level:
             self.agents.append(e)
 
         # -- register collision types
-        setup_collisions(self.phy.space)
+        setup_collisions(self.phy.space, Enemy.COL_TYPES, COLLISION_MAP.get("PlayerType"))
 
         # -- create infopanel
         self.infopanel = InfoPanel(self.name, self.data.objectives, self.map, self.agents)
@@ -943,7 +931,7 @@ class HUD:
         self.items.append(item)
 
     def draw(self):
-        with reset_matrix():
+        with reset_matrix(window.width, window.height):
             for item in self.items:
                 item.draw()
 
@@ -1059,7 +1047,7 @@ class MainMenu:
         game.start()
 
     def draw(self):
-        with reset_matrix():
+        with reset_matrix(window.width, window.height):
             self.title.draw()
             self.quit.draw()
             self.level_batch.draw()
@@ -1127,7 +1115,7 @@ class PauseMenu:
             opt.y = (window.height*.7) - (idx * opt.content_height)
 
     def draw(self):
-        with reset_matrix():
+        with reset_matrix(window.width, window.height):
             self.title.draw()
             self.options_batch.draw()
 
@@ -1173,7 +1161,7 @@ class InfoPanel:
         self.minimap = self.create_minimap()
 
     def draw(self):
-        with reset_matrix():
+        with reset_matrix(window.width, window.height):
             self.panel.blit(0, 0)
             self.title.draw()
             self.objs.draw()
@@ -1245,215 +1233,6 @@ class InfoPanel:
 
 '''
 ============================================================
----   FUNCTIONS
-============================================================
-'''
-
-def clamp(x, _min, _max):
-    return max(_min, min(_max, x))
-
-def angle(p):
-    nx, ny = normalize(p)
-    return math.degrees(math.atan2(ny, nx))
-
-def normalize(p):
-    mag = math.hypot(*p)
-    if mag:
-        x = p[0] / mag
-        y = p[1] / mag
-        return (x, y)
-    return p
-
-def set_flag(name, value, items):
-    for item  in items:
-        setattr(item, name, value)
-
-@contextmanager
-def profile(perform=True):
-    if perform:
-        import cProfile, pstats, io
-        s = io.StringIO()
-        pr = cProfile.Profile()
-
-        pr.enable()
-        yield
-        pr.disable()
-
-        ps = pstats.Stats(pr, stream=s)
-        ps.sort_stats('cumtime')
-        # ps.strip_dirs()
-        ps.print_stats()
-
-        all_stats = s.getvalue().split('\n')
-        self_stats = "".join([line+'\n' for idx, line in enumerate(all_stats)
-            if ('triggered' in  line) or (idx <= 4)])
-        print(self_stats)
-    else:
-        yield
-
-@contextmanager
-def reset_matrix():
-    glMatrixMode(GL_MODELVIEW)
-    glPushMatrix()
-    glLoadIdentity()
-
-    glMatrixMode(GL_PROJECTION)
-    glPushMatrix()
-    glLoadIdentity()
-    glOrtho(0, window.width, 0, window.height, -1, 1)
-
-    yield
-
-    glPopMatrix()
-    glMatrixMode(GL_MODELVIEW)
-    glPopMatrix()
-
-def distance_sqr(p1, p2):
-    dx = p2[0] - p1[0]
-    dy = p2[1] - p1[1]
-    return dx**2 + dy**2
-
-def add_wall(space, pos, size):
-    shape = pm.Poly.create_box(space.static_body, size=size)
-    shape.collision_type = COLLISION_MAP.get("WallType")
-    shape.body.position = pos
-    space.add(shape)
-
-def heuristic(a, b):
-    (x1, y1) = a
-    (x2, y2) = b
-    return abs(x1 - x2) + abs(y1 - y2)
-
-def random_color():
-    r = random.random()
-    g = random.random()
-    b = random.random()
-    return (r, g, b, 1)
-
-def a_star_search(graph, start, goal):
-    frontier = PriorityQueue()
-    frontier.put(start, 0)
-    came_from = {}
-    cost_so_far = {}
-    came_from[start] = None
-    cost_so_far[start] = 0
-
-    while not frontier.empty():
-        current = frontier.get()
-
-        if current == goal:
-            break
-
-        for next in graph.neighbours(current):
-            new_cost = cost_so_far[current] + graph.cost(current, next)
-            if next not in cost_so_far or new_cost < cost_so_far[next]:
-                cost_so_far[next] = new_cost
-                priority = new_cost + heuristic(goal, next)
-                frontier.put(next, priority)
-                came_from[next] = current
-
-    return came_from, cost_so_far
-
-def reconstruct_path(came_from, start, goal):
-    current = goal
-    path = [current]
-    while current != start:
-        current = came_from[current]
-        path.append(current)
-    path.append(start)
-    path.reverse()
-    return path
-
-def setup_collisions(space):
-
-    # Player-Enemy Collision
-    def player_enemy_solve(arbiter, space, data):
-        """ Keep the two bodies from intersecting"""
-        pshape = arbiter.shapes[0]
-        eshape = arbiter.shapes[1]
-
-        normal = pshape.body.position - eshape.body.position
-        normal = normal.normalized()
-        pshape.body.position = eshape.body.position + (normal * (pshape.radius*2))
-        return True
-
-    for etype in Enemy.COL_TYPES:
-        handler = space.add_collision_handler(
-                COLLISION_MAP.get("PlayerType"), etype)
-        handler.begin = player_enemy_solve
-
-    # Enemy-Enemy Collision
-    def enemy_enemy_solve(arbiter, space, data):
-        """ Keep the two bodies from intersecting"""
-        eshape  = arbiter.shapes[0]
-        eshape1 = arbiter.shapes[1]
-
-        normal = eshape.body.position - eshape1.body.position
-        normal = normal.normalized()
-
-        # -- to prevent, dead stop, move eshape a litte perpendicular to collision normal
-        perp = pm.Vec2d(normal.y, -normal.x)
-        perp_move = perp * (eshape.radius*2)
-        eshape.body.position = eshape1.body.position + (normal * (eshape.radius*2)) + perp_move
-        return True
-
-    for etype1, etype2 in it.combinations(Enemy.COL_TYPES, 2):
-        handler = space.add_collision_handler(
-                etype1, etype2)
-        handler.begin = enemy_enemy_solve
-
-def draw_point(pos, color=(1, 0, 0, 1), size=5):
-    glColor4f(*color)
-    glPointSize(size)
-
-    glBegin(GL_POINTS)
-    glVertex2f(*pos)
-    glEnd()
-    # -- reset color
-    glColor4f(1,1,1,1)
-
-def draw_line(start, end, color=(1, 1, 0, 1), width=2):
-    glColor4f(*color)
-    glLineWidth(width)
-
-    glBegin(GL_LINES)
-    glVertex2f(*start)
-    glVertex2f(*end)
-    glEnd()
-    # -- reset color
-    glColor4f(1,1,1,1)
-
-def draw_path(points, color=(1, 0, 1, 1), width=5):
-    glColor4f(*color)
-    glLineWidth(width)
-
-    glBegin(GL_LINE_STRIP)
-    for point in points:
-        glVertex2f(*point)
-    glEnd()
-    # -- reset color
-    glColor4f(1,1,1,1)
-
-def image_set_size(img, w, h):
-    img.width = w
-    img.height = h
-
-def image_set_anchor_center(img):
-    img.anchor_x = img.width/2
-    img.anchor_y = img.height/2
-
-def mouse_over_rect(mouse, center, size):
-    mx, my = mouse
-    tx, ty = center
-    dx, dy = abs(tx - mx), abs(ty - my)
-
-    tsx, tsy = size
-    if dx < tsx/2 and dy < tsy/2:
-        return True
-    return False
-
-'''
-============================================================
 ---   MAIN
 ============================================================
 '''
@@ -1463,16 +1242,9 @@ window = pg.window.Window(*SIZE, resizable=True)
 window.set_minimum_size(*SIZE)
 window.set_caption(CAPTION)
 
-class AppMode(Enum):
-    GAME = 1
-    EDITOR = 2
-
 fps  = pg.window.FPSDisplay(window)
 res  = Resources()
 game = Game()
-
-editor   = Editor()
-app_mode = AppMode.EDITOR
 
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 glEnable(GL_BLEND)
@@ -1482,107 +1254,63 @@ def on_draw():
     window.clear()
     glClearColor(.39, .39, .39, 1)
 
-    if app_mode == AppMode.GAME:
-        game.draw()
-        if DEBUG and game.state == GameState.RUNNING:
-            fps.draw()
-    else:
-        editor.draw()
+    game.draw()
+    if DEBUG and game.state == GameState.RUNNING:
+        fps.draw()
 
 @window.event
 def on_resize(w, h):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.RESIZE, w, h)
-    else:
-        editor.event(EventType.RESIZE, w, h)
+    game.event(EventType.RESIZE, w, h)
 
 @window.event
 def on_key_press(symbol, modifiers):
-    global app_mode
-    if symbol == key.E and modifiers & key.MOD_CTRL:
-        app_mode = AppMode.GAME if app_mode == AppMode.EDITOR else AppMode.EDITOR
-
-    if app_mode == AppMode.GAME:
-        if symbol == key.ESCAPE and game.state in (GameState.RUNNING, GameState.PAUSED):
-            if game.state == GameState.RUNNING:
-                game.pause()
-            elif game.state == GameState.PAUSED:
-                game.start()
-        elif symbol == key.ESCAPE:
-            sys.exit()
-        game.event(EventType.KEY_DOWN, symbol, modifiers)
-
-    else:
-        editor.event(EventType.KEY_DOWN, symbol, modifiers)
+    if symbol == key.ESCAPE and game.state in (GameState.RUNNING, GameState.PAUSED):
+        if game.state == GameState.RUNNING:
+            game.pause()
+        elif game.state == GameState.PAUSED:
+            game.start()
+    elif symbol == key.ESCAPE:
+        sys.exit()
+    game.event(EventType.KEY_DOWN, symbol, modifiers)
 
 @window.event
 def on_key_release(symbol, modifiers):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.KEY_UP, symbol, modifiers)
-    else:
-        editor.event(EventType.KEY_UP, symbol, modifiers)
+    game.event(EventType.KEY_UP, symbol, modifiers)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
-    else:
-        editor.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
+    game.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
 
 @window.event
 def on_mouse_release(x, y, button, modifiers):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.MOUSE_UP, x, y, button, modifiers)
-    else:
-        editor.event(EventType.MOUSE_UP, x, y, button, modifiers)
+    game.event(EventType.MOUSE_UP, x, y, button, modifiers)
 
 @window.event
 def on_mouse_motion(x, y, dx, dy):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.MOUSE_MOTION, x, y, dx, dy)
-    else:
-        editor.event(EventType.MOUSE_MOTION, x, y, dx, dy)
+    game.event(EventType.MOUSE_MOTION, x, y, dx, dy)
 
 @window.event
 def on_mouse_drag(x, y, dx, dy, button, modifiers):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
-    else:
-        editor.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
+    game.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
 
 @window.event
 def on_mouse_scroll(x, y, scroll_x, scroll_y):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
-    else:
-        editor.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
+    game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
 
 @window.event
 def on_text(text):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.TEXT, text)
-    else:
-        editor.event(EventType.TEXT, text)
+    game.event(EventType.TEXT, text)
 
 @window.event
 def on_text_motion(motion):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.TEXT_MOTION, motion)
-    else:
-        editor.event(EventType.TEXT_MOTION, motion)
+    game.event(EventType.TEXT_MOTION, motion)
 
 @window.event
 def on_text_motion_select(motion):
-    if app_mode == AppMode.GAME:
-        game.event(EventType.TEXT_MOTION_SELECT, motion)
-    else:
-        editor.event(EventType.TEXT_MOTION_SELECT, motion)
+    game.event(EventType.TEXT_MOTION_SELECT, motion)
 
 def on_update(dt):
-    if app_mode == AppMode.GAME:
-        game.update(dt)
-    else:
-        editor.update(dt)
+    game.update(dt)
 
 if __name__ == '__main__':
     pg.clock.schedule_interval(on_update, 1/FPS)

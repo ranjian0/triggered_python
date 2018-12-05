@@ -2,7 +2,7 @@ import os
 import pickle
 import pyglet as pg
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 Resource  = namedtuple("Resource", "name data")
 LevelData = namedtuple("LevelData",
