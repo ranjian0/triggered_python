@@ -969,3 +969,78 @@ class ImageButton(Button):
     def draw(self):
         self.sprite.draw()
 
+'''
+============================================================
+---   MAIN
+============================================================
+'''
+
+# -- create window
+window = pg.window.Window(*SIZE, resizable=True)
+window.set_minimum_size(*SIZE)
+window.set_caption(CAPTION)
+
+editor = Editor()
+res    = Resources()
+
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+glEnable(GL_BLEND)
+
+@window.event
+def on_draw():
+    window.clear()
+    glClearColor(.39, .39, .39, 1)
+
+    editor.draw()
+
+@window.event
+def on_resize(w, h):
+    editor.event(EventType.RESIZE, w, h)
+
+@window.event
+def on_key_press(symbol, modifiers):
+    editor.event(EventType.KEY_DOWN, symbol, modifiers)
+
+@window.event
+def on_key_release(symbol, modifiers):
+    editor.event(EventType.KEY_UP, symbol, modifiers)
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    editor.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
+
+@window.event
+def on_mouse_release(x, y, button, modifiers):
+    editor.event(EventType.MOUSE_UP, x, y, button, modifiers)
+
+@window.event
+def on_mouse_motion(x, y, dx, dy):
+    editor.event(EventType.MOUSE_MOTION, x, y, dx, dy)
+
+@window.event
+def on_mouse_drag(x, y, dx, dy, button, modifiers):
+    editor.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
+
+@window.event
+def on_mouse_scroll(x, y, scroll_x, scroll_y):
+    editor.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
+
+@window.event
+def on_text(text):
+    editor.event(EventType.TEXT, text)
+
+@window.event
+def on_text_motion(motion):
+    editor.event(EventType.TEXT_MOTION, motion)
+
+@window.event
+def on_text_motion_select(motion):
+    editor.event(EventType.TEXT_MOTION_SELECT, motion)
+
+def on_update(dt):
+    editor.update(dt)
+
+if __name__ == '__main__':
+    pg.clock.schedule_interval(on_update, 1/FPS)
+    with profile(DEBUG):
+        pg.app.run()
