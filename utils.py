@@ -47,7 +47,7 @@ class TextInput:
         self.add_background(x - pad, y - pad,
                             x + width + pad, y + height + pad)
 
-        self.text_cursor = window.get_system_mouse_cursor('text')
+        # self.text_cursor = window.get_system_mouse_cursor('text')
         self.set_focus()
 
     def hit_test(self, x, y):

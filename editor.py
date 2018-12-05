@@ -3,7 +3,7 @@ import pickle
 import pyglet as pg
 
 from utils import *
-
+from resources import Resources, LevelData
 
 class Editor:
 
@@ -48,7 +48,7 @@ class Editor:
         print("Saved -- > ", self.current)
 
     def draw(self):
-        with reset_matrix():
+        with reset_matrix(window.width, window.height):
             self.viewport.draw()
             self.toolbar.draw()
             self.topbar.draw()
@@ -821,12 +821,13 @@ class ObjectivesTool(EditorTool):
 '''
 
 # -- create window
-window = pg.window.Window(*SIZE, resizable=True)
-window.set_minimum_size(*SIZE)
-window.set_caption(CAPTION)
+window = pg.window.Window(800, 600, resizable=True)
+window.set_minimum_size(800, 600)
+window.set_caption("Triggered Editor")
 
-editor = Editor()
 res    = Resources()
+editor = Editor()
+
 
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 glEnable(GL_BLEND)
@@ -886,6 +887,5 @@ def on_update(dt):
     editor.update(dt)
 
 if __name__ == '__main__':
-    pg.clock.schedule_interval(on_update, 1/FPS)
-    with profile(DEBUG):
-        pg.app.run()
+    pg.clock.schedule_interval(on_update, 1/60)
+    pg.app.run()
