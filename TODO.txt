@@ -1,0 +1,15 @@
+
+Level Editor::
+
+    - implement new level button
+
+
+Triggered::
+
+    - load level files correctly
+
+Utils::
+
+    - implement proper text input widget
+
+    - implement color selection widget

@@ -823,7 +823,7 @@ class ObjectivesTool(EditorTool):
 # -- create window
 window = pg.window.Window(800, 600, resizable=True)
 window.set_minimum_size(800, 600)
-window.set_caption("Triggered Editor")
+window.set_caption("Triggered LevelEditor")
 
 res    = Resources()
 editor = Editor()
