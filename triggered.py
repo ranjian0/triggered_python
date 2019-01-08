@@ -52,7 +52,6 @@ class GameState(Enum):
     MAINMENU = 1
     RUNNING  = 2
     PAUSED   = 3
-    # EDITOR   = 4
 
 class Game:
 
@@ -61,8 +60,8 @@ class Game:
 
         self.manager = LevelManager()
         self.manager.add([
-                Level("Kill them all", "level_one"),
-                Level("Extraction", "level_two")
+                Level("Kill them all",  "level_1"),
+                Level("Extraction",     "level_2")
             ])
 
         self.mainmenu = MainMenu()

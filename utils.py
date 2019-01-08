@@ -176,6 +176,7 @@ class ImageButton(Button):
         size = self.sprite.width, self.sprite.height
 
         if mouse_over_rect((x,y), center, size):
+            print(x,y, " -- ", center, size)
             return True
         return False
 

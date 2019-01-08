@@ -3,10 +3,13 @@ Level Editor::
 
     - implement new level button
 
+    BUG:: save and new button dont register hover/click if window is maximized
+
 
 Triggered::
 
     - load level files correctly
+    - feature save and exit
 
 Utils::
 

@@ -9,7 +9,7 @@ class Editor:
 
     def __init__(self):
         self.levels = Resources.instance.levels()
-        self.current = list(self.levels)[0]
+        self.current = sorted(self.levels)[0]
         self.data = dict()
 
         self.load()
@@ -23,8 +23,21 @@ class Editor:
         self.toolbar = EditorToolbar(self.data)
         self.viewport = EditorViewport(self.data)
 
-        # -- hook save event
+        # -- hook events
+        self.topbar.new_btn.on_click(self.new)
         self.topbar.save_btn.on_click(self.save)
+
+    def new(self):
+        # -- create new level file
+        new_level = Resources.instance.level(f"level_{len(self.levels)+1}")
+        self.levels = Resources.instance.levels()
+
+        # -- set as current level
+        self.current = list(self.levels)[-1]
+        for key, val in self.levels[self.current]._asdict().items():
+            self.data[key] = val
+
+        self.topbar.add_tab(self.current)
 
 
     def save(self):
@@ -60,7 +73,7 @@ class Editor:
 
         # -- check selected tab in topbar
         if self.topbar.tab_switched:
-            self.current = list(self.levels)[self.topbar.active_level]
+            self.current = sorted(self.levels)[self.topbar.active_level]
             self.data.clear()
 
             # -- change level
@@ -96,7 +109,10 @@ class EditorTopbar:
             *self.topbar_settings.get("size"))
 
         # -- save button
-        self.save_btn = ImageButton("save", (EditorToolbar.WIDTH/2, window.height - self.HEIGHT/2))
+        # -- images are 22x22, Toolbar width = 60
+        hw = EditorToolbar.WIDTH / 2
+        self.new_btn  = ImageButton("new",  (hw/2, window.height - self.HEIGHT/2))
+        self.save_btn = ImageButton("save", (hw*1.5, window.height - self.HEIGHT/2))
 
         # -- tabs
         self.tabs_batch = pg.graphics.Batch()
@@ -104,60 +120,61 @@ class EditorTopbar:
         self.tabs = [
             TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
-            for idx, level in enumerate(list(self.levels))
+            for idx, level in enumerate(sorted(self.levels))
         ]
 
         self.tabs[self.active_level].bold = True
         self.init_tabs()
-        for idx, tab in enumerate(self.tabs):
-            tab.on_click(self.switch_level, idx)
+        for tab in self.tabs:
+            tab.on_click(self.switch_level, tab.text)
 
         # - tab switching flags
         self.tab_switched = False
 
-    def switch_level(self, level_idx):
+    def switch_level(self, level_txt):
         self.tab_switched = True
-        self.active_level = level_idx
+        for idx, level in enumerate(sorted(self.levels)):
+            if os.path.basename(level) == level_txt:
+                self.active_level = idx
 
         # -- set clicked tab to underline
         for idx, tab in enumerate(self.tabs):
-            if idx == level_idx:
+            if idx == self.active_level:
                 tab.bold = True
             else:
                 tab.bold = False
 
+    def add_tab(self, level):
+        ntab =  TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
+            anchor_x='center', anchor_y='center', batch=self.tabs_batch)
+        ntab.on_click(self.switch_level, len(self.tabs)-1)
+        self.tabs.append(ntab)
+
+        self.active_level = len(self.tabs)-1
+        self.switch_level(ntab.text)
+        self.init_tabs()
 
     def init_tabs(self):
-        margin_x = 15
+        margin = 15
         start_x = EditorToolbar.WIDTH
-        start_y = window.height - self.HEIGHT/2
 
         for idx, tab in enumerate(self.tabs):
             w, h = tab.get_size()
 
-            tab.x = start_x + (w/2) + (idx*w) + (idx * margin_x) + (margin_x/2 if idx == 0 else margin_x)
-            tab.y = start_y
+            tab.x = start_x + (w/2) + (idx*w) + (idx * margin) + (margin/2 if idx == 0 else margin)
+            tab.y = window.height - self.HEIGHT/2
 
     def draw(self):
         # -- draw background
-        self.topbar_image.blit(0, window.height-self.HEIGHT)
+        self.topbar_image.blit(EditorToolbar.WIDTH+2, window.height-self.HEIGHT)
         draw_line((0, window.height-self.HEIGHT), (window.width, window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
 
         # -- draw save
+        self.new_btn.draw()
         self.save_btn.draw()
 
         # -- draw tabs
         self.tabs_batch.draw()
-        # -- draw tab separators
-        margin_x = 15
-        start_x = EditorToolbar.WIDTH
-        start_y = window.height - self.HEIGHT
-        draw_line((start_x, window.height), (start_x, start_y), color=(.1, .1, .1, .5), width=3)
-        for idx, tab in enumerate(self.tabs):
-            w, h = tab.get_size()
-
-            px = start_x + ((idx+1)*w) + (idx*(margin_x*2))
-            # draw_line((px, window.height), (px, start_y), color=(.1, .1, .1, .5), width=3)
 
     def update(self, dt):
         pass
@@ -168,12 +185,15 @@ class EditorTopbar:
         if _type == EventType.RESIZE:
             _,w,h = args
             self.init_tabs()
-            self.save_btn.update(EditorToolbar.WIDTH/2, window.height - self.HEIGHT/2)
+            hw = EditorToolbar.WIDTH / 2
+            self.new_btn.update(hw/2, window.height - self.HEIGHT/2)
+            self.save_btn.update(hw*1.5, window.height - self.HEIGHT/2)
 
             self.topbar_settings['size'] = (w, self.HEIGHT)
             self.topbar_image = self.topbar.create_image(
                 *self.topbar_settings.get("size"))
 
+        self.new_btn.event(*args, **kwargs)
         self.save_btn.event(*args, **kwargs)
         for tab in self.tabs:
             tab.event(*args, **kwargs)
