@@ -5,6 +5,12 @@ Level Editor::
 
     BUG:: save and new button dont register hover/click if window is maximized
 
+    - Include name in LevelData definition
+    - Change ObjectivesEditor -> PropertiesEditor {name, objectives} etc.
+        - PropertiesEditor will be a side panel on the right
+        - Useful to include :- ColorPicker
+                               Lighting Configuration
+
 
 Triggered::
 

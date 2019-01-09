@@ -73,7 +73,7 @@ class Editor:
 
         # -- check selected tab in topbar
         if self.topbar.tab_switched:
-            self.current = sorted(self.levels)[self.topbar.active_level]
+            self.current = sorted(self.levels, key=self.topbar.tab_sort_func)[self.topbar.active_level]
             self.data.clear()
 
             # -- change level
@@ -98,7 +98,7 @@ class EditorTopbar:
         self.levels = levels
         self.active_level = 0
 
-        # -- topbar
+        # -- topbar background
         self.topbar_settings = {
             "size" : (window.width, self.HEIGHT),
             "color" : (207, 188, 188, 255)
@@ -108,20 +108,21 @@ class EditorTopbar:
         self.topbar_image = self.topbar.create_image(
             *self.topbar_settings.get("size"))
 
-        # -- save button
+        # -- action buttons
         # -- images are 22x22, Toolbar width = 60
         hw = EditorToolbar.WIDTH / 2
         self.new_btn  = ImageButton("new",  (hw/2, window.height - self.HEIGHT/2))
         self.save_btn = ImageButton("save", (hw*1.5, window.height - self.HEIGHT/2))
 
-        # -- tabs
+        # -- tab buttons
         self.tabs_batch = pg.graphics.Batch()
         self.inactive_color = (50, 50, 50, 200)
+        self.tab_sort_func = lambda n: int(os.path.basename(n).split('.')[0].split('_')[-1])
         self.tabs = [
             TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
-            for idx, level in enumerate(sorted(self.levels))
-        ]
+            for idx, level in enumerate(sorted(self.levels, key=self.tab_sort_func)
+            )]
 
         self.tabs[self.active_level].bold = True
         self.init_tabs()
@@ -133,11 +134,12 @@ class EditorTopbar:
 
     def switch_level(self, level_txt):
         self.tab_switched = True
-        for idx, level in enumerate(sorted(self.levels)):
+        for idx, level in enumerate(sorted(self.levels, key=self.tab_sort_func)):
             if os.path.basename(level) == level_txt:
                 self.active_level = idx
+                break
 
-        # -- set clicked tab to underline
+        # -- set clicked tab to bold
         for idx, tab in enumerate(self.tabs):
             if idx == self.active_level:
                 tab.bold = True
@@ -145,9 +147,12 @@ class EditorTopbar:
                 tab.bold = False
 
     def add_tab(self, level):
+        # -- update list of levels from resources
+        self.levels = Resources.instance.levels()
+        # -- add a new tab and set as active
         ntab =  TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
             anchor_x='center', anchor_y='center', batch=self.tabs_batch)
-        ntab.on_click(self.switch_level, len(self.tabs)-1)
+        ntab.on_click(self.switch_level, ntab.text)
         self.tabs.append(ntab)
 
         self.active_level = len(self.tabs)-1
@@ -169,11 +174,11 @@ class EditorTopbar:
         self.topbar_image.blit(EditorToolbar.WIDTH+2, window.height-self.HEIGHT)
         draw_line((0, window.height-self.HEIGHT), (window.width, window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
 
-        # -- draw save
+        # -- draw action buttons
         self.new_btn.draw()
         self.save_btn.draw()
 
-        # -- draw tabs
+        # -- draw tab buttons
         self.tabs_batch.draw()
 
     def update(self, dt):
@@ -186,8 +191,8 @@ class EditorTopbar:
             _,w,h = args
             self.init_tabs()
             hw = EditorToolbar.WIDTH / 2
-            self.new_btn.update(hw/2, window.height - self.HEIGHT/2)
-            self.save_btn.update(hw*1.5, window.height - self.HEIGHT/2)
+            self.new_btn.update(hw/2, h - self.HEIGHT/2)
+            self.save_btn.update(hw*1.5, h - self.HEIGHT/2)
 
             self.topbar_settings['size'] = (w, self.HEIGHT)
             self.topbar_image = self.topbar.create_image(
