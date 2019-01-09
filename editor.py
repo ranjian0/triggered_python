@@ -248,7 +248,7 @@ class EditorToolbar:
             tool.size = self.tool_settings.get("size")
 
     def get_rect(self):
-        center = (self.WIDTH/2, window.height/2)
+        center = (self.WIDTH/2, (window.height-EditorTopbar.HEIGHT)/2)
         size = (self.WIDTH, window.height-EditorTopbar.HEIGHT)
         return [center, size]
 
