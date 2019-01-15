@@ -9,7 +9,7 @@ class Editor:
 
     def __init__(self):
         self.levels = Resources.instance.levels()
-        self.current = sorted(self.levels)[0]
+        self.current = sorted_levels(0)
         self.data = dict()
 
         self.load()
@@ -73,7 +73,7 @@ class Editor:
 
         # -- check selected tab in topbar
         if self.topbar.tab_switched:
-            self.current = sorted(self.levels, key=self.topbar.tab_sort_func)[self.topbar.active_level]
+            self.current = sorted_levels(self.topbar.active_level)
             self.data.clear()
 
             # -- change level
@@ -118,12 +118,10 @@ class EditorTopbar:
         self.max_tabs = 4
         self.tabs_batch = pg.graphics.Batch()
         self.inactive_color = (50, 50, 50, 200)
-        self.tab_sort_func = lambda n: int(os.path.basename(n).split('.')[0].split('_')[-1])
         self.tabs = [
             TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
-            for idx, level in enumerate(sorted(self.levels, key=self.tab_sort_func)
-            )]
+            for idx, level in enumerate(sorted_levels())]
 
         self.tabs[self.active_level].bold = True
         self.init_tabs()
@@ -141,7 +139,7 @@ class EditorTopbar:
 
     def switch_level(self, level_txt):
         self.tab_switched = True
-        for idx, level in enumerate(sorted(self.levels, key=self.tab_sort_func)):
+        for idx, level in enumerate(sorted_levels()):
             if os.path.basename(level) == level_txt:
                 self.active_level = idx
                 break
@@ -864,6 +862,14 @@ class ObjectivesTool(EditorTool):
             for field in self.input_fields:
                 field.draw()
 
+
+def sorted_levels(idx=None):
+    if idx or idx == 0:
+    return sorted(Resources.instance.levels(),
+        key=lambda l: int(os.path.basename(l).split('.')[0].split('_')[-1]))[idx]
+    else:
+        return sorted(Resources.instance.levels(),
+            key=lambda l: int(os.path.basename(l).split('.')[0].split('_')[-1]))
 
 '''
 ============================================================
