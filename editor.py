@@ -133,6 +133,12 @@ class EditorTopbar:
         # - tab switching flags
         self.tab_switched = False
 
+    def get_rect(self):
+        width = window.width - EditorToolbar.WIDTH
+        size = (width, self.HEIGHT)
+        center = (width/2 + EditorToolbar.WIDTH, window.height - self.HEIGHT/2)
+        return [center, size]
+
     def switch_level(self, level_txt):
         self.tab_switched = True
         for idx, level in enumerate(sorted(self.levels, key=self.tab_sort_func)):
@@ -208,6 +214,14 @@ class EditorTopbar:
             self.topbar_settings['size'] = (w, self.HEIGHT)
             self.topbar_image = self.topbar.create_image(
                 *self.topbar_settings.get("size"))
+
+        if _type == EventType.MOUSE_SCROLL:
+            x, y, sx, sy = args[1:]
+            if not mouse_over_rect((x, y), *self.get_rect()): return
+
+            # -- update active level based on scroll
+            self.active_level = clamp(self.active_level + sy, 0, len(self.tabs)-1)
+            self.switch_level(self.tabs[self.active_level].text)
 
         self.new_btn.event(*args, **kwargs)
         self.save_btn.event(*args, **kwargs)
