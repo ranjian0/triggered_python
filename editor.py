@@ -115,6 +115,7 @@ class EditorTopbar:
         self.save_btn = ImageButton("save", (hw*1.5, window.height - self.HEIGHT/2))
 
         # -- tab buttons
+        self.max_tabs = 4
         self.tabs_batch = pg.graphics.Batch()
         self.inactive_color = (50, 50, 50, 200)
         self.tab_sort_func = lambda n: int(os.path.basename(n).split('.')[0].split('_')[-1])
@@ -166,8 +167,13 @@ class EditorTopbar:
         for idx, tab in enumerate(self.tabs):
             w, h = tab.get_size()
 
-            tab.x = start_x + (w/2) + (idx*w) + (idx * margin) + (margin/2 if idx == 0 else margin)
+            tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
             tab.y = window.height - self.HEIGHT/2
+
+        # -- recalculate max_tabs based on tabs and window width
+        bar_width = window.width - EditorToolbar.WIDTH
+        tab_averge_width = sum([t.get_size()[0] + margin for t in self.tabs]) / len(self.tabs)
+        self.max_tabs  = int(bar_width / tab_averge_width)
 
     def draw(self):
         # -- draw background
@@ -179,7 +185,12 @@ class EditorTopbar:
         self.save_btn.draw()
 
         # -- draw tab buttons
-        self.tabs_batch.draw()
+        if len(self.tabs) <= self.max_tabs:
+            self.tabs_batch.draw()
+        else:
+            for i in range(self.max_tabs):
+                self.tabs[i].draw()
+
 
     def update(self, dt):
         pass
