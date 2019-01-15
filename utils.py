@@ -169,6 +169,7 @@ class ImageButton(Button):
         self.sprite = pg.sprite.Sprite(self.image, x=self.x, y=self.y)
 
     def update(self, px, py):
+        self.x, self.y = px, py
         self.sprite.update(x=px, y=py)
 
     def hover(self, x, y):
