@@ -351,8 +351,9 @@ class EditorViewport:
 
     def get_rect(self):
         width = window.width - EditorToolbar.WIDTH
-        size = (width, window.height)
-        center = (width/2 + EditorToolbar.WIDTH, window.height/2)
+        height = window.height - EditorTopbar.HEIGHT
+        size = (width, height)
+        center = (width/2 + EditorToolbar.WIDTH, height/2)
         return [center, size]
 
     def get_transform(self):
@@ -437,6 +438,7 @@ class EditorViewport:
                 self._editor_draw_enemies()
                 self._editor_draw_waypoints()
         glPopMatrix()
+        draw_point(self.get_rect()[0])
 
     def update(self, dt):
         pass
