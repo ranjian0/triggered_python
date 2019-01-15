@@ -207,9 +207,8 @@ class EditorTopbar:
         if _type == EventType.RESIZE:
             _,w,h = args
             self.init_tabs()
-            hw = EditorToolbar.WIDTH / 2
-            self.new_btn.update(hw/2, h - self.HEIGHT/2)
-            self.save_btn.update(hw*1.5, h - self.HEIGHT/2)
+            self.new_btn.update(EditorToolbar.WIDTH*.25,  h - self.HEIGHT/2)
+            self.save_btn.update(EditorToolbar.WIDTH*.75, h - self.HEIGHT/2)
 
             self.topbar_settings['size'] = (w, self.HEIGHT)
             self.topbar_image = self.topbar.create_image(
