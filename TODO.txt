@@ -1,13 +1,6 @@
 
 Level Editor::
 
-    - implement new level button
-
-    BUG:: save and new button dont register hover/click if window is maximized
-
-    BUG:: when tab is created, text is too offset to the right
-    - figure out how to deal with too many tabs
-
     - Include name in LevelData definition
     - Change ObjectivesEditor -> PropertiesEditor {name, objectives} etc.
         - PropertiesEditor will be a side panel on the right
