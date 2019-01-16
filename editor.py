@@ -181,7 +181,7 @@ class EditorTopbar:
 
     def draw(self):
         # -- draw background
-        self.topbar_image.blit(EditorToolbar.WIDTH+2, window.height-self.HEIGHT)
+        self.topbar_image.blit(0, window.height-self.HEIGHT)
         draw_line((0, window.height-self.HEIGHT), (window.width, window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
 
         # -- draw action buttons
