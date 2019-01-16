@@ -1,11 +1,4 @@
 *.pyc
-<<<<<<< HEAD
 *.sublime-project
 *.sublime-workspace
 __pycache__
-=======
-*.data
-*.sublime-project
-*.sublime-workspace
-__pycache__
->>>>>>> single_file_branch
