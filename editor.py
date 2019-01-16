@@ -164,15 +164,22 @@ class EditorTopbar:
         self.switch_level(ntab.text)
         self.init_tabs()
 
-    def init_tabs(self):
+    def init_tabs(self, _range=None):
+        w = 110
         margin = 15
         start_x = EditorToolbar.WIDTH
 
-        for idx, tab in enumerate(self.tabs):
-            w, h = tab.get_size()
-
-            tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
-            tab.y = window.height - self.HEIGHT/2
+        update = lambda tab: 0 if len(tab.text) == 13 else 5
+        if _range is not None:
+            for idx, tab in enumerate(map(lambda i:self.tabs[i], _range)):
+                margin += update(tab)
+                tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
+                tab.y = window.height - self.HEIGHT/2
+        else:
+            for idx, tab in enumerate(self.tabs):
+                margin += update(tab)
+                tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
+                tab.y = window.height - self.HEIGHT/2
 
         # -- recalculate max_tabs based on tabs and window width
         bar_width = window.width - EditorToolbar.WIDTH
@@ -192,9 +199,16 @@ class EditorTopbar:
         if len(self.tabs) <= self.max_tabs:
             self.tabs_batch.draw()
         else:
-            for i in range(self.max_tabs):
-                self.tabs[i].draw()
-
+            if self.active_level < self.max_tabs:
+                self.init_tabs()
+                for i in range(self.max_tabs):
+                    self.tabs[i].draw()
+            else:
+                st = max(0, self.active_level - int(self.max_tabs/2))
+                sp = min(len(self.tabs)-1, self.active_level + int(self.max_tabs/2))
+                self.init_tabs(range(st, sp+1, 1))
+                for i in range(st, sp+1, 1):
+                    self.tabs[i].draw()
 
     def update(self, dt):
         pass
