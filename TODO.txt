@@ -1,6 +1,6 @@
 
 Level Editor::
-
+    - BUG:: TextInput not drawing text
     - Include name in LevelData definition
     - Change ObjectivesEditor -> PropertiesEditor {name, objectives} etc.
         - PropertiesEditor will be a side panel on the right
