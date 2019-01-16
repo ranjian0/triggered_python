@@ -449,7 +449,6 @@ class EditorViewport:
                 self._editor_draw_enemies()
                 self._editor_draw_waypoints()
         glPopMatrix()
-        draw_point(self.get_rect()[0])
 
     def update(self, dt):
         pass
