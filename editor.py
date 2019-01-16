@@ -824,56 +824,110 @@ class AddWaypointTool(EditorTool):
                             self.level_data['_active_enemy'] = idx+1
 
 class ObjectivesTool(EditorTool):
+    WIDTH  = 400
+    HEIGHT = 250
+
     def __init__(self):
         opts = {
             "Objectives" : Resources.instance.sprite("tool_objectives"),
         }
         super(ObjectivesTool, self).__init__(opts)
 
-        self.num_inputs = 1
-        self.active_field = None
-        self.input_fields = []
+        self.batch = pg.graphics.Batch()
+        self.panel_offset = (EditorToolbar.WIDTH, 0)
 
-        self._add_fields()
+        # panel background
+        self.background_settings = {
+            "size" : (self.WIDTH, self.HEIGHT),
+            "color" : (100, 100, 100, 255)
+        }
+        self.background = pg.image.SolidColorImagePattern(
+            self.background_settings.get("color"))
+        self.background_image = self.background.create_image(
+            *self.background_settings.get("size"))
 
-    def _add_fields(self):
-        pad = (5, 5)
-        px, py = [ox+px for ox,px in zip(EditorViewport.OFFSET, pad)]
 
-        w, h, fs = 400, 35, 18
-        hoff = py + (len(self.input_fields) * h)
-        for idx in range(self.num_inputs - len(self.input_fields)):
-            self.input_fields.append(
-                TextInput("Enter Objective", px, hoff+(idx*h), w) #(w, h), {'color':(0, 0, 0, 255), 'font_size':fs})
-            )
+        # panel labels
+        pad = 5
+        left, top = EditorToolbar.WIDTH, self.HEIGHT
 
-    def _remove_fields(self):
-        if len(self.input_fields) >  self.num_inputs:
-            del self.input_fields[self.num_inputs:]
+        self.labels = [
+            pg.text.Label("Level Name", x=left+pad, y=top-pad,
+                anchor_y='top', color=(0, 0, 0, 255), batch=self.batch)
+        ]
+
+        # panel inputs
+        start_x = left + pad + 100
+        start_y = top - pad - 25
+        width = self.WIDTH - (2*pad + 100)
+        self.inputs = [
+            TextInput("Hello", start_x, start_y, width, self.batch)
+        ]
+
+        self.text_cursor = window.get_system_mouse_cursor('text')
+        self.focus = None
+        self.set_focus(self.inputs[0])
+
+    def set_focus(self, focus):
+        if self.focus:
+            self.focus.caret.visible = False
+            self.focus.caret.mark = self.focus.caret.position = 0
+
+        self.focus = focus
+        if self.focus:
+            self.focus.caret.visible = True
+            self.focus.caret.mark = 0
+            self.focus.caret.position = len(self.focus.document.text)
+
 
     def event(self, _type, *args, **kwargs):
         super(ObjectivesTool, self).event(_type, *args, **kwargs)
         if self.is_active:
-            for field in self.input_fields:
-                field.event(_type, *args, **kwargs)
+            if _type == EventType.RESIZE:
+                pass
 
-            if _type == EventType.KEY_DOWN:
-                symbol, mod = args
-                if symbol == key.RETURN:
-                    if mod & key.MOD_CTRL:
-                        self.num_inputs = max(1, self.num_inputs-1)
-                        self._remove_fields()
-                    else:
-                        self.num_inputs += 1
-                        self._add_fields()
+            elif _type == EventType.MOUSE_MOTION:
+                x, y, dx, dy = args
+                for inp in self.inputs:
+                    if inp.hit_test(x, y):
+                        window.set_mouse_cursor(self.text_cursor)
+                else:
+                    window.set_mouse_cursor(None)
 
-                    self.input_fields[self.num_inputs-1].set_focus()
+            elif _type == EventType.MOUSE_DOWN:
+                x, y, bt, mod = args
+                for inp in self.inputs:
+                    if inp.hit_test(x, y):
+                        self.set_focus(inp)
+                        break
+                else:
+                    self.set_focus(None)
+
+                if self.focus:
+                    self.focus.caret.on_mouse_press(x, y, bt, mod)
+
+            elif _type == EventType.MOUSE_DRAG:
+                if self.focus:
+                    self.focus.caret.on_mouse_drag(*args)
+
+            elif _type == EventType.TEXT:
+                if self.focus:
+                    self.focus.caret.on_text(*args)
+
+            elif _type == EventType.TEXT_MOTION:
+                if self.focus:
+                    self.focus.caret.on_text_motion(*args)
+
+            elif _type == EventType.TEXT_MOTION_SELECT:
+                if self.focus:
+                    self.focus.caret.on_text_motion_select(*args)
+
 
     def draw(self):
         super(ObjectivesTool, self).draw()
         if self.is_active:
-            for field in self.input_fields:
-                field.draw()
+            self.background_image.blit(*self.panel_offset)
+            self.batch.draw()
 
 
 def sorted_levels(idx=None):

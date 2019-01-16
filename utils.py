@@ -27,11 +27,11 @@ class EventType(Enum):
 
 class TextInput:
 
-    def __init__(self, text, x, y, width):
-        self.batch = pg.graphics.Batch()
+    def __init__(self, text, x, y, width, batch=None):
+        self.batch = batch
 
         self.document = pg.text.document.UnformattedDocument(text)
-        self.document.set_style(0, len(self.document.text), dict(color=(0, 0, 0, 255)))
+        self.document.set_style(0, len(self.document.text), dict(color=(200, 0, 0, 255)))
         font = self.document.get_font()
         height = font.ascent - font.descent
 
@@ -47,9 +47,6 @@ class TextInput:
         self.add_background(x - pad, y - pad,
                             x + width + pad, y + height + pad)
 
-        # self.text_cursor = window.get_system_mouse_cursor('text')
-        self.set_focus()
-
     def hit_test(self, x, y):
         return (0 < x - self.layout.x < self.layout.width and
                 0 < y - self.layout.y < self.layout.height)
@@ -58,54 +55,6 @@ class TextInput:
         vert_list = self.batch.add(4, pg.gl.GL_QUADS, None,
                                      ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
                                      ('c4B', [200, 200, 220, 255] * 4))
-
-    def draw(self):
-        self.batch.draw()
-
-    def event(self, _type, *args, **kwargs):
-        type_map = {
-            EventType.MOUSE_MOTION : self._on_mouse_motion,
-            EventType.MOUSE_DOWN : self._on_mouse_press,
-            EventType.MOUSE_DRAG : self._on_mouse_drag,
-            EventType.TEXT : self._on_text,
-            EventType.TEXT_MOTION : self._on_text_motion,
-            EventType.TEXT_MOTION_SELECT : self._on_text_motion_select
-        }
-        if _type in type_map.keys():
-            type_map[_type](*args, **kwargs)
-
-    def _on_mouse_motion(self, x, y, dx, dy):
-        if self.hit_test(x, y):
-            window.set_mouse_cursor(self.text_cursor)
-        else:
-            window.set_mouse_cursor(None)
-
-    def _on_mouse_press(self, x, y, button, modifiers):
-        if self.hit_test(x, y):
-            self.set_focus()
-            self.caret.on_mouse_press(x, y, button, modifiers)
-        else:
-            self.set_focus(False)
-
-    def _on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        if self.hit_test(x, y):
-            self.caret.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
-
-    def _on_text(self, text):
-        self.caret.on_text(text)
-
-    def _on_text_motion(self, motion):
-        self.caret.on_text_motion(motion)
-
-    def _on_text_motion_select(self, motion):
-        self.caret.on_text_motion_select(motion)
-
-    def set_focus(self, focus=True):
-        if focus:
-            self.caret.visible = True
-        else:
-            self.caret.visible = False
-            self.caret.mark = self.caret.position = 0
 
 class Button(object):
 
