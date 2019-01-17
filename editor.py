@@ -892,6 +892,14 @@ class ObjectivesTool(EditorTool):
             if _type == EventType.RESIZE:
                 pass
 
+            elif _type == EventType.KEY_DOWN:
+                symbol, mod = args
+                if symbol == key.TAB:
+                    idx = self.inputs.index(self.focus) + 1
+                    if idx > len(self.inputs)-1:
+                        idx = 0
+                    self.set_focus(self.inputs[idx])
+
             elif _type == EventType.MOUSE_MOTION:
                 x, y, dx, dy = args
                 for inp in self.inputs:
