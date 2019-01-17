@@ -8,3 +8,5 @@ Triggered::
     - feature level complete / failed screen
 
     - objectives counter/tracker
+
+    - implement collectible objects - eg health and ammo
