@@ -903,7 +903,7 @@ class ObjectivesTool(EditorTool):
 
     def event(self, _type, *args, **kwargs):
         super(ObjectivesTool, self).event(_type, *args, **kwargs)
-        if self.is_active:
+        if self.is_active and self.level_data:
             if _type == EventType.RESIZE:
                 pass
 
