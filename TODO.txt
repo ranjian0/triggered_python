@@ -1,8 +1,6 @@
 
 Triggered::
 
-    - load level files correctly - name
-
     - feature save and exit
 
     - feature level complete / failed screen
