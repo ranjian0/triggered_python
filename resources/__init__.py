@@ -7,10 +7,11 @@ from collections import namedtuple, defaultdict
 Resource  = namedtuple("Resource", "name data")
 LevelData = namedtuple("LevelData",
             ["map",
+             "name",
              "player",
+             "lights",
              "enemies",
              "waypoints",
-             "lights",
              "objectives"])
 
 
@@ -123,5 +124,5 @@ class Resources:
                 return pickle.load(open(file.name, 'rb'))
             except EOFError as e:
                 # -- file is actually empty, return default data
-                return LevelData([[]], (100, 100), [], [], [], [])
+                return LevelData([[]], "Level Name", (100, 100), [], [], [], [f"Objective {i+1}" for i in range(3)])
 

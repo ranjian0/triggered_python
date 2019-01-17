@@ -9,15 +9,16 @@ class Editor:
 
     def __init__(self):
         self.levels = Resources.instance.levels()
-        self.current = sorted_levels(0)
+        self.current = sorted_levels(0) if len(self.levels) else None
         self.data = dict()
 
         self.load()
 
     def load(self):
-        # -- load current leveldata
-        for key, val in self.levels[self.current]._asdict().items():
-            self.data[key] = val
+        if self.current:
+            # -- load current leveldata
+            for key, val in self.levels[self.current]._asdict().items():
+                self.data[key] = val
 
         self.topbar = EditorTopbar(self.levels)
         self.toolbar = EditorToolbar(self.data)
@@ -38,7 +39,8 @@ class Editor:
             self.data[key] = val
 
         self.topbar.add_tab(self.current)
-
+        self.toolbar = EditorToolbar(self.data)
+        self.viewport = EditorViewport(self.data)
 
     def save(self):
         # -- remove temp data from self.data
@@ -122,10 +124,11 @@ class EditorTopbar:
                         anchor_x='center', anchor_y='center', batch=self.tabs_batch)
             for idx, level in enumerate(sorted_levels())]
 
-        self.tabs[self.active_level].bold = True
-        self.init_tabs()
-        for tab in self.tabs:
-            tab.on_click(self.switch_level, tab.text)
+        if self.tabs:
+            self.tabs[self.active_level].bold = True
+            self.init_tabs()
+            for tab in self.tabs:
+                tab.on_click(self.switch_level, tab.text)
 
         # - tab switching flags
         self.tab_switched = False
@@ -217,7 +220,8 @@ class EditorTopbar:
         _type = args[0]
         if _type == EventType.RESIZE:
             _,w,h = args
-            self.init_tabs()
+            if self.tabs:
+                self.init_tabs()
             self.new_btn.update(EditorToolbar.WIDTH*.25,  h - self.HEIGHT/2)
             self.save_btn.update(EditorToolbar.WIDTH*.75, h - self.HEIGHT/2)
 
@@ -254,10 +258,10 @@ class EditorToolbar:
 
         # -- tools
         self.tools = [
-            AddTileTool(),
-            AddAgentTool(),
-            AddWaypointTool(),
-            ObjectivesTool()
+            AddTileTool(data),
+            AddAgentTool(data),
+            AddWaypointTool(data),
+            ObjectivesTool(data)
         ]
 
         self.tool_start_loc = (0, window.height - EditorTopbar.HEIGHT)
@@ -267,9 +271,6 @@ class EditorToolbar:
             "anchor" : (25, 25)
         }
         self.init_tools()
-        # -- set data that tools operate on
-        for tool in self.tools:
-            tool.set_data(data)
 
     def init_tools(self):
         locx, locy = self.tool_start_loc
@@ -452,6 +453,8 @@ class EditorViewport:
                     draw_point(point, color=(1,1,1,1))
 
     def draw(self):
+        if not self.data: return
+
         glPushMatrix()
         glTranslatef(*self.OFFSET, 1)
         with self._editor_do_pan():
@@ -499,17 +502,11 @@ class EditorViewport:
 
 class EditorTool:
 
-    tools = []
-    def __new__(cls):
-        instance = object.__new__(cls)
-        EditorTool.tools.append(instance)
-        return instance
-
-    def __init__(self, options):
+    def __init__(self, options, data):
         # -- options
         # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
         self.options = options
-        self.level_data = None
+        self.level_data = data
 
         self.position = (0, 0)
         self.size = (0, 0)
@@ -542,9 +539,6 @@ class EditorTool:
         # -- flag to track viewport transform
         self._viewport_pan = (0, 0)
         self._viewport_zoom = (1, 1)
-
-    def set_data(self, val):
-        self.level_data = val
 
     def set_viewport_transform(self, val):
         self._viewport_pan = val[0]
@@ -639,12 +633,12 @@ class EditorTool:
                     self.show_options = False
 
 class AddTileTool(EditorTool):
-    def __init__(self):
+    def __init__(self, data):
         opts = {
             "Wall" : Resources.instance.sprite("tool_wall"),
             "Floor" : Resources.instance.sprite("tool_floor")
         }
-        super(AddTileTool, self).__init__(opts)
+        super(AddTileTool, self).__init__(opts, data)
 
     def _map_add_tile(self, idx, idy, data):
         _map = self.level_data.get('map')
@@ -728,13 +722,12 @@ class AddTileTool(EditorTool):
                         self._map_add_floor_at(*map_id)
 
 class AddAgentTool(EditorTool):
-    def __init__(self):
+    def __init__(self, data):
         opts = {
             "Player" : Resources.instance.sprite("tool_player"),
             "Enemy" : Resources.instance.sprite("tool_enemy"),
-            # "NPC" : Resources.instance.sprite("tool_npc")
         }
-        super(AddAgentTool, self).__init__(opts)
+        super(AddAgentTool, self).__init__(opts, data)
 
     def event(self, _type, *args, **kwargs):
         super(AddAgentTool, self).event(_type, *args, **kwargs)
@@ -763,11 +756,11 @@ class AddAgentTool(EditorTool):
                         self.level_data['waypoints'].append([])
 
 class AddWaypointTool(EditorTool):
-    def __init__(self):
+    def __init__(self, data):
         opts = {
             "Waypoint" : Resources.instance.sprite("tool_waypoint"),
         }
-        super(AddWaypointTool, self).__init__(opts)
+        super(AddWaypointTool, self).__init__(opts, data)
 
     def event(self, _type, *args, **kwargs):
         super(AddWaypointTool, self).event(_type, *args, **kwargs)
@@ -826,11 +819,11 @@ class ObjectivesTool(EditorTool):
     WIDTH  = 400
     HEIGHT = 180
 
-    def __init__(self):
+    def __init__(self, data):
         opts = {
             "Objectives" : Resources.instance.sprite("tool_objectives"),
         }
-        super(ObjectivesTool, self).__init__(opts)
+        super(ObjectivesTool, self).__init__(opts, data)
 
         self.batch = pg.graphics.Batch()
         self.panel_offset = (EditorToolbar.WIDTH, 0)
@@ -862,12 +855,15 @@ class ObjectivesTool(EditorTool):
         start_x = left + 100
         start_y = top - 30
         width = self.WIDTH - (3*pad + 100)
-        self.inputs = [
-            TextInput("Level Name", start_x, start_y, width, self.batch),
 
-            TextInput("Objective 1", start_x, start_y - 40, width, self.batch),
-            TextInput("Objective 2", start_x, start_y - 80, width, self.batch),
-            TextInput("Objective 3", start_x, start_y - 120, width, self.batch),
+        data = self.level_data or {'name': "Level Name", 'objectives': [f"Objective {i+1}" for i in range(3)]}
+        has_objectives = data.get("objectives", None)
+        self.inputs = [
+            TextInput(data.get("name"), start_x, start_y, width, self.batch),
+
+            TextInput(data.get("objectives")[0], start_x, start_y - 40, width, self.batch),
+            TextInput(data.get("objectives")[1], start_x, start_y - 80, width, self.batch),
+            TextInput(data.get("objectives")[2], start_x, start_y - 120, width, self.batch),
         ]
 
         self.text_cursor = window.get_system_mouse_cursor('text')
@@ -885,6 +881,19 @@ class ObjectivesTool(EditorTool):
             self.focus.caret.mark = 0
             self.focus.caret.position = len(self.focus.document.text)
 
+    def next_focus(self):
+        idx = self.inputs.index(self.focus) + 1
+        if idx > len(self.inputs)-1:
+            idx = 0
+        self.set_focus(self.inputs[idx])
+
+
+    def save_data(self):
+        self.level_data['name'] = self.inputs[0].document.text
+        self.level_data['objectives'] = [
+            inp.document.text for inp in self.inputs[1:]
+        ]
+
 
     def event(self, _type, *args, **kwargs):
         super(ObjectivesTool, self).event(_type, *args, **kwargs)
@@ -895,10 +904,10 @@ class ObjectivesTool(EditorTool):
             elif _type == EventType.KEY_DOWN:
                 symbol, mod = args
                 if symbol == key.TAB:
-                    idx = self.inputs.index(self.focus) + 1
-                    if idx > len(self.inputs)-1:
-                        idx = 0
-                    self.set_focus(self.inputs[idx])
+                    self.next_focus()
+                elif symbol == key.RETURN:
+                    self.save_data()
+                    self.next_focus()
 
             elif _type == EventType.MOUSE_MOTION:
                 x, y, dx, dy = args
@@ -926,7 +935,9 @@ class ObjectivesTool(EditorTool):
 
             elif _type == EventType.TEXT:
                 if self.focus:
-                    self.focus.caret.on_text(*args)
+                    if '\r' not in args:
+                        self.focus.caret.on_text(*args)
+                self.save_data()
 
             elif _type == EventType.TEXT_MOTION:
                 if self.focus:
