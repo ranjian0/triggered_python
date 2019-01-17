@@ -434,11 +434,11 @@ class EditorViewport:
         for pos in self.data['enemies']:
             self.enemy_img.blit(*pos, 0)
 
-        enemy_id = self.data.get('_active_enemy')
-        if enemy_id:
-            self.enemy_target.blit(*self.data['enemies'][enemy_id-1], 0)
-
     def _editor_draw_waypoints(self):
+        # -- check if waypoint tool is active
+        waypoint_tool = [t for t in EditorTool.tools if isinstance(t, AddWaypointTool)][-1]
+        if not waypoint_tool.is_active: return
+
         waypoints = self.data.get('waypoints')
         if waypoints:
             # -- check if we have active enemy
@@ -446,6 +446,9 @@ class EditorViewport:
             if enemy_id:
                 # -- select waypoints for active enemy
                 points = waypoints[enemy_id-1]
+
+                # -- draw active enemy
+                self.enemy_target.blit(*self.data['enemies'][enemy_id-1], 0)
 
                 # -- draw waypoints
                 draw_path(points, color=(0,0,1,1))
