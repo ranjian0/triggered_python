@@ -502,6 +502,12 @@ class EditorViewport:
 
 class EditorTool:
 
+    tools = []
+    def __new__(cls, *args, **kwargs):
+        instance = object.__new__(cls)
+        EditorTool.tools.append(instance)
+        return instance
+
     def __init__(self, options, data):
         # -- options
         # -- e.g {'Add Player' : player_image, 'Add_Enemy' : enemy_image}
