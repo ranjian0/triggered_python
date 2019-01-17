@@ -10,3 +10,5 @@ Triggered::
     - objectives counter/tracker
 
     - implement collectible objects - eg health and ammo
+
+    - make the minimap with narrower walls, better perspective

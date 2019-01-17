@@ -60,9 +60,8 @@ class Game:
 
         self.manager = LevelManager()
         self.manager.add([
-                Level("Kill them all",  "level_1"),
-                Level("Extraction",     "level_2")
-            ])
+            Level(os.path.basename(l).split('.')[0]) for l in sorted_levels()
+        ])
 
         self.mainmenu = MainMenu()
         self.pausemenu = PauseMenu()
@@ -749,10 +748,10 @@ class LevelStatus(Enum):
 
 class Level:
 
-    def __init__(self, name, resource_name):
-        self.name = name
+    def __init__(self, resource_name):
         self.file = Resources.instance.get_path(resource_name)
         self.data = Resources.instance.level(resource_name)
+        self.name = self.data.name
 
         self.phy = Physics()
         self.map = None
@@ -843,11 +842,11 @@ class Level:
         # -- change level status
         if self.get_player().dead:
             self.status = LevelStatus.FAILED
-            print("Player Dead")
+            # print("Player Dead")
 
         if len(self.get_enemies()) == 0:
             self.status = LevelStatus.PASSED
-            print("level Finished")
+            # print("level Finished")
 
         if self.show_info:
             self.infopanel.update(dt)

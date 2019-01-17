@@ -961,14 +961,6 @@ class ObjectivesTool(EditorTool):
             self.batch.draw()
 
 
-def sorted_levels(idx=None):
-    if idx or idx == 0:
-        return sorted(Resources.instance.levels(),
-            key=lambda l: int(os.path.basename(l).split('.')[0].split('_')[-1]))[idx]
-    else:
-        return sorted(Resources.instance.levels(),
-            key=lambda l: int(os.path.basename(l).split('.')[0].split('_')[-1]))
-
 '''
 ============================================================
 ---   MAIN

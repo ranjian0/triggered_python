@@ -1,3 +1,4 @@
+import os
 import math
 import pymunk as pm
 import pyglet as pg
@@ -341,3 +342,11 @@ def mouse_over_rect(mouse, center, size):
     if dx < tsx/2 and dy < tsy/2:
         return True
     return False
+
+def sorted_levels(idx=None):
+    if idx or idx == 0:
+        return sorted(Resources.instance.levels(),
+            key=lambda l: int(os.path.basename(l).split('.')[0].split('_')[-1]))[idx]
+    else:
+        return sorted(Resources.instance.levels(),
+            key=lambda l: int(os.path.basename(l).split('.')[0].split('_')[-1]))
