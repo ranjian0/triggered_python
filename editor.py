@@ -956,7 +956,7 @@ class ObjectivesTool(EditorTool):
 
     def draw(self):
         super(ObjectivesTool, self).draw()
-        if self.is_active:
+        if self.is_active and self.level_data:
             self.background_image.blit(*self.panel_offset)
             self.batch.draw()
 
