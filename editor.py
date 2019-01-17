@@ -594,8 +594,7 @@ class EditorTool:
         # -- this will be drawn a little off side
         if self.show_options and len(self.options.items()) > 1:
             offx = 50
-            for idx, (name, image) in enumerate(self.options.items()):
-                idx += 1
+            for idx, (name, image) in enumerate(self.options.items(), 1):
                 px, py = self.position
                 loc = (px + (idx*offx), py)
                 self.tool_background.blit(*loc)
@@ -614,8 +613,9 @@ class EditorTool:
 
         if _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
-            if btn == mouse.LEFT and mouse_over_rect((x, y), self.position, self.size):
-                self.start_show_event = True
+            if btn == mouse.LEFT:
+                if mouse_over_rect((x, y), self.position, self.size) and not self.is_active:
+                    self.start_show_event = True
 
         if _type == EventType.MOUSE_UP:
             x, y, btn, mod = args
@@ -638,6 +638,10 @@ class EditorTool:
                             self.default = list(self.options)[idx-1]
 
                     self.show_options = False
+
+                if self.is_active:
+                    self.activated = False
+                    self.is_active = False
 
 class AddTileTool(EditorTool):
     def __init__(self):
@@ -960,7 +964,6 @@ glEnable(GL_BLEND)
 def on_draw():
     window.clear()
     glClearColor(.39, .39, .39, 1)
-
     editor.draw()
 
 @window.event
