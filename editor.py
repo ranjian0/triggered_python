@@ -61,10 +61,9 @@ class Editor:
         print("Saved -- > ", self.current)
 
     def draw(self):
-        with reset_matrix(window.width, window.height):
-            self.viewport.draw()
-            self.toolbar.draw()
-            self.topbar.draw()
+        self.viewport.draw()
+        self.toolbar.draw()
+        self.topbar.draw()
 
     def update(self, dt):
         self.topbar.update(dt)

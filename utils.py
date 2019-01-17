@@ -31,7 +31,7 @@ class TextInput:
         self.batch = batch
 
         self.document = pg.text.document.UnformattedDocument(text)
-        self.document.set_style(0, len(self.document.text), dict(color=(200, 0, 0, 255)))
+        self.document.set_style(0, len(self.document.text), dict(color=(0, 0, 0, 255)))
         font = self.document.get_font()
         height = font.ascent - font.descent
 
