@@ -614,7 +614,7 @@ class EditorTool:
         if _type == EventType.MOUSE_DOWN:
             x, y, btn, mod = args
             if btn == mouse.LEFT:
-                if mouse_over_rect((x, y), self.position, self.size) and not self.is_active:
+                if mouse_over_rect((x, y), self.position, self.size):
                     self.start_show_event = True
 
         if _type == EventType.MOUSE_UP:
@@ -638,10 +638,6 @@ class EditorTool:
                             self.default = list(self.options)[idx-1]
 
                     self.show_options = False
-
-                if self.is_active:
-                    self.activated = False
-                    self.is_active = False
 
 class AddTileTool(EditorTool):
     def __init__(self):
@@ -829,7 +825,7 @@ class AddWaypointTool(EditorTool):
 
 class ObjectivesTool(EditorTool):
     WIDTH  = 400
-    HEIGHT = 250
+    HEIGHT = 180
 
     def __init__(self):
         opts = {
@@ -843,7 +839,7 @@ class ObjectivesTool(EditorTool):
         # panel background
         self.background_settings = {
             "size" : (self.WIDTH, self.HEIGHT),
-            "color" : (100, 100, 100, 255)
+            "color" : (150, 100, 100, 255)
         }
         self.background = pg.image.SolidColorImagePattern(
             self.background_settings.get("color"))
@@ -853,19 +849,26 @@ class ObjectivesTool(EditorTool):
 
         # panel labels
         pad = 5
-        left, top = EditorToolbar.WIDTH, self.HEIGHT
+        left, top = EditorToolbar.WIDTH + pad, self.HEIGHT - pad
 
         self.labels = [
-            pg.text.Label("Level Name", x=left+pad, y=top-pad,
+            pg.text.Label("Level Name", x=left, y=top-10, bold=True,
+                anchor_y='top', color=(0, 0, 0, 255), batch=self.batch),
+            pg.text.Label("Objectives", x=left, y=top-50, bold=True,
                 anchor_y='top', color=(0, 0, 0, 255), batch=self.batch)
+
         ]
 
         # panel inputs
-        start_x = left + pad + 100
-        start_y = top - pad - 25
-        width = self.WIDTH - (2*pad + 100)
+        start_x = left + 100
+        start_y = top - 30
+        width = self.WIDTH - (3*pad + 100)
         self.inputs = [
-            TextInput("Hello", start_x, start_y, width, self.batch)
+            TextInput("Level Name", start_x, start_y, width, self.batch),
+
+            TextInput("Objective 1", start_x, start_y - 40, width, self.batch),
+            TextInput("Objective 2", start_x, start_y - 80, width, self.batch),
+            TextInput("Objective 3", start_x, start_y - 120, width, self.batch),
         ]
 
         self.text_cursor = window.get_system_mouse_cursor('text')
