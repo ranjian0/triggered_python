@@ -1,20 +1,10 @@
 
-Level Editor::
-    - BUG:: TextInput not drawing text
-    - Include name in LevelData definition
-    - Change ObjectivesEditor -> PropertiesEditor {name, objectives} etc.
-        - PropertiesEditor will be a side panel on the right
-        - Useful to include :- ColorPicker
-                               Lighting Configuration
-
-
 Triggered::
 
-    - load level files correctly
+    - load level files correctly - name
+
     - feature save and exit
 
-Utils::
+    - feature level complete / failed screen
 
-    - implement proper text input widget
-
-    - implement color selection widget
+    - objectives counter/tracker
