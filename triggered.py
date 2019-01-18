@@ -1279,6 +1279,7 @@ def on_key_press(symbol, modifiers):
             game.pause()
         elif game.state == GameState.PAUSED:
             game.start()
+        return pg.event.EVENT_HANDLED
     elif symbol == key.ESCAPE:
         sys.exit()
     game.event(EventType.KEY_DOWN, symbol, modifiers)
