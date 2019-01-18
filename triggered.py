@@ -649,8 +649,8 @@ class Map:
 
         return offx, offy
 
-    def make_minimap(self, size, wall_color=(255, 255, 0, 200),
-        background_color=(0, 0, 0, 0)):
+    def make_minimap(self, size, wall_color=(50, 50, 50, 255),
+        background_color=(200, 0, 0, 0)):
         sx, sy = [s/ms for s, ms in zip(size, self.size())]
         nsx, nsy = (self.node_size,)*2
 
@@ -659,15 +659,26 @@ class Map:
         background = background_image.get_texture()
 
         wall_image = pg.image.SolidColorImagePattern(wall_color)
-        wall_image = wall_image.create_image(nsx, nsy)
+        wall_image = wall_image.create_image(nsx//4, nsy//4)
         wall = wall_image.get_texture()
 
         for y, row in enumerate(self.data):
             for x, data in enumerate(row):
                 offx, offy = x * nsx, y * nsy
-
                 if data == "#":
                     background.blit_into(wall_image, offx, offy, 0)
+
+                    # -- fill x-gaps
+                    if x < len(row)-1 and row[x+1] == '#':
+                        for i in range(1,4):
+                            ox = offx + (i*(nsx//4))
+                            background.blit_into(wall_image, ox, offy, 0)
+                    # -- fill y-gaps
+                    if y < len(self.data)-1 and self.data[y+1][x] == '#':
+                        for i in range(1,4):
+                            oy = offy + (i*(nsy//4))
+                            background.blit_into(wall_image, offx, oy, 0)
+
 
         sp = pg.sprite.Sprite(background)
         sc = min(sx, sy)
@@ -1169,7 +1180,7 @@ class InfoPanel:
     def update(self, dt):
         # -- update position of agents on minimap
         w, h = self.minimap.width, self.minimap.height
-        offx, offy = self.minimap.x - w, self.minimap.y - h
+        offx, offy = self.minimap.x - w, self.minimap.y
         sx, sy = [mini/_map for mini, _map in zip((w,h), self.map.size())]
 
         e_idx = 0
@@ -1211,12 +1222,13 @@ class InfoPanel:
     def create_minimap(self):
         w, h = window.get_size()
 
+        pad = 25
         msx, msy = w*.75, h*.9
-        minimap = self.map.make_minimap((msx, msy), (255, 255, 255, 150))
+        minimap = self.map.make_minimap((msx, msy))
         minimap.image.anchor_x = minimap.image.width
-        minimap.image.anchor_y = minimap.image.height
+        minimap.image.anchor_y = 0
         minimap.x = w
-        minimap.y = h*.9
+        minimap.y = pad
         return minimap
 
     def draw_minimap_agents(self):
