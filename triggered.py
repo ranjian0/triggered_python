@@ -1038,13 +1038,14 @@ class MainMenu:
         self.quit.hover_color = (255, 255, 0, 255)
         self.quit.on_click(sys.exit)
 
+        self.level_pad = 150
         self.level_options = []
         self.level_batch = pg.graphics.Batch()
         for idx, level in enumerate(LevelManager.instance.levels):
             btn = TextButton(level.name, bold=True, font_size=28,
                                 anchor_x='center', anchor_y='center',
                                 batch=self.level_batch)
-            btn.x = window.width/4
+            btn.x = self.level_pad
             btn.y = (window.height*.8)-((idx+1)*btn.content_height)
             btn.hover_color = (200, 0, 0, 255)
             btn.on_click(self.select_level, level.name)
@@ -1073,7 +1074,7 @@ class MainMenu:
             self.quit.y = self.quit.content_height
 
             for idx, txt in enumerate(self.level_options):
-                txt.x = window.width/4
+                txt.x = self.level_pad
                 txt.y = (window.height*.8)-((idx+1)*txt.content_height)
 
         self.quit.event(_type, *args, **kwargs)
