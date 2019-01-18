@@ -1,7 +1,6 @@
 import os
 import sys
 import math
-import heapq
 import random
 import pickle
 import pprint as pp
@@ -692,64 +691,6 @@ class Map:
     def size(self):
         ns = self.node_size
         return (ns * len(self.data[0])), (ns * len(self.data))
-
-class PathFinder:
-
-    def __init__(self, map_data, node_size):
-        self.data = map_data
-        self.node_size = (node_size,)*2
-
-    def walkable(self):
-        # -- find all walkable nodes
-        add = lambda p1, p2 : (p1[0]+p2[0], p1[1]+p2[1])
-        mul = lambda p1, p2 : (p1[0]*p2[0], p1[1]*p2[1])
-
-        hns = (self.node_size[0]/2, self.node_size[1]/2)
-        walkable = [add(hns, mul((x, y), self.node_size)) for y, data in enumerate(self.data)
-            for x, d in enumerate(data) if d != '#']
-        return walkable
-
-    def calculate_path(self, p1, p2):
-        cf, cost = a_star_search(self, p1, p2)
-        return reconstruct_path(cf, p1, p2)
-
-    def calc_patrol_path(self, points):
-        result = []
-        circular_points = points + [points[0]]
-        for i in range(len(circular_points)-2):
-            f, s = circular_points[i:i+2]
-            path = self.calculate_path(f, s)[1:]
-            result.extend(path)
-        return result
-
-    def neighbours(self, p):
-        add = lambda p1, p2 : (p1[0]+p2[0], p1[1]+p2[1])
-        mul = lambda p1, p2 : (p1[0]*p2[0], p1[1]*p2[1])
-
-        # -- find neighbours that are walkable
-        directions      = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        neigh_positions = [add(p, mul(d, self.node_size)) for d in directions]
-        return [n for n in neigh_positions if n in self.walkable()]
-
-    def closest_point(self, p):
-        data = [(distance_sqr(p, point), point) for point in self.walkable()]
-        return min(data, key=lambda d:d[0])[1]
-
-    def cost(self, *ignored):
-        return 1
-
-class PriorityQueue:
-    def __init__(self):
-        self.elements = []
-
-    def empty(self):
-        return len(self.elements) == 0
-
-    def put(self, item, priority):
-        heapq.heappush(self.elements, (priority, item))
-
-    def get(self):
-        return heapq.heappop(self.elements)[1]
 
 
 class LevelStatus(Enum):
