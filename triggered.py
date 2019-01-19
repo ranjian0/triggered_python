@@ -709,6 +709,7 @@ class Level:
         self.map = None
         self.agents = []
         self.status = LevelStatus.RUNNING
+        self.objectives = ObjectivesManager(self.data.objectives)
 
     def reload(self):
         if not self.data: return
@@ -794,11 +795,9 @@ class Level:
         # -- change level status
         if self.get_player().dead:
             self.status = LevelStatus.FAILED
-            # print("Player Dead")
 
-        if len(self.get_enemies()) == 0:
+        if self.objectives.completed(self):
             self.status = LevelStatus.PASSED
-            # print("level Finished")
 
         if self.show_info:
             self.infopanel.update(dt)
@@ -870,6 +869,30 @@ class LevelManager:
     def event(self, *args, **kwargs):
         if self.current:
             self.current.event(*args, **kwargs)
+
+class ObjectivesManager:
+
+    def __init__(self, objectives):
+        self.objectives = objectives
+
+    def completed(self, level):
+        # -- check that all objectives in level are completed
+        status = []
+
+        for objective in self.objectives:
+            if self.string_in("kill enemies", objective):
+                status.append(len(level.get_enemies()) == 0)
+
+            elif self.string_in("collect gemstone", objective):
+                status.append(True)
+
+            elif self.string_in("find escape", objective):
+                status.append(True)
+
+        return all(status)
+
+    def string_in(self, s1, s2):
+        return all(s.lower() in s2.lower() for s in s1.split(' '))
 
 
 class HUD:
