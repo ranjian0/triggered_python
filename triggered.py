@@ -131,8 +131,8 @@ class Physics:
         for _ in it.repeat(None, FPS):
             self.space.step(1. / FPS)
 
-    def raycast(self, start, end, radius, filter):
-        res = self.space.segment_query_first(start, end, radius, filter)
+    def raycast(self, start, end):
+        res = self.space.segment_query_first(start, end, 1, RAYCAST_MASK)
         return res
 
     def add_collision_handler(self, type_a, type_b,
@@ -419,7 +419,7 @@ class Enemy:
             previous_state = self.state
 
             if player_distance < self.chase_radius**2:
-                hit = self.physics.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
+                hit = self.physics.raycast(self.pos, player.pos)
                 if hit:
                     self.state = EnemyState.PATROL
                 else:
@@ -427,11 +427,11 @@ class Enemy:
             else:
                 #self.state = EnemyState.PATROL
                 if previous_state == EnemyState.CHASE:
-                    hit = self.physics.raycast(self.pos, player.pos, 1, RAYCAST_MASK)
+                    hit = self.physics.raycast(self.pos, player.pos)
                     if hit:
                         self.state = EnemyState.PATROL
                         # -- renavigate to current patrol target if its not in our line of sight
-                        if self.physics.raycast(self.pos, self.patrol_target, 1, RAYCAST_MASK):
+                        if self.physics.raycast(self.pos, self.patrol_target):
                             pathfinder = self.map.pathfinder
                             pos = pathfinder.closest_point(self.pos)
                             target = pathfinder.closest_point(self.patrol_target)
