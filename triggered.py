@@ -31,15 +31,18 @@ import pyglet as pg
 import pymunk as pm
 import itertools as it
 
-from utils import *
 from enum import Enum
 from pyglet.gl import *
 from pyglet.window import key, mouse
 from contextlib import contextmanager
 from pymunk import pyglet_util as putils
-from resources import Resources, LevelData
+from resources import Resources, LevelData, sorted_levels
 from pyglet.text import layout, caret, document
 from collections import defaultdict, namedtuple
+
+from core.ui import *
+from core.utils import *
+from core.physics import PhysicsWorld
 
 FPS        = 60
 DEBUG      = 0
@@ -111,14 +114,14 @@ class Game:
 
         elif self.state == GameState.PAUSED:
             self.pausemenu.event(*args, **kwargs)
-            if _type == EventType.KEY_DOWN:
+            if _type == EventType.KEY_PRESS:
                 if args[1] == key.P:
                     self.state = GameState.RUNNING
 
         elif self.state == GameState.RUNNING:
             self.manager.event(*args, **kwargs)
 
-            if _type == EventType.KEY_DOWN:
+            if _type == EventType.KEY_PRESS:
                 symbol, mod = args[1:]
                 if symbol == key.P:
                     self.pausemenu.reload()
@@ -133,51 +136,6 @@ class Game:
             self.pausemenu.update(dt)
         elif self.state == GameState.EDITOR:
             self.editor.update(dt)
-
-class Physics:
-
-    def __init__(self):
-        self.space = pm.Space()
-
-    def add(self, *args):
-        self.space.add(*args)
-
-    def remove(self, *args):
-        self.space.remove(*args)
-
-    def clear(self):
-        self.remove(self.space.static_body.shapes)
-        for body in self.space.bodies:
-            self.remove(body, body.shapes)
-
-    def update(self, dt):
-        for _ in it.repeat(None, FPS):
-            self.space.step(1. / FPS)
-
-    def raycast(self, start, end):
-        res = self.space.segment_query_first(start, end, 1, RAYCAST_MASK)
-        return res
-
-    def add_collision_handler(self, type_a, type_b,
-        handler_begin=None, handler_pre=None, handler_post=None,
-        handler_separate=None, data=None):
-
-        handler = self.space.add_collision_handler(type_a, type_b)
-        if data:
-            handler.data.update(data)
-
-        if handler_begin:
-            handler.begin = handler_begin
-        if handler_pre:
-            handler.pre_solve = handler_pre
-        if handler_post:
-            handler.post_solve = handler_post
-        if handler_separate:
-            handler.separate = handler_separate
-
-    def debug_draw(self):
-        options = putils.DrawOptions()
-        self.space.debug_draw(options)
 
 
 class Player(key.KeyStateHandler):
@@ -290,7 +248,7 @@ class Player(key.KeyStateHandler):
             self.angle = math.degrees(-math.atan2(y - py, x - px))
             self.sprite.update(rotation=self.angle)
 
-        elif type == EventType.MOUSE_DOWN:
+        elif type == EventType.MOUSE_PRESS:
             x, y, btn, mod = args
 
             if btn == mouse.LEFT:
@@ -728,7 +686,7 @@ class Level:
         self.data = Resources.instance.level(resource_name)
         self.name = self.data.name
 
-        self.phy = Physics()
+        self.phy = PhysicsWorld()
         self.map = None
         self.agents = []
         self.status = LevelStatus.RUNNING
@@ -833,10 +791,10 @@ class Level:
             if hasattr(agent, 'event'):
                 agent.event(_type, *args, **kwargs)
 
-        if _type in (EventType.KEY_DOWN, EventType.KEY_UP):
+        if _type in (EventType.KEY_PRESS, EventType.KEY_RELEASE):
             symbol = args[0]
             if symbol == key.TAB:
-                self.show_info = True if (_type == EventType.KEY_DOWN) else False
+                self.show_info = True if (_type == EventType.KEY_PRESS) else False
 
 class LevelManager:
 
@@ -1270,19 +1228,19 @@ def on_key_press(symbol, modifiers):
         return pg.event.EVENT_HANDLED
     elif symbol == key.ESCAPE:
         sys.exit()
-    game.event(EventType.KEY_DOWN, symbol, modifiers)
+    game.event(EventType.KEY_PRESS, symbol, modifiers)
 
 @window.event
 def on_key_release(symbol, modifiers):
-    game.event(EventType.KEY_UP, symbol, modifiers)
+    game.event(EventType.KEY_RELEASE, symbol, modifiers)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
-    game.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
+    game.event(EventType.MOUSE_PRESS, x, y, button, modifiers)
 
 @window.event
 def on_mouse_release(x, y, button, modifiers):
-    game.event(EventType.MOUSE_UP, x, y, button, modifiers)
+    game.event(EventType.MOUSE_RELEASE, x, y, button, modifiers)
 
 @window.event
 def on_mouse_motion(x, y, dx, dy):

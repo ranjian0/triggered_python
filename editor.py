@@ -19,8 +19,9 @@ import os
 import pickle
 import pyglet as pg
 
-from utils import *
-from resources import Resources, LevelData
+from core.ui import *
+from core.utils import *
+from resources import Resources, LevelData, sorted_levels
 
 class Editor:
 
@@ -337,7 +338,7 @@ class EditorToolbar:
             self.toolbar_image = self.toolbar.create_image(
                 *self.toolbar_settings.get("size"))
 
-        elif _type == EventType.MOUSE_DOWN:
+        elif _type == EventType.MOUSE_PRESS:
             x, y, btn, mod = args[1:]
 
             # -- deactivate all tools if click over empty toolbar area
@@ -630,13 +631,13 @@ class EditorTool:
 
     def event(self, _type, *args, **kwargs):
 
-        if _type == EventType.MOUSE_DOWN:
+        if _type == EventType.MOUSE_PRESS:
             x, y, btn, mod = args
             if btn == mouse.LEFT:
                 if mouse_over_rect((x, y), self.position, self.size):
                     self.start_show_event = True
 
-        if _type == EventType.MOUSE_UP:
+        if _type == EventType.MOUSE_RELEASE:
             x, y, btn, mod = args
             if btn == mouse.LEFT:
                 if self.start_show_event or self.show_options:
@@ -724,7 +725,7 @@ class AddTileTool(EditorTool):
         super(AddTileTool, self).event(_type, *args, **kwargs)
         if not self.is_active: return
 
-        if _type == EventType.MOUSE_DRAG or _type == EventType.MOUSE_DOWN:
+        if _type == EventType.MOUSE_DRAG or _type == EventType.MOUSE_PRESS:
             x,y,*_,but,mod = args
             # -- ensure mouse if over viewport
             if x < EditorToolbar.WIDTH: return
@@ -759,7 +760,7 @@ class AddAgentTool(EditorTool):
         super(AddAgentTool, self).event(_type, *args, **kwargs)
         if not self.is_active: return
 
-        if _type == EventType.MOUSE_DOWN:
+        if _type == EventType.MOUSE_PRESS:
             x, y, but, mod = args
             # -- ensure mouse if over viewport
             if x < EditorToolbar.WIDTH: return
@@ -792,7 +793,7 @@ class AddWaypointTool(EditorTool):
         super(AddWaypointTool, self).event(_type, *args, **kwargs)
         if not self.is_active: return
 
-        if _type == EventType.MOUSE_DOWN:
+        if _type == EventType.MOUSE_PRESS:
             x, y, but, mod = args
             px, py = self.mouse_pos_to_viewport(x, y)
 
@@ -927,7 +928,7 @@ class ObjectivesTool(EditorTool):
             if _type == EventType.RESIZE:
                 pass
 
-            elif _type == EventType.KEY_DOWN:
+            elif _type == EventType.KEY_PRESS:
                 symbol, mod = args
                 if symbol == key.TAB:
                     self.next_focus()
@@ -943,7 +944,7 @@ class ObjectivesTool(EditorTool):
                 else:
                     window.set_mouse_cursor(None)
 
-            elif _type == EventType.MOUSE_DOWN:
+            elif _type == EventType.MOUSE_PRESS:
                 x, y, bt, mod = args
                 for inp in self.inputs:
                     if inp.hit_test(x, y):
@@ -1011,19 +1012,19 @@ def on_resize(w, h):
 
 @window.event
 def on_key_press(symbol, modifiers):
-    editor.event(EventType.KEY_DOWN, symbol, modifiers)
+    editor.event(EventType.KEY_PRESS, symbol, modifiers)
 
 @window.event
 def on_key_release(symbol, modifiers):
-    editor.event(EventType.KEY_UP, symbol, modifiers)
+    editor.event(EventType.KEY_RELEASE, symbol, modifiers)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
-    editor.event(EventType.MOUSE_DOWN, x, y, button, modifiers)
+    editor.event(EventType.MOUSE_PRESS, x, y, button, modifiers)
 
 @window.event
 def on_mouse_release(x, y, button, modifiers):
-    editor.event(EventType.MOUSE_UP, x, y, button, modifiers)
+    editor.event(EventType.MOUSE_RELEASE, x, y, button, modifiers)
 
 @window.event
 def on_mouse_motion(x, y, dx, dy):
