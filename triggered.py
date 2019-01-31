@@ -1,3 +1,9 @@
+# TDOD::
+#     - feature save and exit
+#     - feature level complete / failed screen
+#     - objectives counter/tracker
+#     - implement collectible objects - eg health and ammo
+
 import os
 import sys
 import math
