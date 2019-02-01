@@ -15,12 +15,20 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import operator
+import functools
 import pyglet as pg
 from .event import Signal, EventType
 
 class Application(object):
     """ Base Application """
+
+    # -- singleton
+    instance = None
+    def __new__(cls, *args, **kwargs):
+        if Application.instance is None:
+            Application.instance = object.__new__(cls)
+        return Application.instance
+
     def __init__(self, size, name, resizable=False):
         super(Application, self).__init__()
         self.size = size
@@ -31,25 +39,17 @@ class Application(object):
         self.window.set_minimum_size(*size)
         self.window.set_caption(name)
 
-        self.window.push_handlers(on_draw=self.clear)
-
-    def clear(self):
-        self.window.clear()
-
     def run(self):
         pg.app.run()
 
     def process(self, obj):
-        if hasattr(obj, 'update'):
-            pg.clock.schedule_interval(obj.update, 1/60)
-        if hasattr(obj, 'event'):
+        if hasattr(obj, 'on_update'):
+            pg.clock.schedule_interval(obj.on_update, 1/60)
+        if hasattr(obj, 'on_event'):
             for ev in EventType:
                 name = 'on_' + ev.name.lower()
-                func = lambda *args : obj.event(ev, *args)
-                try:
-                    self.window.push_handlers(**{name:func})
-                except Exception:
-                    pass
+                f = functools.partial(obj.on_event, ev)
+                self.window.push_handlers(**{name:functools.partial(obj.on_event, ev)})
 
         for event in self.window.event_types:
             if hasattr(obj, event):

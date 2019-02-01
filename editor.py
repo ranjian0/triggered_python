@@ -21,6 +21,7 @@ import pyglet as pg
 
 from core.ui import *
 from core.utils import *
+from core import Application
 from resources import Resources, LevelData, sorted_levels
 
 class Editor:
@@ -80,12 +81,15 @@ class Editor:
         self.viewport.reload(self.data)
         print("Saved -- > ", self.current)
 
-    def draw(self):
+    def on_draw(self):
+        Application.instance.window.clear()
+        glClearColor(.39, .39, .39, 1)
+
         self.viewport.draw()
         self.toolbar.draw()
         self.topbar.draw()
 
-    def update(self, dt):
+    def on_update(self, dt):
         self.topbar.update(dt)
         self.toolbar.update(dt)
         self.viewport.update(dt)
@@ -105,7 +109,7 @@ class Editor:
         for tool in self.toolbar.tools:
             tool.set_viewport_transform(self.viewport.get_transform())
 
-    def event(self, *args, **kwargs):
+    def on_event(self, *args, **kwargs):
         self.topbar.event(*args, **kwargs)
         self.toolbar.event(*args, **kwargs)
         self.viewport.event(*args, **kwargs)
@@ -119,7 +123,7 @@ class EditorTopbar:
 
         # -- topbar background
         self.topbar_settings = {
-            "size" : (window.width, self.HEIGHT),
+            "size" : (Application.instance.window.width, self.HEIGHT),
             "color" : (207, 188, 188, 255)
         }
         self.topbar = pg.image.SolidColorImagePattern(
@@ -130,8 +134,8 @@ class EditorTopbar:
         # -- action buttons
         # -- images are 22x22, Toolbar width = 60
         hw = EditorToolbar.WIDTH / 2
-        self.new_btn  = ImageButton("new",  (hw/2, window.height - self.HEIGHT/2))
-        self.save_btn = ImageButton("save", (hw*1.5, window.height - self.HEIGHT/2))
+        self.new_btn  = ImageButton("new",  (hw/2, Application.instance.window.height - self.HEIGHT/2))
+        self.save_btn = ImageButton("save", (hw*1.5, Application.instance.window.height - self.HEIGHT/2))
 
         # -- tab buttons
         self.max_tabs = 4
@@ -152,9 +156,9 @@ class EditorTopbar:
         self.tab_switched = False
 
     def get_rect(self):
-        width = window.width - EditorToolbar.WIDTH
+        width = Application.instance.window.width - EditorToolbar.WIDTH
         size = (width, self.HEIGHT)
-        center = (width/2 + EditorToolbar.WIDTH, window.height - self.HEIGHT/2)
+        center = (width/2 + EditorToolbar.WIDTH, Application.instance.window.height - self.HEIGHT/2)
         return [center, size]
 
     def switch_level(self, level_txt):
@@ -194,22 +198,22 @@ class EditorTopbar:
             for idx, tab in enumerate(map(lambda i:self.tabs[i], _range)):
                 margin += update(tab)
                 tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
-                tab.y = window.height - self.HEIGHT/2
+                tab.y = Application.instance.window.height - self.HEIGHT/2
         else:
             for idx, tab in enumerate(self.tabs):
                 margin += update(tab)
                 tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
-                tab.y = window.height - self.HEIGHT/2
+                tab.y = Application.instance.window.height - self.HEIGHT/2
 
-        # -- recalculate max_tabs based on tabs and window width
-        bar_width = window.width - EditorToolbar.WIDTH
+        # -- recalculate max_tabs based on tabs and Application.instance.window width
+        bar_width = Application.instance.window.width - EditorToolbar.WIDTH
         tab_averge_width = sum([t.get_size()[0] + margin for t in self.tabs]) / len(self.tabs)
         self.max_tabs  = int(bar_width / tab_averge_width)
 
     def draw(self):
         # -- draw background
-        self.topbar_image.blit(0, window.height-self.HEIGHT)
-        draw_line((0, window.height-self.HEIGHT), (window.width, window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
+        self.topbar_image.blit(0, Application.instance.window.height-self.HEIGHT)
+        draw_line((0, Application.instance.window.height-self.HEIGHT), (Application.instance.window.width, Application.instance.window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
 
         # -- draw action buttons
         self.new_btn.draw()
@@ -266,7 +270,7 @@ class EditorToolbar:
     def __init__(self, data):
         # -- toolbar
         self.toolbar_settings = {
-            "size" : (self.WIDTH, window.height),
+            "size" : (self.WIDTH, Application.instance.window.height),
             "color" : (207, 188, 188, 255)
         }
         self.toolbar = pg.image.SolidColorImagePattern(
@@ -282,7 +286,7 @@ class EditorToolbar:
             ObjectivesTool(data)
         ]
 
-        self.tool_start_loc = (0, window.height - EditorTopbar.HEIGHT)
+        self.tool_start_loc = (0, Application.instance.window.height - EditorTopbar.HEIGHT)
         self.tool_settings = {
             "size" : (50, 50),
             "border" : (5, 5),
@@ -302,8 +306,8 @@ class EditorToolbar:
             tool.size = self.tool_settings.get("size")
 
     def get_rect(self):
-        center = (self.WIDTH/2, (window.height-EditorTopbar.HEIGHT)/2)
-        size = (self.WIDTH, window.height-EditorTopbar.HEIGHT)
+        center = (self.WIDTH/2, (Application.instance.window.height-EditorTopbar.HEIGHT)/2)
+        size = (self.WIDTH, Application.instance.window.height-EditorTopbar.HEIGHT)
         return [center, size]
 
     def draw(self):
@@ -393,8 +397,8 @@ class EditorViewport:
         self = EditorViewport(data)
 
     def get_rect(self):
-        width = window.width - EditorToolbar.WIDTH
-        height = window.height - EditorTopbar.HEIGHT
+        width = Application.instance.window.width - EditorToolbar.WIDTH
+        height = Application.instance.window.height - EditorTopbar.HEIGHT
         size = (width, height)
         center = (width/2 + EditorToolbar.WIDTH, height/2)
         return [center, size]
@@ -893,7 +897,7 @@ class ObjectivesTool(EditorTool):
             TextInput(data.get("objectives")[2], start_x, start_y - 120, width, self.batch),
         ]
 
-        self.text_cursor = window.get_system_mouse_cursor('text')
+        self.text_cursor = Application.instance.window.get_system_mouse_cursor('text')
         self.focus = None
         self.set_focus(self.inputs[0])
 
@@ -940,9 +944,9 @@ class ObjectivesTool(EditorTool):
                 x, y, dx, dy = args
                 for inp in self.inputs:
                     if inp.hit_test(x, y):
-                        window.set_mouse_cursor(self.text_cursor)
+                        Application.instance.window.set_mouse_cursor(self.text_cursor)
                 else:
-                    window.set_mouse_cursor(None)
+                    Application.instance.window.set_mouse_cursor(None)
 
             elif _type == EventType.MOUSE_PRESS:
                 x, y, bt, mod = args
@@ -988,71 +992,16 @@ class ObjectivesTool(EditorTool):
 ============================================================
 '''
 
-# -- create window
-window = pg.window.Window(800, 600, resizable=True)
-window.set_minimum_size(800, 600)
-window.set_caption("Triggered LevelEditor")
+def main():
+    app = Application((800, 600), "Editor", resizable=True)
+    res = Resources()
 
-res    = Resources()
-editor = Editor()
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glEnable(GL_BLEND)
 
+    app.process(Editor())
+    app.run()
 
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-glEnable(GL_BLEND)
-
-@window.event
-def on_draw():
-    window.clear()
-    glClearColor(.39, .39, .39, 1)
-    editor.draw()
-
-@window.event
-def on_resize(w, h):
-    editor.event(EventType.RESIZE, w, h)
-
-@window.event
-def on_key_press(symbol, modifiers):
-    editor.event(EventType.KEY_PRESS, symbol, modifiers)
-
-@window.event
-def on_key_release(symbol, modifiers):
-    editor.event(EventType.KEY_RELEASE, symbol, modifiers)
-
-@window.event
-def on_mouse_press(x, y, button, modifiers):
-    editor.event(EventType.MOUSE_PRESS, x, y, button, modifiers)
-
-@window.event
-def on_mouse_release(x, y, button, modifiers):
-    editor.event(EventType.MOUSE_RELEASE, x, y, button, modifiers)
-
-@window.event
-def on_mouse_motion(x, y, dx, dy):
-    editor.event(EventType.MOUSE_MOTION, x, y, dx, dy)
-
-@window.event
-def on_mouse_drag(x, y, dx, dy, button, modifiers):
-    editor.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
-
-@window.event
-def on_mouse_scroll(x, y, scroll_x, scroll_y):
-    editor.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
-
-@window.event
-def on_text(text):
-    editor.event(EventType.TEXT, text)
-
-@window.event
-def on_text_motion(motion):
-    editor.event(EventType.TEXT_MOTION, motion)
-
-@window.event
-def on_text_motion_select(motion):
-    editor.event(EventType.TEXT_MOTION_SELECT, motion)
-
-def on_update(dt):
-    editor.update(dt)
 
 if __name__ == '__main__':
-    pg.clock.schedule_interval(on_update, 1/60)
-    pg.app.run()
+    main()
