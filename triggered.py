@@ -120,7 +120,7 @@ from collections import defaultdict, namedtuple
 
 from core.ui import *
 from core.utils import *
-from core.physics import PhysicsWorld
+from core.physics import PhysicsWorld, RAYCAST_FILTER
 
 FPS        = 60
 DEBUG      = 0
@@ -135,8 +135,7 @@ KEYMAP = {
     key.D : (1, 0)
 }
 
-RAYCAST_FILTER = 0x1
-RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
+
 COLLISION_MAP = {
     "PlayerType" : 1,
     "WallType"   : 2,

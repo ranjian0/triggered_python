@@ -42,6 +42,9 @@ class Application(object):
     def run(self):
         pg.app.run()
 
+    def quit(self):
+        pg.app.exit()
+
     def process(self, obj):
         if hasattr(obj, 'on_update'):
             pg.clock.schedule_interval(obj.on_update, 1/60)
