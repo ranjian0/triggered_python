@@ -17,7 +17,8 @@
 
 import functools
 import pyglet as pg
-from .event import Signal, EventType
+
+from .event import EventType
 
 class Application(object):
     """ Base Application """
@@ -31,19 +32,44 @@ class Application(object):
 
     def __init__(self, size, name, resizable=False):
         super(Application, self).__init__()
-        self.size = size
-        self.name = name
-        self.resizable = resizable
+        self._size = size
+        self._name = name
+        self._resizable = resizable
 
-        self.window = pg.window.Window(*size, resizable=resizable)
-        self.window.set_minimum_size(*size)
-        self.window.set_caption(name)
+        self._window = pg.window.Window(*size, resizable=resizable)
+        self._window.set_minimum_size(*size)
+        self._window.set_caption(name)
+        self._window.maximize()
 
-    def run(self):
+    def _get_window(self):
+        return self._window
+    window = property(_get_window)
+
+    def _get_size(self):
+        return self.size
+    def _set_size(self, val):
+        self._size = val
+        self._window.set_size(*val)
+    size = property(_get_size, _set_size)
+
+    def _get_name(self):
+        return self.name
+    def _set_name(self, val):
+        self._name = val
+        self._window.set_caption(val)
+    name = property(_get_name, _set_name)
+
+    @staticmethod
+    def run():
         pg.app.run()
 
-    def quit(self):
+    @staticmethod
+    def quit():
         pg.app.exit()
+
+    def clear(self, color=(.5, .5, .5, 1)):
+        self.window.clear()
+        pg.gl.glClearColor(*color)
 
     def process(self, obj):
         if hasattr(obj, 'on_update'):

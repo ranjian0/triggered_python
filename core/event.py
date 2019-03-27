@@ -31,16 +31,3 @@ class EventType(Enum):
     TEXT = 9
     TEXT_MOTION = 10
     TEXT_MOTION_SELECT = 11
-
-class Signal:
-
-    def __init__(self):
-        self.callbacks = set()
-
-    def connect(self, func):
-        self.callbacks.add(func)
-
-    def emit(self, *args, **kwargs):
-        for meth in self.callbacks:
-            if callable(meth):
-                meth(*args, **kwargs)

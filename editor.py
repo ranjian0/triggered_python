@@ -82,8 +82,7 @@ class Editor:
         print("Saved -- > ", self.current)
 
     def on_draw(self):
-        Application.instance.window.clear()
-        glClearColor(.39, .39, .39, 1)
+        Application.instance.clear((.39, .39, .39, 1))
 
         self.viewport.draw()
         self.toolbar.draw()
