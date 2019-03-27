@@ -42,6 +42,7 @@ from collections import defaultdict, namedtuple
 
 from core.ui import *
 from core.utils import *
+from core.app import Application
 from core.physics import PhysicsWorld, RAYCAST_FILTER
 
 FPS        = 60
@@ -97,16 +98,35 @@ class Game:
     def pause(self):
         self.state = GameState.PAUSED
 
-    def draw(self):
+    def on_draw(self):
+        Application.instance.clear((.39, .39, .39, 1))
+
         if self.state == GameState.MAINMENU:
             self.mainmenu.draw()
         elif self.state == GameState.PAUSED:
             self.pausemenu.draw()
         elif self.state == GameState.RUNNING:
             self.manager.draw()
+            if DEBUG:
+                fps.draw()
 
-    def event(self, *args, **kwargs):
+
+    def on_event(self, *args, **kwargs):
         _type = args[0]
+
+        # -- handle pause and exit
+        if _type == EventType.KEY_PRESS:
+            symbol = args[1]
+
+            if symbol == key.ESCAPE and self.state in (GameState.RUNNING, GameState.PAUSED):
+                if self.state == GameState.RUNNING:
+                    self.pause()
+                elif self.state == GameState.PAUSED:
+                    self.start()
+                return pg.event.EVENT_HANDLED
+            elif symbol == key.ESCAPE:
+                sys.exit()
+
 
         if self.state == GameState.MAINMENU:
             self.mainmenu.event(*args, **kwargs)
@@ -126,7 +146,7 @@ class Game:
                     self.pausemenu.reload()
                     self.state = GameState.PAUSED
 
-    def update(self, dt):
+    def on_update(self, dt):
         if self.state == GameState.MAINMENU:
             self.mainmenu.update(dt)
         elif self.state == GameState.RUNNING:
@@ -1192,83 +1212,21 @@ class InfoPanel:
 ============================================================
 '''
 
-# -- create window
-window = pg.window.Window(*SIZE, resizable=True)
-window.set_minimum_size(*SIZE)
-window.set_caption(CAPTION)
+fps, game, window = None, None, None
+def main():
+    global fps, game, window
+    app = Application((800, 600), "Editor", resizable=True)
+    window = app.window
+    fps = pg.window.FPSDisplay(window)
+    res = Resources()
+    game = Game()
 
-fps  = pg.window.FPSDisplay(window)
-res  = Resources()
-game = Game()
 
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glEnable(GL_BLEND)
 
-@window.event
-def on_draw():
-    window.clear()
-    glClearColor(.39, .39, .39, 1)
-
-    game.draw()
-    if DEBUG and game.state == GameState.RUNNING:
-        fps.draw()
-
-@window.event
-def on_resize(w, h):
-    game.event(EventType.RESIZE, w, h)
-
-@window.event
-def on_key_press(symbol, modifiers):
-    if symbol == key.ESCAPE and game.state in (GameState.RUNNING, GameState.PAUSED):
-        if game.state == GameState.RUNNING:
-            game.pause()
-        elif game.state == GameState.PAUSED:
-            game.start()
-        return pg.event.EVENT_HANDLED
-    elif symbol == key.ESCAPE:
-        sys.exit()
-    game.event(EventType.KEY_PRESS, symbol, modifiers)
-
-@window.event
-def on_key_release(symbol, modifiers):
-    game.event(EventType.KEY_RELEASE, symbol, modifiers)
-
-@window.event
-def on_mouse_press(x, y, button, modifiers):
-    game.event(EventType.MOUSE_PRESS, x, y, button, modifiers)
-
-@window.event
-def on_mouse_release(x, y, button, modifiers):
-    game.event(EventType.MOUSE_RELEASE, x, y, button, modifiers)
-
-@window.event
-def on_mouse_motion(x, y, dx, dy):
-    game.event(EventType.MOUSE_MOTION, x, y, dx, dy)
-
-@window.event
-def on_mouse_drag(x, y, dx, dy, button, modifiers):
-    game.event(EventType.MOUSE_DRAG, x, y, dx, dy, button, modifiers)
-
-@window.event
-def on_mouse_scroll(x, y, scroll_x, scroll_y):
-    game.event(EventType.MOUSE_SCROLL, x, y, scroll_x, scroll_y)
-
-@window.event
-def on_text(text):
-    game.event(EventType.TEXT, text)
-
-@window.event
-def on_text_motion(motion):
-    game.event(EventType.TEXT_MOTION, motion)
-
-@window.event
-def on_text_motion_select(motion):
-    game.event(EventType.TEXT_MOTION_SELECT, motion)
-
-def on_update(dt):
-    game.update(dt)
+    app.process(game)
+    app.run(DEBUG)
 
 if __name__ == '__main__':
-    pg.clock.schedule_interval(on_update, 1/FPS)
-    with profile(DEBUG):
-        pg.app.run()
+    main()

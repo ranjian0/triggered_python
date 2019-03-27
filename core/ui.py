@@ -20,7 +20,7 @@ from resources import Resources
 from pyglet.window import key, mouse
 
 from .utils import *
-from .event import EventType, Signal
+from .event import EventType
 
 class TextInput:
 

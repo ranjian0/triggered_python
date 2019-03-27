@@ -18,7 +18,9 @@
 import functools
 import pyglet as pg
 
+from .utils import profile
 from .event import EventType
+
 
 class Application(object):
     """ Base Application """
@@ -51,6 +53,8 @@ class Application(object):
         self._size = val
         self._window.set_size(*val)
     size = property(_get_size, _set_size)
+    w = property(lambda self: self._window.width)
+    h = property(lambda self: self._window.height)
 
     def _get_name(self):
         return self.name
@@ -60,8 +64,9 @@ class Application(object):
     name = property(_get_name, _set_name)
 
     @staticmethod
-    def run():
-        pg.app.run()
+    def run(debug=False):
+        with profile(debug):
+            pg.app.run()
 
     @staticmethod
     def quit():
