@@ -34,11 +34,12 @@ class PhysicsWorld:
 
     def __init__(self):
         self.space = pm.Space()
-
-        self.collision_layers = []
-        self.collision_masks = []
+        self.collision_type = it.count()
 
     def add(self, *args):
+        for obj in args:
+            if isinstance(obj, pm.Shape):
+                obj.collision_type = next(self.collision_type)
         self.space.add(*args)
 
     def remove(self, *args):
@@ -49,7 +50,7 @@ class PhysicsWorld:
         for body in self.space.bodies:
             self.remove(body, body.shapes)
 
-    def update(self, dt):
+    def on_update(self, dt):
         for _ in it.repeat(None, PHYSICS_STEPS):
             self.space.step(1. / PHYSICS_STEPS)
 
@@ -74,6 +75,36 @@ class PhysicsWorld:
         if handler_separate:
             handler.separate = handler_separate
 
+    def register_collision(self, _type, on_enter, on_exit):
+        handler = self.space.add_wildcard_collision_handler(_type)
+
+        def handler_begin(arbiter, space, data):
+            this, other = arbiter.shapes
+            on_enter(other.body)
+            return True
+        handler.begin = handler_begin
+
+        def handler_separate(arbiter, space, data):
+            this, other = arbiter.shapes
+            on_exit(other.body)
+        handler.separate = handler_separate
+
     def debug_draw(self):
         options = putils.DrawOptions()
         self.space.debug_draw(options)
+
+    def reindex(self, b):
+        self.space.reindex_shapes_for_body(b)
+
+class PhysicsBody(pm.Body):
+    """ Convinience class for tagging physics bodies """
+
+    def __init__(self, *args, **kwargs):
+        pm.Body.__init__(self, *args, **kwargs)
+        self._tag = ""
+
+    def _get_tag(self):
+        return self._tag
+    def _set_tag(self, name):
+        self._tag = name
+    tag = property(_get_tag, _set_tag)
