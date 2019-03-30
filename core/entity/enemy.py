@@ -12,3 +12,7 @@ class Enemy(Entity):
     def on_collision_enter(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
             pass
+
+        if hasattr(other, 'tag') and other.tag == 'PlayerBullet':
+            # -- prevent enemy from being pushed by bullet
+            self.velocity = (0, 0)

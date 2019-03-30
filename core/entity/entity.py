@@ -21,7 +21,7 @@ class Entity(object):
         self.max_health = 100
 
         # -- collision
-        self.body = PhysicsBody(100, pm.inf)
+        self.body = PhysicsBody(1000, pm.moment_for_circle(1000, 0, self.radius))
         self.shape = pm.Circle(self.body, self.radius)
 
 
@@ -77,7 +77,8 @@ class Entity(object):
 
     def on_update(self, dt):
         if self.sprite.image:
-            self.sprite.update(*self.position, math.degrees(self.rotation))
+            # pygame rotates clockwise (pymunk anti-clockwise)
+            self.sprite.update(*self.position, -math.degrees(self.rotation))
 
     def damage(self, amount=5):
         self.health -= amount
