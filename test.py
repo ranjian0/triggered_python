@@ -8,12 +8,10 @@ from resources import Resources
 class Test:
 
     def __init__(self):
-        self.player = Player(image=Resources.instance.sprite("hitman1_gun"),
-            position=(250, 300), speed=100)
+        self.player = Player(position=(250, 300), speed=100)
         Application.instance.process(self.player)
 
-        en = Enemy(image=Resources.instance.sprite("robot1_gun"),
-            position=(100, 100))
+        en = Enemy(position=(100, 100))
         Application.instance.process(en)
 
         sx, sy = Application.instance.size

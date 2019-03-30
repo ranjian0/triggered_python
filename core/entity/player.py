@@ -1,12 +1,13 @@
 import math
 import pyglet as pg
 from .entity import Entity
+from resources import Resources
 
 
 class Player(Entity):
 
     def __init__(self, **kwargs):
-        Entity.__init__(self, **kwargs)
+        Entity.__init__(self, image=Resources.instance.sprite("hitman1_gun"), **kwargs)
         self.direction = (0, 0)
         self.body.tag = "Player"
 
@@ -48,5 +49,5 @@ class Player(Entity):
 
     def on_collision_enter(self, other):
         if hasattr(other, 'tag') and other.tag == 'Enemy':
-            print("Hit Enemy")
+            pass
 
