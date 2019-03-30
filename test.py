@@ -11,6 +11,7 @@ class Test:
     def __init__(self):
         self.cam = Camera()
         self.cam.size = Application.instance.size
+        Application.instance.process(self.cam)
 
         self.player = Player(position=(250, 300), speed=100)
         Application.instance.process(self.player)
@@ -34,11 +35,11 @@ class Test:
             PhysicsWorld.instance.add(shape)
 
     def on_update(self, dt):
-        self.cam.offset = self.player.position
+        self.cam.follow(self.player.position)
 
     def on_draw(self):
         Application.instance.clear()
-        PhysicsWorld.instance.debug_draw()
+        # PhysicsWorld.instance.debug_draw()
 
 
 def main():

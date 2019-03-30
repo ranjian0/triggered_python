@@ -1,5 +1,9 @@
 import math
 import pymunk as pm
+from collections import namedtuple
+
+Bounds = namedtuple('_Bounds',
+    "left bottom right top")
 
 class Vec2(pm.vec2d.Vec2d):
     def __init__(self, *args, **kwargs):
