@@ -3,11 +3,15 @@ import pyglet as pg
 from core.entity import Player, Enemy
 from core.app import Application
 from core.physics import PhysicsWorld
+from core.object import Camera
 from resources import Resources
 
 class Test:
 
     def __init__(self):
+        self.cam = Camera()
+        self.cam.size = Application.instance.size
+
         self.player = Player(position=(250, 300), speed=100)
         Application.instance.process(self.player)
 
@@ -29,6 +33,8 @@ class Test:
             shape.body.position = pos
             PhysicsWorld.instance.add(shape)
 
+    def on_update(self, dt):
+        self.cam.offset = self.player.position
 
     def on_draw(self):
         Application.instance.clear()
