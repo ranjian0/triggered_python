@@ -14,12 +14,15 @@ class Projectile:
     def __init__(self, position, direction, batch):
         self.batch = batch
         self.direction = direction
+
+        # -- sprite
         self.image = Resources.instance.sprite("bullet")
         image_set_size(self.image, *self.SIZE)
         image_set_anchor_center(self.image)
         self.sprite = pg.sprite.Sprite(self.image,
             *position, batch=self.batch)
 
+        # -- physics
         physics = PhysicsWorld.instance
         self.body = PhysicsBody(1, pm.moment_for_box(1, self.SIZE))
         self.shape = pm.Poly.create_box(self.body, self.SIZE, radius=.6)

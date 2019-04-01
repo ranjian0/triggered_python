@@ -21,7 +21,8 @@ class Entity(object):
         self.max_health = 100
 
         # -- collision
-        self.body = PhysicsBody(1000, pm.moment_for_circle(1000, 0, self.radius))
+        mass = 100
+        self.body = PhysicsBody(mass, pm.moment_for_circle(mass, 0, self.radius))
         self.shape = pm.Circle(self.body, self.radius)
 
 
