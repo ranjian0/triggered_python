@@ -18,22 +18,8 @@ class Test:
         self.player = Player(position=(250, 300), speed=200)
         Application.instance.process(self.player)
 
-        en = Enemy(position=(100, 100))
+        en = Enemy(position=(200, 100))
         Application.instance.process(en)
-
-        walls = [
-            # position -- size
-            [(0 , sy/2), (10, sy)], # Left
-            [(sx, sy/2), (10, sy)], # Right
-            [(sx/2 ,sy), (sx, 10)], # Top
-            [(sx/2 , 0), (sx, 10)], # Left
-        ]
-        for wall in walls:
-            pos, size = wall
-            space = PhysicsWorld.instance.space
-            shape = pm.Poly.create_box(space.static_body, size=size)
-            shape.body.position = pos
-            PhysicsWorld.instance.add(shape)
 
     def on_update(self, dt):
         self.cam.follow(self.player.position)
@@ -51,5 +37,7 @@ def main():
     app.run()
 
 if __name__ == '__main__':
+    pg.gl.glBlendFunc(pg.gl.GL_SRC_ALPHA, pg.gl.GL_ONE_MINUS_SRC_ALPHA)
+    pg.gl.glEnable(pg.gl.GL_BLEND)
     main()
 

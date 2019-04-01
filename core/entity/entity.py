@@ -78,7 +78,6 @@ class Entity(object):
 
     def on_update(self, dt):
         if self.sprite.image:
-            # pygame rotates clockwise (pymunk anti-clockwise)
             self.sprite.update(*self.position, -math.degrees(self.rotation))
 
     def damage(self, amount=5):
