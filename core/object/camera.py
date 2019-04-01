@@ -43,15 +43,7 @@ class Camera:
     bounds = property(_get_bounds, _set_bounds)
 
     def follow(self, position):
-        #XXX TODO, update bounds to consider camera size
-        #XXX camera doesnt move if position is less than bounds
-
-        # -- clamp within bounds
-        sx, sy = self.size/2
-        offset = Vec2(clamp(position.x, self.bounds.left, self.bounds.right),
-            clamp(position.y, self.bounds.bottom, self.bounds.top))
-        # print(offset)
-        self.offset = self._size/2 - offset
+        self.offset = self._size/2 - position
 
     def on_update(self, dt):
         """ Move the camera steadily against offset """
@@ -63,6 +55,11 @@ class Camera:
         if (self.offset - self._position).length >= epsilon:
             self._position += norm * dt * self.speed
 
+        #XXX TODO clamp camera position to bounds
+        #XXX FIXME inverted clamping, left->right, top->bottom
+        px, py = self._position
+        self._position = Vec2(clamp(px, self.bounds.left, self.bounds.right),
+            clamp(py, self.bounds.bottom, self.bounds.top))
         pg.gl.glMatrixMode(pg.gl.GL_MODELVIEW)
         pg.gl.glLoadIdentity()
         pg.gl.glTranslatef(*self._position, 0)
