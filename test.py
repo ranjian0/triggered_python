@@ -11,15 +11,16 @@ class Test:
     def __init__(self):
         self.cam = Camera()
         self.cam.size = Application.instance.size
+        sx, sy = Application.instance.size
+        self.cam.bounds = [0, 0, sx, sy]
         Application.instance.process(self.cam)
 
-        self.player = Player(position=(250, 300), speed=100)
+        self.player = Player(position=(250, 300), speed=200)
         Application.instance.process(self.player)
 
         en = Enemy(position=(100, 100))
         Application.instance.process(en)
 
-        sx, sy = Application.instance.size
         walls = [
             # position -- size
             [(0 , sy/2), (10, sy)], # Left
@@ -39,7 +40,7 @@ class Test:
 
     def on_draw(self):
         Application.instance.clear()
-        # PhysicsWorld.instance.debug_draw()
+        PhysicsWorld.instance.debug_draw()
 
 
 def main():
