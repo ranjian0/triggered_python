@@ -28,6 +28,7 @@ class Enemy(Entity):
         self._state.enter(self)
 
     def on_update(self, dt):
+        Entity.on_update(self, dt)
         self._state.update(self, dt)
 
     def on_collision_enter(self, other):
