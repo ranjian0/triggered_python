@@ -62,4 +62,5 @@ class Camera:
         pg.gl.glMatrixMode(pg.gl.GL_MODELVIEW)
         pg.gl.glLoadIdentity()
         pg.gl.glTranslatef(*self._position, 0)
+        pg.gl.glScalef(*self._scale, 1)
 
