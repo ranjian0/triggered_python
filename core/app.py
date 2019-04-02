@@ -79,11 +79,6 @@ class Application(object):
     def process(self, obj):
         if hasattr(obj, 'on_update'):
             pg.clock.schedule_interval(obj.on_update, 1/60)
-        # if hasattr(obj, 'on_event'):
-        #     for ev in EventType:
-        #         name = 'on_' + ev.name.lower()
-        #         f = functools.partial(obj.on_event, ev)
-        #         self.window.push_handlers(**{name:functools.partial(obj.on_event, ev)})
 
         for event in self.window.event_types:
             if hasattr(obj, event):
