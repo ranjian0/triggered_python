@@ -43,26 +43,23 @@ class Camera:
     bounds = property(_get_bounds, _set_bounds)
 
     def follow(self, position):
+        sx, sy = self.size/2
+        px, py = position
+        position = Vec2(clamp(px, self.bounds.left+sx, self.bounds.right-sx),
+            clamp(py, self.bounds.bottom+sy, self.bounds.top-sy))
+
         self.offset = self._size/2 - position
 
     def on_update(self, dt):
         """ Move the camera steadily against offset """
-        if self.offset.length == 0:
-            return
-
         epsilon = 1.0
+        dist = self.offset.get_dist_sqrd(self._position)
         norm = (self.offset - self._position).normalized()
-        if (self.offset - self._position).length >= epsilon:
-            self._position += norm * dt * self.speed
+        if dist >= epsilon:
+            #XXX NOTE: dist is added to speed to prevent camera from lagging behind
+            self._position += norm * dt * (self.speed + dist)
 
-        #XXX TODO clamp camera position to bounds
-        #XXX FIXME inverted clamping, left->right, top->bottom
-        px, py = self._position
-        self._position = Vec2(clamp(px, self.bounds.left, self.bounds.right),
-            clamp(py, self.bounds.bottom, self.bounds.top))
         pg.gl.glMatrixMode(pg.gl.GL_MODELVIEW)
         pg.gl.glLoadIdentity()
         pg.gl.glTranslatef(*self._position, 0)
-
-
 
