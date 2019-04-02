@@ -3,22 +3,28 @@ class Scene(object):
     """ Container object tomanage other objects """
     def __init__(self):
         super(Scene, self).__init__()
-        self.objects = []
+        self.objects = dict()
 
-    def add(self, obj):
-        self.objects.append(obj)
+    def add(self, name, obj):
+        if name in self.objects.keys():
+            raise KeyError(f"Object with name '{name}' already exists!")
+        self.objects[name] = obj
 
-    def add_many(self, *objs):
-        self.objects.extend(objs)
+    def add_many(self, **kwargs):
+        for key, val in kwargs.items():
+            self.add(key, val)
+
+    def get(self, name):
+        return self.objects.get(name, None)
 
     def __iter__(self):
-        return iter(self.objects)
+        return iter(self.objects.values())
 
     def _objects_iter_call(self, method, *args, **kwargs):
         """ Call meth for all objects """
         for obj in self:
             if hasattr(obj, method):
-                m = getattr(obj, meth)
+                m = getattr(obj, method)
                 if callable(m):
                     m(*args, **kwargs)
 

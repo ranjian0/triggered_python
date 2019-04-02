@@ -1,28 +1,24 @@
 import pymunk as pm
 import pyglet as pg
-from core.entity import Player, Enemy
-from core.app import Application
-from core.physics import PhysicsWorld
+from core.scene import Scene
 from core.object import Camera
+from core.app import Application
+from core.entity import Player, Enemy
+from core.physics import PhysicsWorld
 from resources import Resources
 
 class Test:
 
     def __init__(self):
-        self.cam = Camera()
-        self.cam.size = Application.instance.size
-        sx, sy = Application.instance.size
-        self.cam.bounds = [0, 0, sx, sy]
-        Application.instance.process(self.cam)
-
-        self.player = Player(position=(250, 300), speed=200)
-        Application.instance.process(self.player)
-
-        en = Enemy(position=(200, 100))
-        Application.instance.process(en)
+        self.scene = Scene()
+        self.scene.add("camera", Camera(size=Application.instance.size))
+        self.scene.add("player", Player(position=(250, 300), speed=200))
+        self.scene.add("enemy", Enemy(position=(200, 100)))
+        Application.instance.process(self.scene)
 
     def on_update(self, dt):
-        self.cam.follow(self.player.position)
+        self.scene.get('camera').follow(
+            self.scene.get('player').position)
 
     def on_draw(self):
         Application.instance.clear()

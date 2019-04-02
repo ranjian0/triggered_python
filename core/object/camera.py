@@ -4,13 +4,15 @@ from core.math import Vec2, Bounds, clamp
 
 class Camera:
 
-    def __init__(self):
-        self._speed = 100
-        self._size = Vec2(1,1)
-        self._scale = Vec2(1,1)
-        self._offset = Vec2(0, 0)
-        self._bounds = Bounds(-1, -100, 10000, 10000)
-        self._position = Vec2(0, 0)
+    def __init__(self, **kwargs):
+        self._speed  = kwargs.get('speed', 100)
+        self._size, self._scale, self._offset, self._position =list(map(Vec2, [
+                kwargs.get('size', (1,1)),
+                kwargs.get('scale', (1,1)),
+                kwargs.get('offset', (0, 0)),
+                kwargs.get('position', (0, 0))
+        ]))
+        self._bounds = Bounds(*kwargs.get('bounds', (-10000, -10000, 10000, 10000)))
 
     def _get_speed(self):
         return self._speed
