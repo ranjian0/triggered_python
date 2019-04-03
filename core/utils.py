@@ -24,7 +24,6 @@ import pyglet as pg
 import itertools as it
 
 from pyglet.gl import *
-from collections import namedtuple
 from contextlib import contextmanager
 
 
