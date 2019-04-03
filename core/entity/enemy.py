@@ -41,11 +41,11 @@ class Enemy(Entity):
 
     def on_body_entered(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
-            print("Player is around")
+            pass
 
     def on_body_exited(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
-            print("Player ran escaped")
+            pass
 
 
 class EnemyState:

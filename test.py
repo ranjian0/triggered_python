@@ -11,7 +11,7 @@ class Test:
 
     def __init__(self):
         self.scene = Scene()
-        self.scene.add("camera", Camera(size=Application.instance.size))
+        self.scene.add("camera", Camera())
         self.scene.add("player", Player(position=(250, 300), speed=200))
         self.scene.add("enemy", Enemy(position=(200, 100)))
         Application.instance.process(self.scene)

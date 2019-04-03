@@ -1,13 +1,15 @@
+import operator as op
 
 class Scene(object):
-    """ Container object tomanage other objects """
+    """ Container object to manage other objects """
+
     def __init__(self):
         super(Scene, self).__init__()
         self.objects = dict()
 
     def add(self, name, obj):
         if name in self.objects.keys():
-            raise KeyError(f"Object with name '{name}' already exists!")
+            raise ValueError(f"Object with name '{name}' already exists!")
         self.objects[name] = obj
 
     def add_many(self, **kwargs):
@@ -24,9 +26,8 @@ class Scene(object):
         """ Call meth for all objects """
         for obj in self:
             if hasattr(obj, method):
-                m = getattr(obj, method)
-                if callable(m):
-                    m(*args, **kwargs)
+                f = op.methodcaller(method, *args, **kwargs)
+                f(obj)
 
     #XXX Event handlers
     def on_draw(self):

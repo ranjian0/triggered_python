@@ -1,13 +1,14 @@
 import pyglet as pg
 import operator as op
+from core.app import Application
 from core.math import Vec2, Bounds, clamp
 
 class Camera:
 
     def __init__(self, **kwargs):
         self._speed  = kwargs.get('speed', 100)
-        self._size, self._scale, self._offset, self._position =list(map(Vec2, [
-                kwargs.get('size', (1,1)),
+        self._size, self._scale, self._offset, self._position = list(map(Vec2, [
+                kwargs.get('size', Application.instance.size),
                 kwargs.get('scale', (1,1)),
                 kwargs.get('offset', (0, 0)),
                 kwargs.get('position', (0, 0))
