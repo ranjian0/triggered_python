@@ -1,5 +1,5 @@
 import pyglet as pg
-
+import pymunk as pm
 from resources import Resources
 from core.physics import PhysicsWorld
 from core.utils import image_set_size
@@ -39,7 +39,19 @@ class Map(object):
                     sp = pg.sprite.Sprite(wall_img, x=offx, y=offy, batch=self.batch, group=fg)
                     self.sprites.append(sp)
 
+                    # -- add collision box
+                    world = PhysicsWorld.instance
+                    wall = pm.Poly.create_box(world.space.static_body, size=self.node_size)
+                    wall.body.position = (offx + nsx/2, offy + nsy/2)
+                    world.add(wall)
+
     def on_draw(self):
         self.batch.draw()
+
+
+    def _get_size(self):
+        ns = self.node_size
+        return (ns * len(self.data[0])), (ns * len(self.data))
+    size = property(_get_size)
 
 

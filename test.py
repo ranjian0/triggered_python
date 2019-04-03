@@ -25,7 +25,7 @@ class Test:
 
     def on_draw(self):
         Application.instance.clear()
-        # PhysicsWorld.instance.debug_draw()
+        PhysicsWorld.instance.debug_draw()
 
 
 def main():
