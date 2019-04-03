@@ -3,8 +3,9 @@ import operator as op
 class Scene(object):
     """ Container object to manage other objects """
 
-    def __init__(self):
+    def __init__(self, name):
         super(Scene, self).__init__()
+        self.name = name
         self.objects = dict()
 
     def add(self, name, obj):

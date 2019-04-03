@@ -18,11 +18,13 @@
 import os
 import math
 import heapq
+import ctypes
 import pymunk as pm
 import pyglet as pg
 import itertools as it
 
 from pyglet.gl import *
+from collections import namedtuple
 from contextlib import contextmanager
 
 
@@ -287,3 +289,16 @@ def mouse_over_rect(mouse, center, size):
     if dx < tsx/2 and dy < tsy/2:
         return True
     return False
+
+def get_gl_translation():
+    """ return global gl translation """
+    arr = ctypes.c_double * 16
+    mat = arr(*list(range(16)))
+    glGetDoublev(GL_MODELVIEW_MATRIX, mat)
+    return list(mat)[-4:-1]
+
+def global_position(x, y):
+    """ convert x,y from relative to absolute global position """
+    tx, ty, tz = get_gl_translation()
+    #XXX : Negate because camera translates against center
+    return -tx+x, -ty+y

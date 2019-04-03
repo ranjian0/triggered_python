@@ -4,6 +4,7 @@ import pymunk as pm
 from .entity import Entity
 from resources import Resources
 from core.object import Projectile
+from core.utils import global_position
 
 
 class Player(Entity):
@@ -53,8 +54,9 @@ class Player(Entity):
 
     def on_mouse_motion(self, x, y, dx, dy):
         px, py = self.position
+        mx, my = global_position(x, y)
         self.rotation = math.atan2(
-            y - py, x - px)
+            my - py, mx - px)
 
     def on_collision_enter(self, other):
         if hasattr(other, 'tag') and other.tag == 'Enemy':
