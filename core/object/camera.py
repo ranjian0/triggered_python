@@ -45,9 +45,9 @@ class Camera:
         self._bounds = bnds if isinstance(bnds, Bounds) else Bounds(*bnds)
     bounds = property(_get_bounds, _set_bounds)
 
-    def follow(self, position):
+    def follow(self, obj):
         sx, sy = self.size/2
-        px, py = position
+        px, py = obj.position
         position = Vec2(clamp(px, self.bounds.left+sx, self.bounds.right-sx),
             clamp(py, self.bounds.bottom+sy, self.bounds.top-sy))
 
@@ -56,7 +56,7 @@ class Camera:
     def on_update(self, dt):
         """ Move the camera steadily against offset """
         epsilon = 1.0
-        dist = self.offset.get_dist_sqrd(self._position)
+        dist = self.offset.get_distance(self._position)
         norm = (self.offset - self._position).normalized()
         if dist >= epsilon:
             #XXX NOTE: dist is added to speed to prevent camera from lagging behind

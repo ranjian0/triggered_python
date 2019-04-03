@@ -1,7 +1,7 @@
 import pymunk as pm
 import pyglet as pg
 from core.scene import Scene
-from core.object import Camera
+from core.object import Camera, Map
 from core.app import Application
 from core.entity import Player, Enemy
 from core.physics import PhysicsWorld
@@ -10,23 +10,26 @@ from resources import Resources
 class Test:
 
     def __init__(self):
+        level = Resources.instance.level('level_1')
+
         self.scene = Scene()
         self.scene.add("camera", Camera())
+        self.scene.add("map", Map(level.map))
         self.scene.add("player", Player(position=(250, 300), speed=200))
         self.scene.add("enemy", Enemy(position=(200, 100)))
         Application.instance.process(self.scene)
 
     def on_update(self, dt):
         self.scene.get('camera').follow(
-            self.scene.get('player').position)
+            self.scene.get('player'))
 
     def on_draw(self):
         Application.instance.clear()
-        PhysicsWorld.instance.debug_draw()
+        # PhysicsWorld.instance.debug_draw()
 
 
 def main():
-    app = Application((500, 600), "Test Application")
+    app = Application((1000, 600), "Test Application")
     res = Resources()
     app.process(PhysicsWorld())
     app.process(Test())
