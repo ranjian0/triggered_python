@@ -19,6 +19,7 @@ import pymunk as pm
 import itertools as it
 from pymunk import pyglet_util as putils
 
+DEBUG = 0
 PHYSICS_STEPS = 60
 RAYCAST_FILTER = 0x1
 RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
@@ -90,8 +91,9 @@ class PhysicsWorld:
         handler.separate = handler_separate
 
     def on_draw(self):
-        options = putils.DrawOptions()
-        self.space.debug_draw(options)
+        if DEBUG:
+            options = putils.DrawOptions()
+            self.space.debug_draw(options)
 
     def reindex(self, b):
         self.space.reindex_shapes_for_body(b)

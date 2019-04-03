@@ -7,27 +7,25 @@ from core.entity import Player, Enemy
 from core.physics import PhysicsWorld
 from resources import Resources
 
-class Test:
+def test():
+    level = Resources.instance.level('level_1')
 
-    def __init__(self):
-        level = Resources.instance.level('level_1')
+    scene = Scene()
+    scene.add("camera", Camera())
+    scene.add("map", Map(level.map))
+    scene.add("player", Player(position=(250, 300), speed=200))
+    scene.add("enemy", Enemy(position=(200, 100)))
+    Application.process(scene)
 
-        self.scene = Scene()
-        self.scene.add("camera", Camera())
-        self.scene.add("map", Map(level.map))
-        self.scene.add("player", Player(position=(250, 300), speed=200))
-        self.scene.add("enemy", Enemy(position=(200, 100)))
-        Application.process(self.scene)
-
-        self.scene.camera.bounds = (0, 0, *self.scene.map.size)
-        self.scene.camera.track(self.scene.player)
+    scene.camera.bounds = (0, 0, *scene.map.size)
+    scene.camera.track(scene.player)
 
 
 def main():
     app = Application((1000, 600), "Test Application")
     res = Resources()
     app.process(PhysicsWorld())
-    app.process(Test())
+    test()
     app.run()
 
 if __name__ == '__main__':
