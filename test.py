@@ -17,15 +17,10 @@ class Test:
         self.scene.add("map", Map(level.map))
         self.scene.add("player", Player(position=(250, 300), speed=200))
         self.scene.add("enemy", Enemy(position=(200, 100)))
-        Application.instance.process(self.scene)
+        Application.process(self.scene)
 
-    def on_update(self, dt):
-        self.scene.get('camera').follow(
-            self.scene.get('player'))
-
-    def on_draw(self):
-        Application.instance.clear()
-        PhysicsWorld.instance.debug_draw()
+        self.scene.camera.bounds = (0, 0, *self.scene.map.size)
+        self.scene.camera.track(self.scene.player)
 
 
 def main():

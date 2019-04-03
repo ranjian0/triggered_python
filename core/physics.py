@@ -89,7 +89,7 @@ class PhysicsWorld:
             on_exit(other.body)
         handler.separate = handler_separate
 
-    def debug_draw(self):
+    def on_draw(self):
         options = putils.DrawOptions()
         self.space.debug_draw(options)
 

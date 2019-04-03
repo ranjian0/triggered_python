@@ -14,6 +14,7 @@ class Camera:
                 kwargs.get('position', (0, 0))
         ]))
         self._bounds = Bounds(*kwargs.get('bounds', (-10000, -10000, 10000, 10000)))
+        self._track_target = None
 
     def _get_speed(self):
         return self._speed
@@ -45,17 +46,25 @@ class Camera:
         self._bounds = bnds if isinstance(bnds, Bounds) else Bounds(*bnds)
     bounds = property(_get_bounds, _set_bounds)
 
-    def follow(self, obj):
+    def track(self, obj):
+        self._track_target = obj
+
+    def on_update(self, dt):
+        """ Center the camera on target  """
+        if not self._track_target:
+            return
+
+        # -- clamp target to camera bounds
         sx, sy = self.size/2
-        px, py = obj.position
+        px, py = self._track_target.position
         position = Vec2(clamp(px, self.bounds.left+sx, self.bounds.right-sx),
             clamp(py, self.bounds.bottom+sy, self.bounds.top-sy))
 
+        # -- set camera offset (distance from center of camera to target_pos)
         self.offset = self._size/2 - position
 
-    def on_update(self, dt):
-        """ Move the camera steadily against offset """
-        epsilon = 1.0
+        # -- move the camera steadily to reduce offset
+        epsilon = 2.0
         dist = self.offset.get_distance(self._position)
         norm = (self.offset - self._position).normalized()
         if dist >= epsilon:

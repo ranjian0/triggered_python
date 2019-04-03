@@ -19,8 +19,6 @@ import functools
 import pyglet as pg
 
 from .utils import profile
-from .event import EventType
-
 
 class Application(object):
     """ Base Application """
@@ -43,6 +41,10 @@ class Application(object):
         self._window.set_caption(name)
         self._window.maximize()
 
+    def _clear(self):
+        self._window.clear()
+        pg.gl.glClearColor(.2,.3,.3,1)
+
     def _get_window(self):
         return self._window
     window = property(_get_window)
@@ -63,8 +65,8 @@ class Application(object):
         self._window.set_caption(val)
     name = property(_get_name, _set_name)
 
-    @staticmethod
-    def run(debug=False):
+    def run(self, debug=False):
+        self._window.push_handlers(on_draw=self._clear)
         with profile(debug):
             pg.app.run()
 
@@ -72,11 +74,9 @@ class Application(object):
     def quit():
         pg.app.exit()
 
-    def clear(self, color=(.5, .5, .5, 1)):
-        self.window.clear()
-        pg.gl.glClearColor(*color)
-
-    def process(self, obj):
+    @classmethod
+    def process(cls, obj):
+        self = cls.instance
         if hasattr(obj, 'on_update'):
             pg.clock.schedule_interval(obj.on_update, 1/60)
 

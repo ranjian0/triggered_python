@@ -16,7 +16,7 @@ class Scene(object):
         for key, val in kwargs.items():
             self.add(key, val)
 
-    def get(self, name):
+    def __getattr__(self, name):
         return self.objects.get(name, None)
 
     def __iter__(self):

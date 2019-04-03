@@ -11,7 +11,7 @@ class Map(object):
     node_size = (100, 100)
     def __init__(self, data):
         super(Map, self).__init__()
-        self.data = data
+        self.data = [r for r in data if '#' in r]
         self.batch = pg.graphics.Batch()
         self.generate()
 
@@ -48,10 +48,9 @@ class Map(object):
     def on_draw(self):
         self.batch.draw()
 
-
     def _get_size(self):
-        ns = self.node_size
-        return (ns * len(self.data[0])), (ns * len(self.data))
+        nx, ny = self.node_size
+        return nx * len(self.data[0]), ny * len(self.data)
     size = property(_get_size)
 
 
