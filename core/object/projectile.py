@@ -33,7 +33,13 @@ class Projectile:
             self.on_collision_enter, lambda other: None)
 
     def on_collision_enter(self, other):
-        self.destroy()
+        #XXX Unwanted Behaviour: called for sensors shapes
+        for shape in other.shapes:
+            if shape.sensor: continue
+
+            res = shape.shapes_collide(self.shape)
+            if res.points:
+                self.destroy()
 
     def on_update(self, dt):
         self.body.velocity = pm.vec2d.Vec2d(*self.direction) * self.SPEED * dt
