@@ -2,6 +2,7 @@ import math
 import pymunk as pm
 import pyglet as pg
 from resources import Resources
+from core.math import Vec2
 from core.physics import PhysicsWorld, PhysicsBody
 from core.utils import (
     image_set_size,
@@ -42,14 +43,11 @@ class Projectile:
                 self.destroy()
 
     def on_update(self, dt):
-        self.body.velocity = pm.vec2d.Vec2d(*self.direction) * self.SPEED * dt
-
-        dx, dy = self.direction
-        rotation = math.atan2(dy, dx)
-        self.body.angle = rotation
+        self.body.velocity = self.direction * self.SPEED * dt
+        self.body.angle = self.direction.angle
         if self.sprite.image:
-            # pygame rotates clockwise (pymunk anti-clockwise)
-            self.sprite.update(*self.body.position, -math.degrees(rotation))
+            # pyglet rotates clockwise (pymunk anti-clockwise)
+            self.sprite.update(*self.body.position, -math.degrees(self.direction.angle))
 
     def destroy(self):
         PhysicsWorld.remove(self.body, self.shape)
