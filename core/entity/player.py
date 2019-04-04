@@ -15,12 +15,16 @@ class Player(Entity):
         self.body.tag = "Player"
         self.projectiles = []
 
+        self.running = False
+        self.run_speed = self.speed * 1.5
+
     def on_update(self, dt):
         Entity.on_update(self, dt)
         dx, dy = self.direction
+        speed = self.run_speed if self.running else self.speed
         self.velocity = (
-            dx * self.speed * dt,
-            dy * self.speed * dt)
+            dx * speed * dt,
+            dy * speed * dt)
 
         for p in self.projectiles:
             p.on_update(dt)
@@ -37,6 +41,8 @@ class Player(Entity):
             dx = 1
         self.direction = (dx, dy)
 
+        if symbol == pg.window.key.LSHIFT:
+            self.running = True
         if symbol == pg.window.key.SPACE:
             self.shoot()
 
@@ -51,6 +57,9 @@ class Player(Entity):
         if symbol == pg.window.key.D:
             dx = 0
         self.direction = (dx, dy)
+
+        if symbol == pg.window.key.LSHIFT:
+            self.running = False
 
     def on_mouse_motion(self, x, y, dx, dy):
         px, py = self.position
