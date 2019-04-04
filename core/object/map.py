@@ -60,7 +60,7 @@ class Map(object):
         return self._navmap.calculate_path(p1, p2)
 
     def find_closest_node(self, p):
-        return self._navmap.closest_point(p)
+        return self._navmap.closest_node(p)
 
 
 class PriorityQueue:
@@ -82,68 +82,63 @@ class Astar:
         self.data = data
         self.node_size = node_size
 
-    def walkable(self):
-        # -- find all walkable nodes
+        self._walkable = self._get_walkable_nodes()
+
+    def calculate_path(self, p1, p2):
+        """ Calculate path of walkable nodes from p1 to p2 """
+        cf, cost = self._astar_search(self, p1, p2)
+        return reconstruct_path(cf, p1, p2)
+
+    def closest_node(self, p):
+        data = [(dist_sqr(p, point), point) for point in self._walkable]
+        return min(data, key=lambda d:d[0])[1]
+
+    def _get_walkable_nodes(self):
+        """ Find all node positions without a wall """
         hns = (self.node_size[0]/2, self.node_size[1]/2)
         walkable = [tadd(hns, tmul((x, y), self.node_size))
             for y, data in enumerate(self.data)
-            for x, d in enumerate(data) if d != '#']
+            for x, d in enumerate(data) if d == ' ']
         return walkable
 
-    def calculate_path(self, p1, p2):
-        cf, cost = a_star_search(self, p1, p2)
-        return reconstruct_path(cf, p1, p2)
-
-    def calc_patrol_path(self, points):
-        result = []
-        circular_points = points + [points[0]]
-        for i in range(len(circular_points)-2):
-            f, s = circular_points[i:i+2]
-            path = self.calculate_path(f, s)[1:]
-            result.extend(path)
-        return result
-
-    def neighbours(self, p):
-        # -- find neighbours that are walkable
+    def _get_neighbours(self, p):
+        """ Find all neightbours of p that are walkable"""
         directions      = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         neigh_positions = [tadd(p, tmul(d, self.node_size)) for d in directions]
-        return [n for n in neigh_positions if n in self.walkable()]
+        return [n for n in neigh_positions if n in self._walkable]
 
-    def closest_point(self, p):
-        data = [(dist_sqr(p, point), point) for point in self.walkable()]
-        return min(data, key=lambda d:d[0])[1]
-
-    def cost(self, *ignored):
+    def _get_cost(self, *ignored):
         return 1
+
+    def _astar_search(self, start, goal):
+        """ Use astar algorithm to calculate path from start to goal """
+        frontier = PriorityQueue()
+        frontier.put(start, 0)
+        came_from = {}
+        cost_so_far = {}
+        came_from[start] = None
+        cost_so_far[start] = 0
+
+        while not frontier.empty():
+            current = frontier.get()
+
+            if current == goal:
+                break
+
+            for next in self._neighbours(current):
+                new_cost = cost_so_far[current] + self._cost(current, next)
+                if next not in cost_so_far or new_cost < cost_so_far[next]:
+                    cost_so_far[next] = new_cost
+                    priority = new_cost + heuristic(goal, next)
+                    frontier.put(next, priority)
+                    came_from[next] = current
+
+        return came_from, cost_so_far
 
 def heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
     return abs(x1 - x2) + abs(y1 - y2)
-
-def a_star_search(graph, start, goal):
-    frontier = PriorityQueue()
-    frontier.put(start, 0)
-    came_from = {}
-    cost_so_far = {}
-    came_from[start] = None
-    cost_so_far[start] = 0
-
-    while not frontier.empty():
-        current = frontier.get()
-
-        if current == goal:
-            break
-
-        for next in graph.neighbours(current):
-            new_cost = cost_so_far[current] + graph.cost(current, next)
-            if next not in cost_so_far or new_cost < cost_so_far[next]:
-                cost_so_far[next] = new_cost
-                priority = new_cost + heuristic(goal, next)
-                frontier.put(next, priority)
-                came_from[next] = current
-
-    return came_from, cost_so_far
 
 def reconstruct_path(came_from, start, goal):
     current = goal
