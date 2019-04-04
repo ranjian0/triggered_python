@@ -3,6 +3,7 @@ import pyglet as pg
 import pymunk as pm
 from .entity import Entity
 from resources import Resources
+from core.math import Vec2
 from core.object import Projectile
 from core.utils import global_position
 
@@ -72,8 +73,17 @@ class Player(Entity):
             pass
 
     def shoot(self):
-        dx, dy = math.cos(self.rotation), math.sin(self.rotation)
-        pos = self.position + pm.vec2d.Vec2d(dx, dy)*(self.radius + max(Projectile.SIZE))
-        p = Projectile(pos, (dx, dy), self.batch)
+        """ Eject projectile """
+        # -- set relative muzzle location
+        muzzle_loc = Vec2(self.radius + max(Projectile.SIZE), -self.radius*.4)
+
+        # -- calculate direction of (1.muzzle location), (2.player rotation)
+        rotation = muzzle_loc.angle + self.rotation
+        d_muzzle = Vec2(math.cos(rotation), math.sin(rotation))
+        d_player = Vec2(math.cos(self.rotation), math.sin(self.rotation))
+
+        # -- eject bullet
+        pos = self.position + (d_muzzle * muzzle_loc.length)
+        p = Projectile(pos, d_player, self.batch)
         p.body.tag = "PlayerBullet"
         self.projectiles.append(p)
