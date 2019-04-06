@@ -44,8 +44,6 @@ class Player(Entity):
 
         if symbol == pg.window.key.LSHIFT:
             self.running = True
-        if symbol == pg.window.key.SPACE:
-            self.shoot()
 
     def on_key_release(self, symbol, mod):
         dx, dy = self.direction
@@ -61,6 +59,10 @@ class Player(Entity):
 
         if symbol == pg.window.key.LSHIFT:
             self.running = False
+
+    def on_mouse_press(self, x, y, button, mod):
+        if button == pg.window.mouse.LEFT:
+            self.shoot()
 
     def on_mouse_motion(self, x, y, dx, dy):
         px, py = self.position
