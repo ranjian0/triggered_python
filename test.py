@@ -6,7 +6,7 @@ from resources import Resources
 from core.app import Application
 from core.object import Camera, Map
 from core.physics import PhysicsWorld
-from core.entity import Player, Enemy
+from core.entity import Player, EnemyCollection
 
 def game_scene():
     level = Resources.instance.level('level_1')
@@ -15,7 +15,7 @@ def game_scene():
     game.add("camera", Camera())
     game.add("map", Map(level.map))
     game.add("player", Player(position=(250, 300), speed=200))
-    game.add("enemy", Enemy(position=(200, 100)))
+    game.add("enemy", EnemyCollection(level.enemies, level.waypoints))
 
     game.camera.bounds = (0, 0, *game.map.size)
     game.camera.track(game.player)
@@ -33,4 +33,3 @@ if __name__ == '__main__':
     pg.gl.glBlendFunc(pg.gl.GL_SRC_ALPHA, pg.gl.GL_ONE_MINUS_SRC_ALPHA)
     pg.gl.glEnable(pg.gl.GL_BLEND)
     main()
-

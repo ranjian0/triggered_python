@@ -1,13 +1,23 @@
+import math
 import pymunk as pm
+import itertools as it
+
 from .entity import Entity
+from core.math import Vec2
 from resources import Resources
 from core.physics import PhysicsWorld
+from core.collection import Collection
 
+def EnemyCollection(positions, waypoints):
+    col = Collection(Enemy)
+    col.add_many(len(positions), position=positions, waypoints=waypoints)
+    return col
 
 class Enemy(Entity):
 
     def __init__(self, **kwargs):
         Entity.__init__(self, image=Resources.instance.sprite("robot1_gun"), **kwargs)
+        self.speed = 175
         self.direction = (0, 0)
         self.body.tag = "Enemy"
 
@@ -20,6 +30,28 @@ class Enemy(Entity):
 
         self._state = None
         self.new_state(EnemyState_IDLE)
+
+        # -- State Machine Properties
+        #XXX EnemyState_Idle
+        self.idle_time = 0
+        self.idle_wait_time = 5
+
+        #XXX EnemyState_Patrol
+        path = kwargs.get('waypoints')
+        self.waypoints = it.cycle(path + path[::-1][1:-1])
+        self.patrol_target = next(self.waypoints)
+        self.patrol_epsilon = 10
+
+        self.return_path = []
+        self.return_target = None
+
+        #XXX EnemyState_Chase
+        self.chase_target = None
+
+        #XXX EnemyState_Attack
+        self.attack_target = None
+        self.attack_fequency = 10
+
 
     def new_state(self, state):
         if self._state:
@@ -40,11 +72,28 @@ class Enemy(Entity):
 
     def on_body_entered(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
-            pass
+            self.chase_target = other
 
     def on_body_exited(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
-            pass
+            self.chase_target = None
+
+    def _look_at(self, target):
+        tx, ty = target
+        px, py = self.position
+        self.rotation = math.atan2(ty-py, tx-px)
+
+    def _move_to(self, target, dt):
+        diff = Vec2(target) - self.position
+        dist = self.position.get_dist_sqrd(target)
+        if dist:
+            dx, dy = diff.normalized()
+            self.velocity = (
+                dx * self.speed * dt,
+                dy * self.speed * dt)
+        else:
+            self.velocity = (0, 0)
+
 
 
 class EnemyState:
@@ -62,25 +111,26 @@ class EnemyState:
     def exit(enemy):
         return NotImplementedError()
 
-
 class EnemyState_IDLE(EnemyState):
     """
     Initial state for the enemy:
-        - Do nothing
+        - Wait for idle_wait time
         - Transition to PATROL
     """
 
     @staticmethod
     def enter(enemy):
-        enemy.new_state(EnemyState_PATROL)
+        pass
 
     @staticmethod
     def update(enemy, dt):
-        pass
+        enemy.idle_time += dt
+        if enemy.idle_time >= enemy.idle_wait_time:
+            enemy.new_state(EnemyState_PATROL)
 
     @staticmethod
     def exit(enemy):
-        pass
+        enemy.idle_time = 0
 
 class EnemyState_PATROL(EnemyState):
     """
@@ -94,7 +144,15 @@ class EnemyState_PATROL(EnemyState):
 
     @staticmethod
     def update(enemy, dt):
-        pass
+        dist = enemy.position.get_dist_sqrd(enemy.patrol_target)
+        if dist < enemy.patrol_epsilon:
+            enemy.patrol_target = next(enemy.waypoints)
+
+        enemy._look_at(enemy.patrol_target)
+        enemy._move_to(enemy.patrol_target, dt)
+
+        if enemy.chase_target:
+            enemy.new_state(EnemyState_CHASE)
 
     @staticmethod
     def exit(enemy):
