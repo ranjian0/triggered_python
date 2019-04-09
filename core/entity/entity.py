@@ -15,10 +15,10 @@ class Entity(object):
         self.batch = pg.graphics.Batch()
 
         # -- health
-        self.dead = False
         self.health = 100
         self.min_health = 0
         self.max_health = 100
+        self.destroyed = False
 
         # -- collision
         mass = 100
@@ -85,10 +85,10 @@ class Entity(object):
         self.health -= amount
         self.on_damage(self.health)
         if self.health <= self.min_health:
-            self.dead = True
             self.destroy()
 
     def destroy(self):
         PhysicsWorld.remove(self.body, self.shape)
         self.sprite.delete()
+        self.destroyed = True
 

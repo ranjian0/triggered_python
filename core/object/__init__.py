@@ -1,3 +1,3 @@
 from .map import Map
 from .camera import Camera
-from .projectile import Projectile
+from .projectile import Projectile, ProjectileCollection

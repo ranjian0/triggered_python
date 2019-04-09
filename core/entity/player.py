@@ -4,7 +4,7 @@ import pymunk as pm
 from .entity import Entity
 from resources import Resources
 from core.math import Vec2
-from core.object import Projectile
+from core.object import ProjectileCollection
 from core.utils import global_position
 
 
@@ -14,21 +14,20 @@ class Player(Entity):
         Entity.__init__(self, image=Resources.instance.sprite("hitman1_gun"), **kwargs)
         self.direction = (0, 0)
         self.body.tag = "Player"
-        self.projectiles = []
+        self.projectiles = ProjectileCollection()
 
         self.running = False
         self.run_speed = self.speed * 1.5
 
     def on_update(self, dt):
         Entity.on_update(self, dt)
+        self.projectiles.on_update(dt)
+
         dx, dy = self.direction
         speed = self.run_speed if self.running else self.speed
         self.velocity = (
             dx * speed * dt,
             dy * speed * dt)
-
-        for p in self.projectiles:
-            p.on_update(dt)
 
     def on_key_press(self, symbol, mod):
         dx, dy = self.direction
@@ -77,7 +76,7 @@ class Player(Entity):
     def shoot(self):
         """ Eject projectile """
         # -- set relative muzzle location
-        muzzle_loc = Vec2(self.radius + max(Projectile.SIZE), -self.radius*.4)
+        muzzle_loc = Vec2(self.radius*1.5, -self.radius*.4)
 
         # -- calculate direction of (1.muzzle location), (2.player rotation)
         rotation = muzzle_loc.angle + self.rotation
@@ -86,6 +85,4 @@ class Player(Entity):
 
         # -- eject bullet
         pos = self.position + (d_muzzle * muzzle_loc.length)
-        p = Projectile(pos, d_player, self.batch)
-        p.body.tag = "PlayerBullet"
-        self.projectiles.append(p)
+        self.projectiles.add(pos, d_player, self.batch, tag="PlayerBullet")
