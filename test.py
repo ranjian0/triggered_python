@@ -1,11 +1,12 @@
 import pymunk as pm
 import pyglet as pg
+
 from core.scene import Scene
-from core.object import Camera, Map
-from core.app import Application
-from core.entity import Player, Enemy
-from core.physics import PhysicsWorld
 from resources import Resources
+from core.app import Application
+from core.object import Camera, Map
+from core.physics import PhysicsWorld
+from core.entity import Player, Enemy
 
 def game_scene():
     level = Resources.instance.level('level_1')

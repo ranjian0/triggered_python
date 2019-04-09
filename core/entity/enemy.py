@@ -36,7 +36,7 @@ class Enemy(Entity):
             pass
 
         if hasattr(other, 'tag') and other.tag == 'PlayerBullet':
-            pass
+            self.damage(10)
 
     def on_body_entered(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
