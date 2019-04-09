@@ -7,11 +7,20 @@ from core.math import Vec2
 from resources import Resources
 from core.physics import PhysicsWorld
 from core.collection import Collection
+from core.object import ProjectileCollection
+
+
+RAYCAST_CATEGORY = 0x1
+RAYCAST_FILTER = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_CATEGORY)
+def raycast(start, end):
+    world = PhysicsWorld.instance
+    return world.space.segment_query_first(start, end, 1, RAYCAST_FILTER)
 
 def EnemyCollection(positions, waypoints):
     col = Collection(Enemy)
     col.add_many(len(positions), position=positions, waypoints=waypoints)
     return col
+
 
 class Enemy(Entity):
 
@@ -20,6 +29,7 @@ class Enemy(Entity):
         self.speed = 175
         self.direction = (0, 0)
         self.body.tag = "Enemy"
+        self.shape.filter = pm.ShapeFilter(categories=RAYCAST_CATEGORY)
 
         self.trigger_area = pm.Circle(self.body, 250)
         self.trigger_area.sensor = True
@@ -28,13 +38,13 @@ class Enemy(Entity):
         PhysicsWorld.instance.register_collision(self.trigger_area.collision_type,
             on_enter=self.on_body_entered, on_exit=self.on_body_exited)
 
-        self._state = None
-        self.new_state(EnemyState_IDLE)
 
-        # -- State Machine Properties
+        # -- STATE MACHINE
+        self._state = EnemyState_IDLE
+
         #XXX EnemyState_Idle
         self.idle_time = 0
-        self.idle_wait_time = 5
+        self.idle_wait_time = 3
 
         #XXX EnemyState_Patrol
         path = kwargs.get('waypoints')
@@ -47,13 +57,21 @@ class Enemy(Entity):
 
         #XXX EnemyState_Chase
         self.chase_target = None
+        self.chase_radius = self.trigger_area.radius * 1.25
 
         #XXX EnemyState_Attack
+        self.projectiles = ProjectileCollection()
         self.attack_target = None
+        self.attack_counter = 0
         self.attack_fequency = 10
 
 
     def new_state(self, state):
+        print(f"SWITCHED    FROM {self._state.__name__} TO  {state.__name__}")
+        if self._state == state:
+            print(f"Error State {state}")
+            return
+
         if self._state:
             self._state.exit(self)
         self._state = state
@@ -62,6 +80,7 @@ class Enemy(Entity):
     def on_update(self, dt):
         Entity.on_update(self, dt)
         self._state.update(self, dt)
+        self.projectiles.on_update(dt)
 
     def on_collision_enter(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
@@ -72,11 +91,24 @@ class Enemy(Entity):
 
     def on_body_entered(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
-            self.chase_target = other
+            # -- check that the body is in our line of sight
+            hit = raycast(self.position, other.position)
+            visible = hit.shape in other.shapes
+            if visible:
+                self.chase_target = other
+                self.new_state(EnemyState_CHASE)
+
 
     def on_body_exited(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
-            self.chase_target = None
+            pass
+            # # -- check that the body is out of our line of sight
+
+            # hit = raycast(self.position, other.position)
+            # not_visible = hit.shape not in other.shapes
+            # if not_visible:
+            #     self.chase_target = None
+            #     # self.new_state(EnemyState_PATROL)
 
     def _look_at(self, target):
         tx, ty = target
@@ -93,6 +125,23 @@ class Enemy(Entity):
                 dy * self.speed * dt)
         else:
             self.velocity = (0, 0)
+
+    def _shoot_at(self, target):
+        """ Eject projectile every attack frequency"""
+        self.attack_counter += 1
+
+        if self.attack_counter % self.attack_fequency == 0:
+            # -- set relative muzzle location
+            muzzle_loc = Vec2(self.radius*1.5, -self.radius*.4)
+
+            # -- calculate direction of (1.muzzle location), (2.enemy rotation)
+            rotation = muzzle_loc.angle + self.rotation
+            d_muzzle = Vec2(math.cos(rotation), math.sin(rotation))
+            d_enemy  = Vec2(math.cos(self.rotation), math.sin(self.rotation))
+
+            # -- eject bullet
+            pos = self.position + (d_muzzle * muzzle_loc.length)
+            self.projectiles.add(pos, d_enemy, self.batch, tag="EnemyBullet")
 
 
 
@@ -140,6 +189,8 @@ class EnemyState_PATROL(EnemyState):
 
     @staticmethod
     def enter(enemy):
+        #XXX TODO
+        # Calculate return path to waypoints if we cannot see patrol_target
         pass
 
     @staticmethod
@@ -151,9 +202,6 @@ class EnemyState_PATROL(EnemyState):
         enemy._look_at(enemy.patrol_target)
         enemy._move_to(enemy.patrol_target, dt)
 
-        if enemy.chase_target:
-            enemy.new_state(EnemyState_CHASE)
-
     @staticmethod
     def exit(enemy):
         pass
@@ -161,8 +209,8 @@ class EnemyState_PATROL(EnemyState):
 class EnemyState_CHASE(EnemyState):
     """
     Move towards a chase target
-        - If we get close enough (attack radius), Transition to ATTACK
-        - if target escapes, Transition to PATROL
+        - If we get close enough, Transition to ATTACK
+        - if target escapes (out of sight), Transition to PATROL
     """
 
     @staticmethod
@@ -171,11 +219,31 @@ class EnemyState_CHASE(EnemyState):
 
     @staticmethod
     def update(enemy, dt):
-        pass
+        target = enemy.chase_target
+
+        #XXX Check if target went out of sight
+        hit = raycast(enemy.position, target.position)
+        visible = hit.shape in target.shapes
+        # -- still in our line of sight
+        if visible:
+            # Chase
+            enemy._look_at(target.position)
+            enemy._move_to(target.position, dt)
+
+            # Attack if we are really close
+            dist = enemy.position.get_dist_sqrd(target.position)
+            if dist < (enemy.chase_radius**2)/2:
+                enemy.attack_target = target
+                enemy.new_state(EnemyState_ATTACK)
+
+
+        # -- target escaped our sight
+        else:
+            enemy.new_state(EnemyState_PATROL)
 
     @staticmethod
     def exit(enemy):
-        pass
+        enemy.chase_target = None
 
 class EnemyState_ATTACK(EnemyState):
     """
@@ -185,12 +253,30 @@ class EnemyState_ATTACK(EnemyState):
 
     @staticmethod
     def enter(enemy):
-        pass
+        enemy.velocity = (0, 0)
 
     @staticmethod
     def update(enemy, dt):
-        pass
+        target = enemy.attack_target
+
+        #XXX Check if target went out of sight
+        hit = raycast(enemy.position, target.position)
+        visible = hit.shape in target.shapes
+        # -- still in our line of sight
+        if visible:
+            enemy._look_at(target.position)
+            enemy._shoot_at(target.position)
+
+            # -- Target moved away, Chase
+            dist = enemy.position.get_dist_sqrd(target.position)
+            if dist > (enemy.chase_radius**2)/2:
+                enemy.chase_target = target
+                enemy.new_state(EnemyState_CHASE)
+
+        else:
+            enemy.new_state(EnemyState_PATROL)
 
     @staticmethod
     def exit(enemy):
-        pass
+        enemy.attack_counter = 0
+        enemy.attack_target = None

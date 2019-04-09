@@ -32,6 +32,7 @@ class Projectile:
         physics = PhysicsWorld.instance
         self.body = PhysicsBody(1, pm.moment_for_box(1, self.SIZE))
         self.shape = pm.Poly.create_box(self.body, self.SIZE, radius=.6)
+        self.shape.filter = pm.ShapeFilter(categories=0x1)
 
         self.body.tag = tag
         self.body.position = position

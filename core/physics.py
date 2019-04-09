@@ -21,8 +21,6 @@ from pymunk import pyglet_util as putils
 
 DEBUG = 0
 PHYSICS_STEPS = 60
-RAYCAST_FILTER = 0x1
-RAYCAST_MASK = pm.ShapeFilter(mask=pm.ShapeFilter.ALL_MASKS ^ RAYCAST_FILTER)
 
 class PhysicsWorld:
 
@@ -54,10 +52,6 @@ class PhysicsWorld:
     def on_update(self, dt):
         for _ in it.repeat(None, PHYSICS_STEPS):
             self.space.step(1. / PHYSICS_STEPS)
-
-    def raycast(self, start, end):
-        res = self.space.segment_query_first(start, end, 1, RAYCAST_MASK)
-        return res
 
     def add_collision_handler(self, type_a, type_b,
         handler_begin=None, handler_pre=None, handler_post=None,
@@ -102,7 +96,7 @@ class PhysicsBody(pm.Body):
     """ Convinience class for tagging physics bodies """
 
     def __init__(self, *args, **kwargs):
-        pm.Body.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._tag = ""
 
     def _get_tag(self):
