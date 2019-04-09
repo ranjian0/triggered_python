@@ -67,11 +67,6 @@ class Enemy(Entity):
 
 
     def new_state(self, state):
-        print(f"SWITCHED    FROM {self._state.__name__} TO  {state.__name__}")
-        if self._state == state:
-            print(f"Error State {state}")
-            return
-
         if self._state:
             self._state.exit(self)
         self._state = state
@@ -101,14 +96,8 @@ class Enemy(Entity):
 
     def on_body_exited(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
+            # No need to handle this, State only changes when we lose line of sight
             pass
-            # # -- check that the body is out of our line of sight
-
-            # hit = raycast(self.position, other.position)
-            # not_visible = hit.shape not in other.shapes
-            # if not_visible:
-            #     self.chase_target = None
-            #     # self.new_state(EnemyState_PATROL)
 
     def _look_at(self, target):
         tx, ty = target

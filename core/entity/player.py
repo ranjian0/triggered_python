@@ -73,6 +73,9 @@ class Player(Entity):
         if hasattr(other, 'tag') and other.tag == 'Enemy':
             pass
 
+        if hasattr(other, 'tag') and other.tag == 'EnemyBullet':
+            self.damage()
+
     def shoot(self):
         """ Eject projectile """
         # -- set relative muzzle location
