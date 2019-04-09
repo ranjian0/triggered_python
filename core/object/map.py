@@ -14,6 +14,13 @@ dist_sqr = lambda x,y: sum(map(operator.pow, map(operator.sub, x, y), (2,2)))
 class Map(object):
     """ Create map from level data """
 
+    # -- singleton
+    instance = None
+    def __new__(cls, *args):
+        if Map.instance is None:
+            Map.instance = object.__new__(cls)
+        return Map.instance
+
     sprites = []
     node_size = (100, 100)
     def __init__(self, data):
@@ -86,7 +93,7 @@ class Astar:
 
     def calculate_path(self, p1, p2):
         """ Calculate path of walkable nodes from p1 to p2 """
-        cf, cost = self._astar_search(self, p1, p2)
+        cf, cost = self._astar_search(p1, p2)
         return reconstruct_path(cf, p1, p2)
 
     def closest_node(self, p):
@@ -125,8 +132,8 @@ class Astar:
             if current == goal:
                 break
 
-            for next in self._neighbours(current):
-                new_cost = cost_so_far[current] + self._cost(current, next)
+            for next in self._get_neighbours(current):
+                new_cost = cost_so_far[current] + self._get_cost(current, next)
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
                     priority = new_cost + heuristic(goal, next)

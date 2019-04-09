@@ -7,7 +7,7 @@ from core.math import Vec2
 from resources import Resources
 from core.physics import PhysicsWorld
 from core.collection import Collection
-from core.object import ProjectileCollection
+from core.object import ProjectileCollection, Map
 
 
 RAYCAST_CATEGORY = 0x1
@@ -91,7 +91,8 @@ class Enemy(Entity):
             visible = hit.shape in other.shapes
             if visible:
                 self.chase_target = other
-                self.new_state(EnemyState_CHASE)
+                if self._state is not EnemyState_CHASE:
+                    self.new_state(EnemyState_CHASE)
 
 
     def on_body_exited(self, other):
@@ -180,16 +181,40 @@ class EnemyState_PATROL(EnemyState):
     def enter(enemy):
         #XXX TODO
         # Calculate return path to waypoints if we cannot see patrol_target
-        pass
+        hit = raycast(enemy.position, enemy.patrol_target)
+        if hit:
+            # patrol target is not visible, calculate path to it
+            start = Map.instance.find_closest_node(enemy.position)
+            end = Map.instance.find_closest_node(enemy.patrol_target)
+
+            enemy.return_path = iter(Map.instance.find_path(start, end))
+            enemy.return_target = next(enemy.return_path)
 
     @staticmethod
     def update(enemy, dt):
-        dist = enemy.position.get_dist_sqrd(enemy.patrol_target)
-        if dist < enemy.patrol_epsilon:
-            enemy.patrol_target = next(enemy.waypoints)
+        target = None
 
-        enemy._look_at(enemy.patrol_target)
-        enemy._move_to(enemy.patrol_target, dt)
+        if enemy.return_target:
+            # -- return to waypoints
+            dist = enemy.position.get_dist_sqrd(enemy.return_target)
+            if dist < enemy.patrol_epsilon:
+                try:
+                    enemy.return_target = next(enemy.return_path)
+                except StopIteration:
+                    # -- we have successfully returned
+                    enemy.return_target = None
+                    enemy.return_path = []
+
+            target = enemy.return_target or enemy.patrol_target
+        else:
+            # -- navigate waypoints
+            dist = enemy.position.get_dist_sqrd(enemy.patrol_target)
+            if dist < enemy.patrol_epsilon:
+                enemy.patrol_target = next(enemy.waypoints)
+            target = enemy.patrol_target
+
+        enemy._look_at(target)
+        enemy._move_to(target, dt)
 
     @staticmethod
     def exit(enemy):
@@ -212,6 +237,9 @@ class EnemyState_CHASE(EnemyState):
 
         #XXX Check if target went out of sight
         hit = raycast(enemy.position, target.position)
+        if not hit:
+            enemy.new_state(EnemyState_PATROL)
+            return
         visible = hit.shape in target.shapes
         # -- still in our line of sight
         if visible:
@@ -224,7 +252,6 @@ class EnemyState_CHASE(EnemyState):
             if dist < (enemy.chase_radius**2)/2:
                 enemy.attack_target = target
                 enemy.new_state(EnemyState_ATTACK)
-
 
         # -- target escaped our sight
         else:
@@ -250,6 +277,9 @@ class EnemyState_ATTACK(EnemyState):
 
         #XXX Check if target went out of sight
         hit = raycast(enemy.position, target.position)
+        if not hit:
+            enemy.new_state(EnemyState_PATROL)
+            return
         visible = hit.shape in target.shapes
         # -- still in our line of sight
         if visible:
