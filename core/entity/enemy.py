@@ -21,7 +21,6 @@ def EnemyCollection(positions, waypoints):
     col.add_many(len(positions), position=positions, waypoints=waypoints)
     return col
 
-
 class Enemy(Entity):
 
     def __init__(self, **kwargs):
@@ -132,7 +131,6 @@ class Enemy(Entity):
             # -- eject bullet
             pos = self.position + (d_muzzle * muzzle_loc.length)
             self.projectiles.add(pos, d_enemy, self.batch, tag="EnemyBullet")
-
 
 
 class EnemyState:
