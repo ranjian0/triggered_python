@@ -37,6 +37,9 @@ class Scene(object):
     def on_update(self, dt):
         self._objects_iter_call('on_update', dt)
 
+    def on_resize(self, *args):
+        self._objects_iter_call('on_resize', *args)
+
     def on_key_press(self, *args):
         self._objects_iter_call('on_key_press', *args)
 
