@@ -5,7 +5,7 @@ from .entity import Entity
 from resources import Resources
 from core.math import Vec2
 from core.object import ProjectileCollection
-from core.utils import global_position
+from core.utils import global_position, reset_matrix
 
 
 class Player(Entity):
@@ -19,6 +19,32 @@ class Player(Entity):
 
         self.running = False
         self.run_speed = self.speed * 1.5
+
+        # Health Bar
+        self.health_batch = pg.graphics.Batch()
+        border = Resources.instance.sprite("health_bar_border")
+        border.anchor_y = border.height
+        self.border = pg.sprite.Sprite(border, batch=self.health_batch)
+
+        self.bar_im = Resources.instance.sprite("health_bar")
+        self.bar_im.anchor_y = self.bar_im.height
+        self.bar = pg.sprite.Sprite(self.bar_im, batch=self.health_batch)
+
+    def on_damage(self, health_percent):
+        region = self.bar_im.get_region(0, 0,
+            int(self.bar_im.width*health_percent), self.bar_im.height)
+        region.anchor_y = self.bar_im.height
+        self.bar.image = region
+
+    def on_resize(self, w, h):
+        super().on_resize(w, h)
+        self.border.update(x=10, y=h)
+        self.bar.update(x=10, y=h)
+
+    def on_draw(self):
+        super().on_draw()
+        with reset_matrix(*self._window_size):
+            self.health_batch.draw()
 
     def on_update(self, dt):
         super().on_update(dt)
@@ -66,14 +92,10 @@ class Player(Entity):
             self.running = False
 
     def on_mouse_press(self, x, y, button, mod):
-        super().on_mouse_press(x, y, button, mod)
-
         if button == pg.window.mouse.LEFT:
             self.shoot()
 
     def on_mouse_motion(self, x, y, dx, dy):
-        super().on_mouse_motion(x, y, dx, dy)
-
         px, py = self.position
         mx, my = global_position(x, y)
         self.rotation = math.atan2(
@@ -101,3 +123,8 @@ class Player(Entity):
         # -- eject bullet
         pos = self.position + (d_muzzle * muzzle_loc.length)
         self.projectiles.add(pos, d_player, self.batch, tag="PlayerBullet")
+
+    def destroy(self):
+        super().destroy()
+        self.border.delete()
+        self.bar.delete()
