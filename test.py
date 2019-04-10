@@ -22,7 +22,7 @@ def game_scene():
     return game
 
 def main():
-    app = Application((1000, 600), "Test Application")
+    app = Application((1366, 680), "Test Application")
     res = Resources()
 
     app.process(PhysicsWorld())
@@ -30,6 +30,4 @@ def main():
     app.run()
 
 if __name__ == '__main__':
-    pg.gl.glBlendFunc(pg.gl.GL_SRC_ALPHA, pg.gl.GL_ONE_MINUS_SRC_ALPHA)
-    pg.gl.glEnable(pg.gl.GL_BLEND)
     main()
