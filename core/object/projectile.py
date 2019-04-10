@@ -46,7 +46,7 @@ class Projectile:
             if shape.sensor: continue
 
             res = shape.shapes_collide(self.shape)
-            if res.points:
+            if res.points and not self.destroyed:
                 self.destroy()
 
     def on_update(self, dt):
