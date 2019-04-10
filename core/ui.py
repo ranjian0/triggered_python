@@ -18,9 +18,10 @@
 import pyglet as pg
 from resources import Resources
 from pyglet.window import key, mouse
-
-from .utils import *
-from .event import EventType
+from .utils import (
+    mouse_over_rect,
+    image_set_anchor_center
+    )
 
 class TextInput:
 
@@ -74,7 +75,6 @@ class Button(object):
         if button == mouse.LEFT:
             if self.hover(x,y):
                 self._callback(*self._callback_args)
-
 
 class TextButton(pg.text.Label, Button):
 

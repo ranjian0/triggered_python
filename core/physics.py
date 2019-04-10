@@ -53,23 +53,6 @@ class PhysicsWorld:
         for _ in it.repeat(None, PHYSICS_STEPS):
             self.space.step(1. / PHYSICS_STEPS)
 
-    def add_collision_handler(self, type_a, type_b,
-        handler_begin=None, handler_pre=None, handler_post=None,
-        handler_separate=None, data=None):
-
-        handler = self.space.add_collision_handler(type_a, type_b)
-        if data:
-            handler.data.update(data)
-
-        if handler_begin:
-            handler.begin = handler_begin
-        if handler_pre:
-            handler.pre_solve = handler_pre
-        if handler_post:
-            handler.post_solve = handler_post
-        if handler_separate:
-            handler.separate = handler_separate
-
     def register_collision(self, _type, on_enter, on_exit):
         handler = self.space.add_wildcard_collision_handler(_type)
 

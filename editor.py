@@ -19,11 +19,31 @@ import os
 import pickle
 import operator
 import pyglet as pg
+from pyglet.gl import *
+from contextlib import contextmanager
 
-from core.ui import *
-from core.utils import *
-from core import Application
-from resources import Resources, LevelData, sorted_levels
+from core.math import clamp
+from core.app import Application
+from resources import (
+    LevelData,
+    Resources,
+    sorted_levels,
+    )
+from core.ui import (
+    TextInput,
+    TextButton,
+    ImageButton,
+    )
+from core.utils import (
+    set_flag,
+    draw_path,
+    draw_line,
+    draw_point,
+    image_set_size,
+    mouse_over_rect,
+    image_set_anchor_center,
+    )
+
 
 class Editor:
 
@@ -394,7 +414,7 @@ class EditorToolbar:
         self._iter_call_meth('on_mouse_press',  x, y, button, mod)
 
         # -- deactivate all tools if click over empty toolbar area
-        if button == mouse.LEFT and mouse_over_rect((x, y), *self.get_rect()):
+        if button == pg.window.mouse.LEFT and mouse_over_rect((x, y), *self.get_rect()):
             # -- check if mouse was clicked over toolbar but not over a tool,
             if not any([mouse_over_rect((x, y), tool.position, tool.size) for tool in self.tools]):
                 # -- set all tools as inactive
@@ -568,7 +588,7 @@ class EditorViewport:
         if not mouse_over_rect((x, y), *self.get_rect()):
             return
 
-        if button == mouse.MIDDLE:
+        if button == pg.window.mouse.MIDDLE:
             self._is_panning = True
             px, py = self._pan_offset
             px = 0 if (px+dx) > 0 else px+dx
@@ -701,12 +721,12 @@ class EditorTool:
                 self.mouse_down_duration = 0
 
     def on_mouse_press(self, x, y, button, mod):
-        if button == mouse.LEFT:
+        if button == pg.window.mouse.LEFT:
             if mouse_over_rect((x, y), self.position, self.size):
                 self.start_show_event = True
 
     def on_mouse_release(self, x, y, button, mod):
-        if button == mouse.LEFT:
+        if button == pg.window.mouse.LEFT:
             if self.start_show_event or self.show_options:
                 self.activated = True
 
@@ -796,12 +816,12 @@ class AddTileTool(EditorTool):
 
         map_id = self.mouse_pos_to_map(x, y)
         if self.default == 'Wall':
-            if mod & key.MOD_CTRL:
+            if mod & pg.window.key.MOD_CTRL:
                 self._map_remove_wall_at(*map_id)
             else:
                 self._map_add_wall_at(*map_id)
         elif self.default == 'Floor':
-            if mod & key.MOD_CTRL:
+            if mod & pg.window.key.MOD_CTRL:
                 self._map_remove_floor_at(*map_id)
             else:
                 self._map_add_floor_at(*map_id)
@@ -811,7 +831,7 @@ class AddTileTool(EditorTool):
         if not self.is_active: return
         if x < EditorToolbar.WIDTH: return
 
-        if button == mouse.LEFT:
+        if button == pg.window.mouse.LEFT:
             self._do_add_tile(x, y, mod)
 
     def on_mouse_drag(self, x, y, dx, dy, button, mod):
@@ -819,7 +839,7 @@ class AddTileTool(EditorTool):
         if not self.is_active: return
         if x < EditorToolbar.WIDTH: return
 
-        if button == mouse.LEFT:
+        if button == pg.window.mouse.LEFT:
             self._do_add_tile(x, y, mod)
 
 class AddAgentTool(EditorTool):
@@ -840,13 +860,13 @@ class AddAgentTool(EditorTool):
         if x < EditorToolbar.WIDTH:
             return
 
-        if button == mouse.LEFT:
+        if button == pg.window.mouse.LEFT:
             px, py = self.mouse_pos_to_viewport(x, y)
 
             if self.default == 'Player':
                 self.level_data['player'] = (px, py)
             elif self.default == 'Enemy':
-                if mod & key.MOD_CTRL:
+                if mod & pg.window.key.MOD_CTRL:
                     enemies = self.level_data['enemies']
                     waypoints = self.level_data['waypoints']
                     for idx, en in enumerate(enemies):
@@ -878,7 +898,7 @@ class AddWaypointTool(EditorTool):
 
         # -- create waypoint
         px, py = self.mouse_pos_to_viewport(x, y)
-        if button == mouse.LEFT:
+        if button == pg.window.mouse.LEFT:
             # -- check if an enemy is selected
             enemy_id = self.level_data.get('_active_enemy')
             if enemy_id:
@@ -895,7 +915,7 @@ class AddWaypointTool(EditorTool):
                         waypoints.append([])
 
 
-                if mod & key.MOD_CTRL:
+                if mod & pg.window.key.MOD_CTRL:
                     # -- remove waypoint at mouse location
                     selected = None
                     for point in waypoints[enemy_id-1]:
@@ -909,8 +929,8 @@ class AddWaypointTool(EditorTool):
                     waypoints[enemy_id-1].append((px, py))
 
         # -- select enemy
-        elif button == mouse.RIGHT:
-            if mod & key.MOD_CTRL:
+        elif button == pg.window.mouse.RIGHT:
+            if mod & pg.window.key.MOD_CTRL:
                 if self.level_data.get('_active_enemy'):
                     del self.level_data['_active_enemy']
             else:
@@ -1003,9 +1023,9 @@ class ObjectivesTool(EditorTool):
 
     def on_key_press(self, symbol, mod):
         if self.is_active and self.level_data:
-            if symbol == key.TAB:
+            if symbol == pg.window.key.TAB:
                 self.next_focus()
-            elif symbol == key.RETURN:
+            elif symbol == pg.window.key.RETURN:
                 self.save_data()
                 self.next_focus()
 
