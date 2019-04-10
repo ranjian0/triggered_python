@@ -30,6 +30,7 @@ class Entity(object):
 
 
         # -- LOAD PROPERTIES
+        self._window_size = (0, 0)
         if 'image' in kwargs:
             self.image = kwargs.pop('image')
             image_set_size(self.image, self.radius*2, self.radius*2)
@@ -40,7 +41,6 @@ class Entity(object):
 
         if 'minimap_image' in kwargs:
             self._show_minimap = False
-            self._window_size = (0, 0)
             self.minimap_image = kwargs.pop('minimap_image')
             image_set_size(self.minimap_image, 25, 25)
             image_set_anchor_center(self.minimap_image)
@@ -81,7 +81,7 @@ class Entity(object):
     def on_collision_exit(self, other):
         pass
 
-    def on_damage(self, health):
+    def on_damage(self, health_percent):
         pass
 
     def on_draw(self):
@@ -121,7 +121,7 @@ class Entity(object):
 
     def damage(self, amount=5):
         self.health -= amount
-        self.on_damage(self.health)
+        self.on_damage(self.health/self.max_health)
         if self.health <= self.min_health:
             self.destroy()
 
