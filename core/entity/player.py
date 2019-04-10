@@ -5,7 +5,10 @@ from .entity import Entity
 from resources import Resources
 from core.math import Vec2
 from core.object import ProjectileCollection
-from core.utils import global_position, reset_matrix
+from core.utils import (
+    reset_matrix,
+    image_set_size,
+    global_position)
 
 
 class Player(Entity):
@@ -20,15 +23,45 @@ class Player(Entity):
         self.running = False
         self.run_speed = self.speed * 1.5
 
+        #XXX HUD Elements
+        self.hud_batch = pg.graphics.Batch()
+
         # Health Bar
-        self.health_batch = pg.graphics.Batch()
         border = Resources.instance.sprite("health_bar_border")
         border.anchor_y = border.height
-        self.border = pg.sprite.Sprite(border, batch=self.health_batch)
+        self.border = pg.sprite.Sprite(border, batch=self.hud_batch)
 
         self.bar_im = Resources.instance.sprite("health_bar")
         self.bar_im.anchor_y = self.bar_im.height
-        self.bar = pg.sprite.Sprite(self.bar_im, batch=self.health_batch)
+        self.bar = pg.sprite.Sprite(self.bar_im, batch=self.hud_batch)
+
+        # Ammo Indicator
+        self.ammo = 350
+        self.ammo_h = 30
+        self.ammo_im = Resources.instance.sprite("ammo_bullet")
+        image_set_size(self.ammo_im, self.ammo_h//3, self.ammo_h)
+        self.ammo_im.anchor_y = self.ammo_im.height
+        self.ammo_sprites = [pg.sprite.Sprite(self.ammo_im, batch=self.hud_batch)
+            for _ in range(self.ammo // 100)]
+
+        self.ammo_text = pg.text.Label(f" X {self.ammo}", bold=True,
+            font_size=12, color=(200, 200, 0, 255), batch=self.hud_batch,
+            anchor_y='top', anchor_x='left')
+
+    def _update_ammo_indicator(self):
+        w, h = self._window_size
+        px, py = 10, h-(self.ammo_h*1.5)
+
+        # Sprites
+        offx = self.ammo_im.width + 2
+        for idx, sp in enumerate(self.ammo_sprites):
+            sp.x = px + (idx * offx)
+            sp.y = py
+
+        # Text
+        txt_off = px + (len(self.ammo_sprites) * offx)
+        self.ammo_text.x = txt_off
+        self.ammo_text.y = py
 
     def on_damage(self, health_percent):
         region = self.bar_im.get_region(0, 0,
@@ -41,10 +74,12 @@ class Player(Entity):
         self.border.update(x=10, y=h)
         self.bar.update(x=10, y=h)
 
+        self._update_ammo_indicator()
+
     def on_draw(self):
         super().on_draw()
         with reset_matrix(*self._window_size):
-            self.health_batch.draw()
+            self.hud_batch.draw()
 
     def on_update(self, dt):
         super().on_update(dt)
@@ -93,6 +128,17 @@ class Player(Entity):
 
     def on_mouse_press(self, x, y, button, mod):
         if button == pg.window.mouse.LEFT:
+            if self.ammo <= 0:
+                return
+            self.ammo -= 1
+
+            # -- update ammo indicator
+            num_bul = self.ammo // 100
+            if len(self.ammo_sprites) > num_bul:
+                self.ammo_sprites.pop()
+            self.ammo_text.text = f" X {self.ammo}"
+            self._update_ammo_indicator()
+
             self.shoot()
 
     def on_mouse_motion(self, x, y, dx, dy):
@@ -128,3 +174,6 @@ class Player(Entity):
         super().destroy()
         self.border.delete()
         self.bar.delete()
+        self.ammo_text.delete()
+        for sp in self.ammo_sprites:
+            sp.delete()
