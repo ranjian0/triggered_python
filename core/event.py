@@ -15,6 +15,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import pyglet as pg
 from enum import Enum
 
 class EventType(Enum):
@@ -30,3 +31,16 @@ class EventType(Enum):
     TEXT = 9
     TEXT_MOTION = 10
     TEXT_MOTION_SELECT = 11
+
+class Signal(pg.event.EventDispatcher):
+
+    def __init__(self, name):
+        super().__init__()
+        self._name = name
+        Signal.register_event_type(name)
+
+    def emit(self, *args):
+        self.dispatch_event(self._name, *args)
+
+    def connect(self, meth):
+        self.push_handlers(**{self._name : meth})
