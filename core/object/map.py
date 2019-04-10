@@ -28,6 +28,9 @@ class Map(object):
         self.data = [r for r in data if '#' in r]
         self.batch = pg.graphics.Batch()
 
+        self._minimap = None
+        self._minimap_drop = None
+        self._show_minimap = False
         self._navmap = Astar(self.data, self.node_size)
         self._generate()
 
@@ -60,8 +63,68 @@ class Map(object):
                     wall.body.position = (px + nx/2, py + ny/2)
                     world.add(wall)
 
+    def _generate_minimap(self, size):
+        wall_color = (50, 50, 50, 255)
+        background_color = (200, 0, 0, 0)
+        sx, sy = [s/ms for s, ms in zip(size, self.size)]
+        nsx, nsy = self.node_size
+
+        background_image = pg.image.SolidColorImagePattern(background_color)
+        background_image = background_image.create_image(*self.size)
+        background = background_image.get_texture()
+
+        wall_image = pg.image.SolidColorImagePattern(wall_color)
+        wall_image = wall_image.create_image(nsx//4, nsy//4)
+        wall = wall_image.get_texture()
+
+        for y, row in enumerate(self.data):
+            for x, data in enumerate(row):
+                offx, offy = x * nsx, y * nsy
+                if data == "#":
+                    background.blit_into(wall_image, offx, offy, 0)
+
+                    # -- fill x-gaps
+                    if x < len(row)-1 and row[x+1] == '#':
+                        for i in range(1,4):
+                            ox = offx + (i*(nsx//4))
+                            background.blit_into(wall_image, ox, offy, 0)
+                    # -- fill y-gaps
+                    if y < len(self.data)-1 and self.data[y+1][x] == '#':
+                        for i in range(1,4):
+                            oy = offy + (i*(nsy//4))
+                            background.blit_into(wall_image, offx, oy, 0)
+
+        sp = pg.sprite.Sprite(background)
+        sc = min(sx, sy)
+        sp.scale_x = sc
+        sp.scale_y = sc
+        return sp
+
     def on_draw(self):
         self.batch.draw()
+        if self._show_minimap:
+            self._minimap_drop.blit(0, 0)
+            self._minimap.draw()
+
+    def on_resize(self, w, h):
+        minimap_size = tuple(map(operator.mul, (w,h), (.75, .9)))
+        self._minimap = self._generate_minimap(minimap_size)
+
+        self._minimap.image.anchor_x = self._minimap.image.width
+        self._minimap.image.anchor_y = 0
+        self._minimap.x = w
+        self._minimap.y = 25
+
+        drop = pg.image.SolidColorImagePattern((100, 100, 100, 200))
+        self._minimap_drop = drop.create_image(w, h)
+
+    def on_key_press(self, symbol, mod):
+        if symbol == pg.window.key.TAB:
+            self._show_minimap = True
+
+    def on_key_release(self, symbol, mod):
+        if symbol == pg.window.key.TAB:
+            self._show_minimap = False
 
     def find_path(self, p1, p2):
         return self._navmap.calculate_path(p1, p2)
