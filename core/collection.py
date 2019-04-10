@@ -31,8 +31,12 @@ class Collection:
 
     #XXX Event handlers
     def on_draw(self):
-        self._objects_iter_call('on_draw_first')
         self._objects_iter_call('on_draw')
+
+    def on_draw_first(self):
+        self._objects_iter_call('on_draw_first')
+
+    def on_draw_last(self):
         self._objects_iter_call('on_draw_last')
 
     def on_update(self, dt):
