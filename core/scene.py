@@ -32,7 +32,9 @@ class Scene(object):
 
     #XXX Event handlers
     def on_draw(self):
+        self._objects_iter_call('on_draw_first')
         self._objects_iter_call('on_draw')
+        self._objects_iter_call('on_draw_last')
 
     def on_update(self, dt):
         self._objects_iter_call('on_update', dt)
