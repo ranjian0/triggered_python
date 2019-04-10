@@ -12,10 +12,10 @@ def game_scene():
     level = Resources.instance.level('level_1')
 
     game = Scene("game")
-    game.add("camera", Camera())
-    game.add("map", Map(level.map))
-    game.add("player", Player(position=(250, 300), speed=200))
-    game.add("enemy", EnemyCollection(level.enemies, level.waypoints))
+    game.add("camera",  Camera())
+    game.add("map",     Map(level.map))
+    game.add("player",  Player(position=(250, 300), speed=200))
+    game.add("enemy",   EnemyCollection(level.enemies, level.waypoints))
 
     game.camera.bounds = (0, 0, *game.map.size)
     game.camera.track(game.player)
