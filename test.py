@@ -17,6 +17,7 @@ def game_scene():
     game.add("player",  Player(position=(250, 300), speed=200))
     game.add("enemy",   EnemyCollection(level.enemies, level.waypoints))
 
+    # -- setup camera
     game.camera.bounds = (0, 0, *game.map.size)
     game.camera.track(game.player)
     return game
