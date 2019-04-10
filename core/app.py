@@ -67,6 +67,8 @@ class Application(object):
 
     def run(self, debug=False):
         self._window.push_handlers(on_draw=self._clear)
+        pg.gl.glBlendFunc(pg.gl.GL_SRC_ALPHA, pg.gl.GL_ONE_MINUS_SRC_ALPHA)
+        pg.gl.glEnable(pg.gl.GL_BLEND)
         with profile(debug):
             pg.app.run()
 
