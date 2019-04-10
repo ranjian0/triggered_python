@@ -43,7 +43,8 @@ class Collection:
         self._objects_iter_call('on_update', dt)
 
         # -- remove destroyed items from the collection
-        self._items = [item for item in self if hasattr(item, 'destroyed') and not item.destroyed]
+        self._items = [item for item in self
+                if (hasattr(item, 'destroyed') and not item.destroyed) or not hasattr(item, 'destroyed')]
 
     def on_resize(self, *args):
         self._objects_iter_call('on_resize', *args)

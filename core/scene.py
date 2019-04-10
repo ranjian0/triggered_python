@@ -39,9 +39,9 @@ class Scene(object):
     def on_update(self, dt):
         self._objects_iter_call('on_update', dt)
 
-        # Remove all destroyed objects
+        # -- remove all destroyed objects from the scene
         self.objects = {k:v for k,v in self.objects.items()
-            if hasattr(v, 'destroyed') and not v.destroyed}
+            if (hasattr(v, 'destroyed') and not v.destroyed) or not hasattr(v, 'destroyed')}
 
     def on_resize(self, *args):
         self._objects_iter_call('on_resize', *args)
