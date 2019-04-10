@@ -80,9 +80,6 @@ class Application(object):
     @classmethod
     def process(cls, obj):
         self = cls.instance
+        self.window.push_handlers(obj)
         if hasattr(obj, 'on_update'):
             pg.clock.schedule_interval(obj.on_update, 1/60)
-
-        for event in self.window.event_types:
-            if hasattr(obj, event):
-                self.window.push_handlers(getattr(obj, event))
