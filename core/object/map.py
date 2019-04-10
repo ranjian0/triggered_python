@@ -102,12 +102,14 @@ class Map(object):
 
     def on_draw(self):
         self.batch.draw()
+
+    def on_draw_last(self):
         if self._show_minimap:
             self._minimap_drop.blit(0, 0)
             self._minimap.draw()
 
     def on_resize(self, w, h):
-        minimap_size = tuple(map(operator.mul, (w,h), (.75, .9)))
+        minimap_size = tuple(map(operator.mul, (w,h), (.9, .95)))
         self._minimap = self._generate_minimap(minimap_size)
 
         self._minimap.image.anchor_x = self._minimap.image.width
