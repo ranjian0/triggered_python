@@ -64,6 +64,10 @@ class Enemy(Entity):
         self.attack_counter = 0
         self.attack_fequency = 10
 
+        # ALERT [Transition mode]
+        self.alert = False
+        self.alert_target = None
+
 
     def new_state(self, state):
         if self._state:
@@ -92,12 +96,18 @@ class Enemy(Entity):
                 self.chase_target = other
                 if self._state is not EnemyState_CHASE:
                     self.new_state(EnemyState_CHASE)
+            else:
+                # Stay alert incase player comes into view
+                self.alert = True
+                self.alert_target = other
+
 
 
     def on_body_exited(self, other):
         if hasattr(other, 'tag') and other.tag == 'Player':
-            # No need to handle this, State only changes when we lose line of sight
-            pass
+            # If we were in high alert, now target has completely escaped us
+            self.alert = False
+            self.alert_target = None
 
     def _look_at(self, target):
         tx, ty = target
@@ -177,7 +187,6 @@ class EnemyState_PATROL(EnemyState):
 
     @staticmethod
     def enter(enemy):
-        #XXX TODO
         # Calculate return path to waypoints if we cannot see patrol_target
         hit = raycast(enemy.position, enemy.patrol_target)
         if hit:
@@ -214,6 +223,18 @@ class EnemyState_PATROL(EnemyState):
         enemy._look_at(target)
         enemy._move_to(target, dt)
 
+        #XXX EDGE CASE
+        # Player is in trigger area but is not visible
+        # Escaped during CHASE or ATTACK
+        if enemy.alert:
+            # Cast ray to see if player has become visible
+            target = enemy.alert_target
+            hit = raycast(enemy.position, target.position)
+            visible = hit.shape in target.shapes
+            if visible:
+                enemy.chase_target = target
+                enemy.new_state(EnemyState_CHASE)
+
     @staticmethod
     def exit(enemy):
         pass
@@ -235,9 +256,11 @@ class EnemyState_CHASE(EnemyState):
 
         #XXX Check if target went out of sight
         hit = raycast(enemy.position, target.position)
+        # -- Possible target died
         if not hit:
             enemy.new_state(EnemyState_PATROL)
             return
+
         visible = hit.shape in target.shapes
         # -- still in our line of sight
         if visible:
@@ -253,6 +276,8 @@ class EnemyState_CHASE(EnemyState):
 
         # -- target escaped our sight
         else:
+            enemy.alert = True
+            enemy.alert_target = target
             enemy.new_state(EnemyState_PATROL)
 
     @staticmethod
@@ -263,6 +288,7 @@ class EnemyState_ATTACK(EnemyState):
     """
     Stop close to a target and shoot at it.
         - If target move away within (chase radius), Transition to CHASE
+        - If target moves out of sight, Transition to PATROL
     """
 
     @staticmethod
@@ -275,9 +301,11 @@ class EnemyState_ATTACK(EnemyState):
 
         #XXX Check if target went out of sight
         hit = raycast(enemy.position, target.position)
+        # -- Possible target died
         if not hit:
             enemy.new_state(EnemyState_PATROL)
             return
+
         visible = hit.shape in target.shapes
         # -- still in our line of sight
         if visible:
@@ -290,7 +318,10 @@ class EnemyState_ATTACK(EnemyState):
                 enemy.chase_target = target
                 enemy.new_state(EnemyState_CHASE)
 
+        # -- target escaped our sight,
         else:
+            enemy.alert = True
+            enemy.alert_target = target
             enemy.new_state(EnemyState_PATROL)
 
     @staticmethod
