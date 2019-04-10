@@ -24,7 +24,9 @@ def EnemyCollection(positions, waypoints):
 class Enemy(Entity):
 
     def __init__(self, **kwargs):
-        Entity.__init__(self, image=Resources.instance.sprite("robot1_gun"), **kwargs)
+        super().__init__(image=Resources.instance.sprite("robot1_gun"),
+            minimap_image=Resources.instance.sprite("minimap_enemy"), **kwargs)
+
         self.speed = 175
         self.direction = (0, 0)
         self.body.tag = "Enemy"
@@ -36,7 +38,6 @@ class Enemy(Entity):
         PhysicsWorld.instance.add(self.trigger_area)
         PhysicsWorld.instance.register_collision(self.trigger_area.collision_type,
             on_enter=self.on_body_entered, on_exit=self.on_body_exited)
-
 
         # -- STATE MACHINE
         self._state = EnemyState_IDLE
@@ -76,7 +77,8 @@ class Enemy(Entity):
         self._state.enter(self)
 
     def on_update(self, dt):
-        Entity.on_update(self, dt)
+        super().on_update(dt)
+
         self._state.update(self, dt)
         self.projectiles.on_update(dt)
 

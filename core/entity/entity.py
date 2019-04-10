@@ -2,8 +2,11 @@ import math
 import pyglet as pg
 import pymunk as pm
 
+from core.object import Map
 from core.physics import PhysicsWorld, PhysicsBody
-from core.utils import (image_set_size,
+from core.utils import (
+    reset_matrix,
+    image_set_size,
     image_set_anchor_center)
 
 class Entity(object):
@@ -34,6 +37,14 @@ class Entity(object):
 
             self.sprite = pg.sprite.Sprite(self.image,
                 *self.position, batch=self.batch)
+
+        if 'minimap_image' in kwargs:
+            self._show_minimap = False
+            self._window_size = (0, 0)
+            self.minimap_image = kwargs.pop('minimap_image')
+            image_set_size(self.minimap_image, 25, 25)
+            image_set_anchor_center(self.minimap_image)
+            self.minimap_sprite = pg.sprite.Sprite(self.minimap_image)
 
         for k,v in kwargs.items():
             if hasattr(self, k):
@@ -76,10 +87,37 @@ class Entity(object):
     def on_draw(self):
         self.batch.draw()
 
+    def on_draw_last(self):
+        if self._show_minimap:
+            with reset_matrix(*self._window_size):
+                self.minimap_sprite.draw()
+
+    def on_resize(self, w, h):
+        self._window_size = (w, h)
+
     def on_update(self, dt):
         if self.sprite.image:
             # pyglet rotates clockwise (pymunk anti-clockwise)
             self.sprite.update(*self.position, -math.degrees(self.rotation))
+
+        if self.minimap_sprite.image:
+            mmap = Map.instance._minimap
+
+            w, h = mmap.width, mmap.height
+            offx, offy = mmap.x-w, mmap.y
+            sx, sy = [mini/_map for mini, _map in zip((w,h), Map.instance.size)]
+            px, py = self.position
+
+            _x, _y = offx + (px*sx), offy + (py*sy)
+            self.minimap_sprite.update(x=_x, y=_y)
+
+    def on_key_press(self, symbol, mod):
+        if symbol == pg.window.key.TAB:
+            self._show_minimap = True
+
+    def on_key_release(self, symbol, mod):
+        if symbol == pg.window.key.TAB:
+            self._show_minimap = False
 
     def damage(self, amount=5):
         self.health -= amount
@@ -90,5 +128,6 @@ class Entity(object):
     def destroy(self):
         PhysicsWorld.remove(self.body, self.shape)
         self.sprite.delete()
+        self.minimap_sprite.delete()
         self.destroyed = True
 

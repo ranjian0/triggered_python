@@ -5,7 +5,7 @@ import pymunk as pm
 import itertools as it
 from resources import Resources
 from core.physics import PhysicsWorld
-from core.utils import image_set_size
+from core.utils import image_set_size, reset_matrix
 
 tadd = lambda x,y : tuple(map(operator.add, x, y))
 tmul = lambda x,y : tuple(map(operator.mul, x, y))
@@ -31,6 +31,7 @@ class Map(object):
         self._minimap = None
         self._minimap_drop = None
         self._show_minimap = False
+        self._window_size = (0, 0)
         self._navmap = Astar(self.data, self.node_size)
         self._generate()
 
@@ -105,10 +106,12 @@ class Map(object):
 
     def on_draw_last(self):
         if self._show_minimap:
-            self._minimap_drop.blit(0, 0)
-            self._minimap.draw()
+            with reset_matrix(*self._window_size):
+                self._minimap_drop.blit(0, 0)
+                self._minimap.draw()
 
     def on_resize(self, w, h):
+        self._window_size = (w,h)
         minimap_size = tuple(map(operator.mul, (w,h), (.9, .95)))
         self._minimap = self._generate_minimap(minimap_size)
 

@@ -1,3 +1,4 @@
+import operator as op
 
 class Collection:
     """ Base class to manage a collection of objects """
@@ -7,8 +8,7 @@ class Collection:
         self._items = []
 
     def __iter__(self):
-        for item in self._items:
-            yield item
+        return iter(self._items)
 
     def add(self, *args, **kwargs):
         """ Add a single object of type self._class to the collection """
@@ -22,17 +22,54 @@ class Collection:
             arg = () if not len(args) else args[idx]
             self.add(*arg, **kw)
 
+    def _objects_iter_call(self, method, *args, **kwargs):
+        """ Call meth for all objects """
+        for obj in self:
+            if hasattr(obj, method):
+                f = op.methodcaller(method, *args, **kwargs)
+                f(obj)
+
+    #XXX Event handlers
     def on_draw(self):
-        for item in self:
-            if hasattr(item, 'on_draw'):
-                item.on_draw()
+        self._objects_iter_call('on_draw_first')
+        self._objects_iter_call('on_draw')
+        self._objects_iter_call('on_draw_last')
 
     def on_update(self, dt):
-        for item in self:
-            if hasattr(item, 'on_update'):
-                item.on_update(dt)
+        self._objects_iter_call('on_update', dt)
 
         # -- remove destroyed items from the collection
-        destroyed = [self._items.index(item) for item in self if hasattr(item, 'destroyed') and item.destroyed]
-        for idx in destroyed:
-            del self._items[idx]
+        self._items = [item for item in self if hasattr(item, 'destroyed') and not item.destroyed]
+
+    def on_resize(self, *args):
+        self._objects_iter_call('on_resize', *args)
+
+    def on_key_press(self, *args):
+        self._objects_iter_call('on_key_press', *args)
+
+    def on_key_release(self, *args):
+        self._objects_iter_call('on_key_release', *args)
+
+    def on_mouse_press(self, *args):
+        self._objects_iter_call('on_mouse_press', *args)
+
+    def on_mouse_release(self, *args):
+        self._objects_iter_call('on_mouse_release', *args)
+
+    def on_mouse_drag(self, *args):
+        self._objects_iter_call('on_mouse_drag', *args)
+
+    def on_mouse_motion(self, *args):
+        self._objects_iter_call('on_mouse_motion', *args)
+
+    def on_mouse_scroll(self, *args):
+        self._objects_iter_call('on_mouse_scroll', *args)
+
+    def on_text(self, *args):
+        self._objects_iter_call('on_text', *args)
+
+    def on_text_motion(self, *args):
+        self._objects_iter_call('on_text_motion', *args)
+
+    def on_text_motion_select(self, *args):
+        self._objects_iter_call('on_text_motion_select', *args)
