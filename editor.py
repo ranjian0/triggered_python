@@ -17,6 +17,7 @@
 
 import os
 import pickle
+import operator
 import pyglet as pg
 
 from core.ui import *
@@ -30,7 +31,6 @@ class Editor:
         self.levels = Resources.instance.levels()
         self.current = sorted_levels(0) if len(self.levels) else None
         self.data = dict()
-
         self.load()
 
     def load(self):
@@ -81,17 +81,20 @@ class Editor:
         self.viewport.reload(self.data)
         print("Saved -- > ", self.current)
 
-    def on_draw(self):
-        # Application.instance.clear((.39, .39, .39, 1))
+    def __iter__(self):
+        return iter([self.viewport, self.toolbar, self.topbar])
 
-        self.viewport.draw()
-        self.toolbar.draw()
-        self.topbar.draw()
+    def _iter_call_meth(self, meth, *args, **kwargs):
+        for obj in self:
+            if hasattr(obj, meth):
+                caller = operator.methodcaller(meth, *args, **kwargs)
+                caller(obj)
+
+    def on_draw(self):
+        self._iter_call_meth("on_draw")
 
     def on_update(self, dt):
-        self.topbar.update(dt)
-        self.toolbar.update(dt)
-        self.viewport.update(dt)
+        self._iter_call_meth("on_update", dt)
 
         # -- check selected tab in topbar
         if self.topbar.tab_switched:
@@ -108,10 +111,39 @@ class Editor:
         for tool in self.toolbar.tools:
             tool.set_viewport_transform(self.viewport.get_transform())
 
-    def on_event(self, *args, **kwargs):
-        self.topbar.event(*args, **kwargs)
-        self.toolbar.event(*args, **kwargs)
-        self.viewport.event(*args, **kwargs)
+    def on_resize(self, *args):
+        self._iter_call_meth('on_resize', *args)
+
+    def on_key_press(self, *args):
+        self._iter_call_meth('on_key_press', *args)
+
+    def on_key_release(self, *args):
+        self._iter_call_meth('on_key_release', *args)
+
+    def on_mouse_press(self, *args):
+        self._iter_call_meth('on_mouse_press', *args)
+
+    def on_mouse_release(self, *args):
+        self._iter_call_meth('on_mouse_release', *args)
+
+    def on_mouse_drag(self, *args):
+        self._iter_call_meth('on_mouse_drag', *args)
+
+    def on_mouse_motion(self, *args):
+        self._iter_call_meth('on_mouse_motion', *args)
+
+    def on_mouse_scroll(self, *args):
+        self._iter_call_meth('on_mouse_scroll', *args)
+
+    def on_text(self, *args):
+        self._iter_call_meth('on_text', *args)
+
+    def on_text_motion(self, *args):
+        self._iter_call_meth('on_text_motion', *args)
+
+    def on_text_motion_select(self, *args):
+        self._iter_call_meth('on_text_motion_select', *args)
+
 
 class EditorTopbar:
     HEIGHT = 40
@@ -209,10 +241,11 @@ class EditorTopbar:
         tab_averge_width = sum([t.get_size()[0] + margin for t in self.tabs]) / len(self.tabs)
         self.max_tabs  = int(bar_width / tab_averge_width)
 
-    def draw(self):
+    def on_draw(self):
         # -- draw background
-        self.topbar_image.blit(0, Application.instance.window.height-self.HEIGHT)
-        draw_line((0, Application.instance.window.height-self.HEIGHT), (Application.instance.window.width, Application.instance.window.height-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
+        w, h = Application.instance.size
+        self.topbar_image.blit(0, h-self.HEIGHT)
+        draw_line((0,h-self.HEIGHT), (w, h-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
 
         # -- draw action buttons
         self.new_btn.draw()
@@ -233,35 +266,38 @@ class EditorTopbar:
                 for i in range(st, sp+1, 1):
                     self.tabs[i].draw()
 
-    def update(self, dt):
+    def on_update(self, dt):
         pass
 
-    def event(self, *args, **kwargs):
-        # -- handle resize
-        _type = args[0]
-        if _type == EventType.RESIZE:
-            _,w,h = args
-            if self.tabs:
-                self.init_tabs()
-            self.new_btn.update(EditorToolbar.WIDTH*.25,  h - self.HEIGHT/2)
-            self.save_btn.update(EditorToolbar.WIDTH*.75, h - self.HEIGHT/2)
+    def on_resize(self, w, h):
+        if self.tabs:
+            self.init_tabs()
+        self.new_btn.update(EditorToolbar.WIDTH*.25,  h - self.HEIGHT/2)
+        self.save_btn.update(EditorToolbar.WIDTH*.75, h - self.HEIGHT/2)
 
-            self.topbar_settings['size'] = (w, self.HEIGHT)
-            self.topbar_image = self.topbar.create_image(
-                *self.topbar_settings.get("size"))
+        self.topbar_settings['size'] = (w, self.HEIGHT)
+        self.topbar_image = self.topbar.create_image(
+            *self.topbar_settings.get("size"))
 
-        if _type == EventType.MOUSE_SCROLL:
-            x, y, sx, sy = args[1:]
-            if not mouse_over_rect((x, y), *self.get_rect()): return
+    def on_mouse_scroll(self, x, y, sx, sy):
+        if not mouse_over_rect((x, y), *self.get_rect()):
+            return
 
-            # -- update active level based on scroll
-            self.active_level = clamp(self.active_level + sy, 0, len(self.tabs)-1)
-            self.switch_level(self.tabs[self.active_level].text)
+        # -- update active level based on scroll
+        self.active_level = clamp(self.active_level + sy, 0, len(self.tabs)-1)
+        self.switch_level(self.tabs[self.active_level].text)
 
-        self.new_btn.event(*args, **kwargs)
-        self.save_btn.event(*args, **kwargs)
+    def on_mouse_motion(self, x, y, dx, dy):
+        self.new_btn.on_mouse_motion(x, y, dx, dy)
+        self.save_btn.on_mouse_motion(x, y, dx, dy)
         for tab in self.tabs:
-            tab.event(*args, **kwargs)
+            tab.on_mouse_motion(x, y, dx, dy)
+
+    def on_mouse_press(self, x, y, button, mod):
+        self.new_btn.on_mouse_press(x, y, button, mod)
+        self.save_btn.on_mouse_press(x, y, button, mod)
+        for tab in self.tabs:
+            tab.on_mouse_press(x, y, button, mod)
 
 class EditorToolbar:
     WIDTH = 60
@@ -309,15 +345,27 @@ class EditorToolbar:
         size = (self.WIDTH, Application.instance.window.height-EditorTopbar.HEIGHT)
         return [center, size]
 
-    def draw(self):
+    def __iter__(self):
+        return iter(self.tools)
+
+    def _iter_call_meth(self, method, *args, **kwargs):
+        """ Call meth on this objects __iter__ """
+        for obj in self:
+            if hasattr(obj, method):
+                f = operator.methodcaller(method, *args, **kwargs)
+                f(obj)
+
+    #XXX Event handlers
+    def on_draw(self):
         self.toolbar_image.blit(0, -EditorTopbar.HEIGHT)
-        for tool in self.tools:
-            tool.draw()
+        self._iter_call_meth('on_draw_first')
+        self._iter_call_meth('on_draw')
+        self._iter_call_meth('on_draw_last')
 
-    def update(self, dt):
-        for tool in self.tools:
-            tool.update(dt)
+    def on_update(self, dt):
+        self._iter_call_meth('on_update', dt)
 
+        for tool in self:
             if tool.activated:
                 # -- set all tools as inactive
                 set_flag('is_active', False, self.tools)
@@ -326,31 +374,54 @@ class EditorToolbar:
                 # -- activate current tool
                 tool.is_active = True
 
-    def event(self, *args, **kwargs):
-        for tool in self.tools:
-            tool.event(*args, **kwargs)
+    def on_resize(self, w, h):
+        self._iter_call_meth('on_resize', w, h)
 
-        # -- handle resize
-        _type = args[0]
-        if _type == EventType.RESIZE:
-            _,_,h = args
-            self.tool_start_loc = (0, h- EditorTopbar.HEIGHT)
-            self.init_tools()
+        self.tool_start_loc = (0, h-EditorTopbar.HEIGHT)
+        self.init_tools()
 
-            self.toolbar_settings['size'] = (self.WIDTH, h)
-            self.toolbar_image = self.toolbar.create_image(
-                *self.toolbar_settings.get("size"))
+        self.toolbar_settings['size'] = (self.WIDTH, h)
+        self.toolbar_image = self.toolbar.create_image(
+            *self.toolbar_settings.get("size"))
 
-        elif _type == EventType.MOUSE_PRESS:
-            x, y, btn, mod = args[1:]
+    def on_key_press(self, *args):
+        self._iter_call_meth('on_key_press', *args)
 
-            # -- deactivate all tools if click over empty toolbar area
-            if btn == mouse.LEFT and mouse_over_rect((x, y), *self.get_rect()):
-                # -- check if mouse was clicked over toolbar but not over a tool,
-                if not any([mouse_over_rect((x, y), tool.position, tool.size) for tool in self.tools]):
-                    # -- set all tools as inactive
-                    set_flag('is_active', False, self.tools)
-                    set_flag('activated', False, self.tools)
+    def on_key_release(self, *args):
+        self._iter_call_meth('on_key_release', *args)
+
+    def on_mouse_press(self, x, y, button, mod):
+        self._iter_call_meth('on_mouse_press',  x, y, button, mod)
+
+        # -- deactivate all tools if click over empty toolbar area
+        if button == mouse.LEFT and mouse_over_rect((x, y), *self.get_rect()):
+            # -- check if mouse was clicked over toolbar but not over a tool,
+            if not any([mouse_over_rect((x, y), tool.position, tool.size) for tool in self.tools]):
+                # -- set all tools as inactive
+                set_flag('is_active', False, self.tools)
+                set_flag('activated', False, self.tools)
+
+
+    def on_mouse_release(self, *args):
+        self._iter_call_meth('on_mouse_release', *args)
+
+    def on_mouse_drag(self, *args):
+        self._iter_call_meth('on_mouse_drag', *args)
+
+    def on_mouse_motion(self, *args):
+        self._iter_call_meth('on_mouse_motion', *args)
+
+    def on_mouse_scroll(self, *args):
+        self._iter_call_meth('on_mouse_scroll', *args)
+
+    def on_text(self, *args):
+        self._iter_call_meth('on_text', *args)
+
+    def on_text_motion(self, *args):
+        self._iter_call_meth('on_text_motion', *args)
+
+    def on_text_motion_select(self, *args):
+        self._iter_call_meth('on_text_motion_select', *args)
 
 class EditorViewport:
     LINE_WIDTH = 2
@@ -476,7 +547,7 @@ class EditorViewport:
                 for point in points:
                     draw_point(point, color=(1,1,1,1))
 
-    def draw(self):
+    def on_draw(self):
         if not self.data: return
 
         glPushMatrix()
@@ -490,38 +561,35 @@ class EditorViewport:
                 self._editor_draw_waypoints()
         glPopMatrix()
 
-    def update(self, dt):
+    def on_update(self, dt):
         pass
 
-    def event(self, *args, **kwargs):
-        _type = args[0]
+    def on_mouse_drag(self, x, y, dx, dy, button, mod):
+        if not mouse_over_rect((x, y), *self.get_rect()):
+            return
 
-        if _type == EventType.MOUSE_DRAG:
-            x, y, dx, dy, but, mod = args[1:]
-            if not mouse_over_rect((x, y), *self.get_rect()): return
-
-            if but == mouse.MIDDLE:
-                self._is_panning = True
-                px, py = self._pan_offset
-                px = 0 if (px+dx) > 0 else px+dx
-                py = 0 if (py+dy) > 0 else py+dy
-                self._pan_offset = (px, py)
+        if button == mouse.MIDDLE:
+            self._is_panning = True
+            px, py = self._pan_offset
+            px = 0 if (px+dx) > 0 else px+dx
+            py = 0 if (py+dy) > 0 else py+dy
+            self._pan_offset = (px, py)
         else:
             self._is_panning = False
 
-        if _type == EventType.MOUSE_SCROLL:
-            x, y, sx, sy = args[1:]
-            if not mouse_over_rect((x, y), *self.get_rect()): return
+    def on_mouse_scroll(self, x, y, sx, sy):
+        if not mouse_over_rect((x, y), *self.get_rect()):
+            return
 
-            _sum = lambda x,y,val: (x+val, y+val)
-            if sy < 0:
-                self._zoom = _sum(*self._zoom, -self._zoom_sensitivity)
-            else:
-                self._zoom = _sum(*self._zoom,  self._zoom_sensitivity)
+        _sum = lambda x,y,val: (x+val, y+val)
+        if sy < 0:
+            self._zoom = _sum(*self._zoom, -self._zoom_sensitivity)
+        else:
+            self._zoom = _sum(*self._zoom,  self._zoom_sensitivity)
 
-            # -- clamp zoom to (0.2, 10.0) and round to  d.p
-            self._zoom = tuple(map(lambda x: clamp(x, 0.2, 10.0), self._zoom))
-            self._zoom = tuple(map(lambda x: round(x, 1), self._zoom))
+        # -- clamp zoom to (0.2, 10.0) and round to  d.p
+        self._zoom = tuple(map(lambda x: clamp(x, 0.2, 10.0), self._zoom))
+        self._zoom = tuple(map(lambda x: round(x, 1), self._zoom))
 
 
 class EditorTool:
@@ -595,7 +663,7 @@ class EditorTool:
         gs = EditorViewport.GRID_SPACING
         return int(vx) // gs, int(vy) // gs
 
-    def draw(self):
+    def on_draw(self):
         # -- draw tool background
         self.tool_background.blit(*self.position)
 
@@ -623,7 +691,7 @@ class EditorTool:
                 self.tool_background.blit(*loc)
                 image.blit(*loc)
 
-    def update(self, dt):
+    def on_update(self, dt):
         if self.start_show_event:
             self.mouse_down_duration += dt
 
@@ -632,35 +700,31 @@ class EditorTool:
                 self.start_show_event = False
                 self.mouse_down_duration = 0
 
-    def event(self, _type, *args, **kwargs):
+    def on_mouse_press(self, x, y, button, mod):
+        if button == mouse.LEFT:
+            if mouse_over_rect((x, y), self.position, self.size):
+                self.start_show_event = True
 
-        if _type == EventType.MOUSE_PRESS:
-            x, y, btn, mod = args
-            if btn == mouse.LEFT:
-                if mouse_over_rect((x, y), self.position, self.size):
-                    self.start_show_event = True
+    def on_mouse_release(self, x, y, button, mod):
+        if button == mouse.LEFT:
+            if self.start_show_event or self.show_options:
+                self.activated = True
 
-        if _type == EventType.MOUSE_RELEASE:
-            x, y, btn, mod = args
-            if btn == mouse.LEFT:
-                if self.start_show_event or self.show_options:
-                    self.activated = True
+            if self.start_show_event:
+                self.start_show_event = False
 
-                if self.start_show_event:
-                    self.start_show_event = False
+            if self.show_options:
+                # -- check if mouse was released over a tool option
+                # --  set that tool as active
+                offx = 50
+                for idx, (name, image) in enumerate(self.options.items()):
+                    idx += 1
+                    px, py = self.position
+                    loc = (px + (idx*offx), py)
+                    if mouse_over_rect((x,y), loc, self.size):
+                        self.default = list(self.options)[idx-1]
 
-                if self.show_options:
-                    # -- check if mouse was released over a tool option
-                    # --  set that tool as active
-                    offx = 50
-                    for idx, (name, image) in enumerate(self.options.items()):
-                        idx += 1
-                        px, py = self.position
-                        loc = (px + (idx*offx), py)
-                        if mouse_over_rect((x,y), loc, self.size):
-                            self.default = list(self.options)[idx-1]
-
-                    self.show_options = False
+                self.show_options = False
 
 class AddTileTool(EditorTool):
     def __init__(self, data):
@@ -668,7 +732,7 @@ class AddTileTool(EditorTool):
             "Wall" : Resources.instance.sprite("tool_wall"),
             "Floor" : Resources.instance.sprite("tool_floor")
         }
-        super(AddTileTool, self).__init__(opts, data)
+        super().__init__(opts, data)
 
     def _map_add_tile(self, idx, idy, data):
         _map = self.level_data.get('map')
@@ -724,32 +788,39 @@ class AddTileTool(EditorTool):
             if idy < len(_map) and idx < len(_map[0]):
                 _map[idy][idx] = ''
 
-    def event(self, _type, *args, **kwargs):
-        super(AddTileTool, self).event(_type, *args, **kwargs)
+    def _do_add_tile(self, x, y, mod):
+        # -- if we are showing tool options for other tools, return
+        for tool in EditorTool.tools:
+            if tool.show_options:
+                return
+
+        map_id = self.mouse_pos_to_map(x, y)
+        if self.default == 'Wall':
+            if mod & key.MOD_CTRL:
+                self._map_remove_wall_at(*map_id)
+            else:
+                self._map_add_wall_at(*map_id)
+        elif self.default == 'Floor':
+            if mod & key.MOD_CTRL:
+                self._map_remove_floor_at(*map_id)
+            else:
+                self._map_add_floor_at(*map_id)
+
+    def on_mouse_press(self, x, y, button, mod):
+        super().on_mouse_press(x, y, button, mod)
         if not self.is_active: return
+        if x < EditorToolbar.WIDTH: return
 
-        if _type == EventType.MOUSE_DRAG or _type == EventType.MOUSE_PRESS:
-            x,y,*_,but,mod = args
-            # -- ensure mouse if over viewport
-            if x < EditorToolbar.WIDTH: return
+        if button == mouse.LEFT:
+            self._do_add_tile(x, y, mod)
 
-            if but == mouse.LEFT:
-                # -- if we are showing tool options for other tools, return
-                for tool in EditorTool.tools:
-                    if tool.show_options:
-                        return
+    def on_mouse_drag(self, x, y, dx, dy, button, mod):
+        # super().on_mouse_drag(x, y, button, mod)
+        if not self.is_active: return
+        if x < EditorToolbar.WIDTH: return
 
-                map_id = self.mouse_pos_to_map(x, y)
-                if self.default == 'Wall':
-                    if mod & key.MOD_CTRL:
-                        self._map_remove_wall_at(*map_id)
-                    else:
-                        self._map_add_wall_at(*map_id)
-                elif self.default == 'Floor':
-                    if mod & key.MOD_CTRL:
-                        self._map_remove_floor_at(*map_id)
-                    else:
-                        self._map_add_floor_at(*map_id)
+        if button == mouse.LEFT:
+            self._do_add_tile(x, y, mod)
 
 class AddAgentTool(EditorTool):
     def __init__(self, data):
@@ -757,93 +828,96 @@ class AddAgentTool(EditorTool):
             "Player" : Resources.instance.sprite("tool_player"),
             "Enemy" : Resources.instance.sprite("tool_enemy"),
         }
-        super(AddAgentTool, self).__init__(opts, data)
+        super().__init__(opts, data)
 
-    def event(self, _type, *args, **kwargs):
-        super(AddAgentTool, self).event(_type, *args, **kwargs)
-        if not self.is_active: return
+    def on_mouse_press(self, x, y, button, mod):
+        super().on_mouse_press(x, y, button, mod)
 
-        if _type == EventType.MOUSE_PRESS:
-            x, y, but, mod = args
-            # -- ensure mouse if over viewport
-            if x < EditorToolbar.WIDTH: return
+        # -- ensure tool is active
+        if not self.is_active:
+            return
 
-            if but == mouse.LEFT:
-                px, py = self.mouse_pos_to_viewport(x, y)
+        if x < EditorToolbar.WIDTH:
+            return
 
-                if self.default == 'Player':
-                    self.level_data['player'] = (px, py)
-                elif self.default == 'Enemy':
-                    if mod & key.MOD_CTRL:
-                        enemies = self.level_data['enemies']
-                        waypoints = self.level_data['waypoints']
-                        for idx, en in enumerate(enemies):
-                            if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
-                                self.level_data['enemies'].remove(en)
-                                self.level_data['waypoints'].remove(waypoints[idx])
-                    else:
-                        self.level_data['enemies'].append((px, py))
-                        self.level_data['waypoints'].append([])
+        if button == mouse.LEFT:
+            px, py = self.mouse_pos_to_viewport(x, y)
+
+            if self.default == 'Player':
+                self.level_data['player'] = (px, py)
+            elif self.default == 'Enemy':
+                if mod & key.MOD_CTRL:
+                    enemies = self.level_data['enemies']
+                    waypoints = self.level_data['waypoints']
+                    for idx, en in enumerate(enemies):
+                        if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
+                            self.level_data['enemies'].remove(en)
+                            self.level_data['waypoints'].remove(waypoints[idx])
+                else:
+                    self.level_data['enemies'].append((px, py))
+                    self.level_data['waypoints'].append([])
 
 class AddWaypointTool(EditorTool):
     def __init__(self, data):
         opts = {
             "Waypoint" : Resources.instance.sprite("tool_waypoint"),
         }
-        super(AddWaypointTool, self).__init__(opts, data)
-
-    def event(self, _type, *args, **kwargs):
-        super(AddWaypointTool, self).event(_type, *args, **kwargs)
-        if not self.is_active: return
-
-        if _type == EventType.MOUSE_PRESS:
-            x, y, but, mod = args
-            px, py = self.mouse_pos_to_viewport(x, y)
-
-            # -- ensure mouse if over viewport
-            if x < EditorToolbar.WIDTH: return
-
-            # -- create waypoint
-            if but == mouse.LEFT:
-                # -- check if an enemy is selected
-                enemy_id = self.level_data.get('_active_enemy')
-                if enemy_id:
-                    # -- ensure waypoint list exist
-                    waypoints = self.level_data.get('waypoints')
-                    if not waypoints:
-                        self.level_data['waypoints'] = []
-                        waypoints = self.level_data['waypoints']
-
-                    # -- check if waypoints exist for all enemies
-                    missing = len(self.level_data['enemies']) > len(waypoints)
-                    if missing:
-                        for _ in range(len(self.level_data['enemies']) - len(waypoints)):
-                            waypoints.append([])
+        super().__init__(opts, data)
 
 
-                    if mod & key.MOD_CTRL:
-                        # -- remove waypoint at mouse location
-                        selected = None
-                        for point in waypoints[enemy_id-1]:
-                            if mouse_over_rect((px, py), point, (10, 10)):
-                                selected = point
-                                break
-                        if selected:
-                            waypoints[enemy_id-1].remove(selected)
-                    else:
-                        # -- add mouse location to the selected enemy waypoints
-                        waypoints[enemy_id-1].append((px, py))
+    def on_mouse_press(self, x, y, button, mod):
+        super().on_mouse_press(x, y, button, mod)
 
-            # -- select enemy
-            elif but == mouse.RIGHT:
+        # -- ensure tool is active
+        if not self.is_active:
+            return
+
+        # -- ensure mouse if over viewport
+        if x < EditorToolbar.WIDTH:
+            return
+
+        # -- create waypoint
+        px, py = self.mouse_pos_to_viewport(x, y)
+        if button == mouse.LEFT:
+            # -- check if an enemy is selected
+            enemy_id = self.level_data.get('_active_enemy')
+            if enemy_id:
+                # -- ensure waypoint list exist
+                waypoints = self.level_data.get('waypoints')
+                if not waypoints:
+                    self.level_data['waypoints'] = []
+                    waypoints = self.level_data['waypoints']
+
+                # -- check if waypoints exist for all enemies
+                missing = len(self.level_data['enemies']) > len(waypoints)
+                if missing:
+                    for _ in range(len(self.level_data['enemies']) - len(waypoints)):
+                        waypoints.append([])
+
+
                 if mod & key.MOD_CTRL:
-                    if self.level_data.get('_active_enemy'):
-                        del self.level_data['_active_enemy']
+                    # -- remove waypoint at mouse location
+                    selected = None
+                    for point in waypoints[enemy_id-1]:
+                        if mouse_over_rect((px, py), point, (10, 10)):
+                            selected = point
+                            break
+                    if selected:
+                        waypoints[enemy_id-1].remove(selected)
                 else:
-                    enemies = self.level_data['enemies']
-                    for idx, en in enumerate(enemies):
-                        if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
-                            self.level_data['_active_enemy'] = idx+1
+                    # -- add mouse location to the selected enemy waypoints
+                    waypoints[enemy_id-1].append((px, py))
+
+        # -- select enemy
+        elif button == mouse.RIGHT:
+            if mod & key.MOD_CTRL:
+                if self.level_data.get('_active_enemy'):
+                    del self.level_data['_active_enemy']
+            else:
+                enemies = self.level_data['enemies']
+                for idx, en in enumerate(enemies):
+                    if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
+                        self.level_data['_active_enemy'] = idx+1
 
 class ObjectivesTool(EditorTool):
     WIDTH  = 400
@@ -853,7 +927,7 @@ class ObjectivesTool(EditorTool):
         opts = {
             "Objectives" : Resources.instance.sprite("tool_objectives"),
         }
-        super(ObjectivesTool, self).__init__(opts, data)
+        super().__init__(opts, data)
 
         self.batch = pg.graphics.Batch()
         self.panel_offset = (EditorToolbar.WIDTH, 0)
@@ -868,7 +942,6 @@ class ObjectivesTool(EditorTool):
         self.background_image = self.background.create_image(
             *self.background_settings.get("size"))
 
-
         # panel labels
         pad = 5
         left, top = EditorToolbar.WIDTH + pad, self.HEIGHT - pad
@@ -878,7 +951,6 @@ class ObjectivesTool(EditorTool):
                 anchor_y='top', color=(0, 0, 0, 255), batch=self.batch),
             pg.text.Label("Objectives", x=left, y=top-50, bold=True,
                 anchor_y='top', color=(0, 0, 0, 255), batch=self.batch)
-
         ]
 
         # panel inputs
@@ -917,72 +989,68 @@ class ObjectivesTool(EditorTool):
             idx = 0
         self.set_focus(self.inputs[idx])
 
-
     def save_data(self):
         self.level_data['name'] = self.inputs[0].document.text
         self.level_data['objectives'] = [
             inp.document.text for inp in self.inputs[1:]
         ]
 
-
-    def event(self, _type, *args, **kwargs):
-        super(ObjectivesTool, self).event(_type, *args, **kwargs)
-        if self.is_active and self.level_data:
-            if _type == EventType.RESIZE:
-                pass
-
-            elif _type == EventType.KEY_PRESS:
-                symbol, mod = args
-                if symbol == key.TAB:
-                    self.next_focus()
-                elif symbol == key.RETURN:
-                    self.save_data()
-                    self.next_focus()
-
-            elif _type == EventType.MOUSE_MOTION:
-                x, y, dx, dy = args
-                for inp in self.inputs:
-                    if inp.hit_test(x, y):
-                        Application.instance.window.set_mouse_cursor(self.text_cursor)
-                else:
-                    Application.instance.window.set_mouse_cursor(None)
-
-            elif _type == EventType.MOUSE_PRESS:
-                x, y, bt, mod = args
-                for inp in self.inputs:
-                    if inp.hit_test(x, y):
-                        self.set_focus(inp)
-                        break
-                else:
-                    self.set_focus(None)
-
-                if self.focus:
-                    self.focus.caret.on_mouse_press(x, y, bt, mod)
-
-            elif _type == EventType.MOUSE_DRAG:
-                if self.focus:
-                    self.focus.caret.on_mouse_drag(*args)
-
-            elif _type == EventType.TEXT:
-                if self.focus:
-                    if '\r' not in args:
-                        self.focus.caret.on_text(*args)
-                self.save_data()
-
-            elif _type == EventType.TEXT_MOTION:
-                if self.focus:
-                    self.focus.caret.on_text_motion(*args)
-
-            elif _type == EventType.TEXT_MOTION_SELECT:
-                if self.focus:
-                    self.focus.caret.on_text_motion_select(*args)
-
-
-    def draw(self):
-        super(ObjectivesTool, self).draw()
+    def on_draw(self):
+        super().on_draw()
         if self.is_active and self.level_data:
             self.background_image.blit(*self.panel_offset)
             self.batch.draw()
+
+    def on_key_press(self, symbol, mod):
+        if self.is_active and self.level_data:
+            if symbol == key.TAB:
+                self.next_focus()
+            elif symbol == key.RETURN:
+                self.save_data()
+                self.next_focus()
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        if self.is_active and self.level_data:
+            for inp in self.inputs:
+                if inp.hit_test(x, y):
+                    Application.instance.window.set_mouse_cursor(self.text_cursor)
+            else:
+                Application.instance.window.set_mouse_cursor(None)
+
+    def on_mouse_press(self, x, y, button, mod):
+        super().on_mouse_press(x, y, button, mod)
+        if self.is_active and self.level_data:
+            for inp in self.inputs:
+                if inp.hit_test(x, y):
+                    self.set_focus(inp)
+                    break
+            else:
+                self.set_focus(None)
+
+            if self.focus:
+                self.focus.caret.on_mouse_press(x, y, button, mod)
+
+    def on_mouse_drag(self, *args):
+        if self.is_active and self.level_data:
+            if self.focus:
+                self.focus.caret.on_mouse_drag(*args)
+
+    def on_text(self, *args):
+        if self.is_active and self.level_data:
+            if self.focus:
+                if '\r' not in args:
+                    self.focus.caret.on_text(*args)
+            self.save_data()
+
+    def on_text_motion(self, *args):
+        if self.is_active and self.level_data:
+            if self.focus:
+                self.focus.caret.on_text_motion(*args)
+
+    def on_text_motion_select(self, *args):
+        if self.is_active and self.level_data:
+            if self.focus:
+                self.focus.caret.on_text_motion_select(*args)
 
 
 '''
@@ -992,15 +1060,10 @@ class ObjectivesTool(EditorTool):
 '''
 
 def main():
-    app = Application((800, 600), "Editor", resizable=True)
     res = Resources()
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    glEnable(GL_BLEND)
-
+    app = Application((800, 600), "Editor", resizable=True)
     app.process(Editor())
     app.run()
-
 
 if __name__ == '__main__':
     main()

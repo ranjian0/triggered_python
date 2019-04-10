@@ -50,6 +50,7 @@ class Application(object):
     window = property(_get_window)
 
     def _get_size(self):
+        self._size = self._window.get_size()
         return self._size
     def _set_size(self, val):
         self._size = val

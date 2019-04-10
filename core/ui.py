@@ -67,17 +67,14 @@ class Button(object):
     def hover(self, x, y):
         return NotImplementedError()
 
-    def event(self, _type, *args, **kwargs):
-        if _type == EventType.MOUSE_MOTION:
-            x, y, *_ = args
-            self.hover(x,y)
+    def on_mouse_motion(self, x, y, dx, dy):
+        self.hover(x, y)
 
-        elif _type == EventType.MOUSE_PRESS:
-            x, y, btn, mod = args
+    def on_mouse_press(self, x, y, button, mod):
+        if button == mouse.LEFT:
+            if self.hover(x,y):
+                self._callback(*self._callback_args)
 
-            if btn == mouse.LEFT:
-                if self.hover(x,y):
-                    self._callback(*self._callback_args)
 
 class TextButton(pg.text.Label, Button):
 
