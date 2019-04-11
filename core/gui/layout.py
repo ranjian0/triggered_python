@@ -1,5 +1,6 @@
 import operator
 from .widget import Widget
+from core.math import Rect
 
 
 class Layout(Widget):
@@ -14,16 +15,20 @@ class Layout(Widget):
     def _add(self, item):
         item.parent = self
         self._children.append(item)
+        self._dirty = True
 
     def __iadd__(self, item):
         self._add(item)
+        return self
 
     def _remove(self, item):
         item.parent = None
         self._children.remove(item)
+        self._dirty = True
 
     def __isub__(self, item):
         self._remove(item)
+        return self
 
     def __iter__(self):
         return iter(self._children)
@@ -36,6 +41,7 @@ class Layout(Widget):
                 f(obj)
 
     def on_draw(self):
+        self.update_layout()
         self.batch.draw()
 
     def on_update(self, dt):
@@ -83,36 +89,41 @@ class BoxLayout(Layout):
         self._spacing = spacing
 
     def update_layout(self):
-        self._gx, self._gy = self._find_root().position
+        for c in self._children:
+            c.update_layout()
 
-        w, h = 0, 0
-        if self._orient == Layout.HORIZONTAL:
-            h = max(c.h for c in self._children)
-            w = sum(c.w + self._spacing for c in self._children)
+        if self._dirty:
+            self._gx, self._gy = self._find_root().position
 
-            accumulator = 0
-            for c in self._children:
-                c.y = self._gy
-                c.x = self._gx + accumulator
-                c.update_layout()
-                accumulator += c.w  + self._spacing
+            w, h = 0, 0
+            if self._orient == Layout.HORIZONTAL:
+                h = max(c.h for c in self._children)
+                w = sum(c.w + self._spacing for c in self._children)
 
-        elif self._orient == 1:
-            w = max(c.w for c in self._children)
-            h = sum(c.h + self._spacing for c in self._children)
+                accumulator = 0
+                for c in self._children:
+                    c.y = self._gy
+                    c.x = self._gx + accumulator
+                    c.update_layout()
+                    accumulator += c.w  + self._spacing
 
-            accumulator = 0
-            for c in self._children:
-                c.x = self._gx
-                c.y = self._gy + accumulator
-                c.update_layout()
-                accumulator += c.h + self._spacing
+            elif self._orient == Layout.VERTICAL:
+                w = max(c.w for c in self._children)
+                h = sum(c.h + self._spacing for c in self._children)
 
-        self._w, self._h = w, h
-        self._rect = Rect(self._gx, self._gy, self._w, self._h)
+                accumulator = 0
+                for c in self._children:
+                    c.x = self._gx
+                    c.y = self._gy - accumulator
+                    c.update_layout()
+                    accumulator += c.h + self._spacing
+
+            self._w, self._h = w, h
+            self._rect = Rect(self._gx, self._gy, self._w, self._h)
+            self.update_batch(self._batch, self._group)
         super().update_layout()
 
-    def update_batch(self):
+    def update_batch(self, batch, group):
         for c in self._children:
             c.update_batch(self._batch, self._group)
 
