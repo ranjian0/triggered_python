@@ -23,7 +23,7 @@ class Layout(Widget):
         self._children.remove(item)
 
     def __isub__(self, item):
-        self._children.remove(item)
+        self._remove(item)
 
     def __iter__(self):
         return iter(self._children)
