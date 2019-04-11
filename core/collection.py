@@ -24,9 +24,6 @@ class Collection:
         self._class = object_type
         self._items = []
 
-    def __iter__(self):
-        return iter(self._items)
-
     def add(self, *args, **kwargs):
         """ Add a single object of type self._class to the collection """
         obj = self._class(*args, **kwargs)
@@ -39,7 +36,10 @@ class Collection:
             arg = () if not len(args) else args[idx]
             self.add(*arg, **kw)
 
-    def _objects_iter_call(self, method, *args, **kwargs):
+    def __iter__(self):
+        return iter(self._items)
+
+    def _iter_call_meth(self, method, *args, **kwargs):
         """ Call meth for all objects """
         for obj in self:
             if hasattr(obj, method):
@@ -48,50 +48,50 @@ class Collection:
 
     #XXX Event handlers
     def on_draw(self):
-        self._objects_iter_call('on_draw')
+        self._iter_call_meth('on_draw')
 
     def on_draw_first(self):
-        self._objects_iter_call('on_draw_first')
+        self._iter_call_meth('on_draw_first')
 
     def on_draw_last(self):
-        self._objects_iter_call('on_draw_last')
+        self._iter_call_meth('on_draw_last')
 
     def on_update(self, dt):
-        self._objects_iter_call('on_update', dt)
+        self._iter_call_meth('on_update', dt)
 
         # -- remove destroyed items from the collection
         self._items = [item for item in self
                 if (hasattr(item, 'destroyed') and not item.destroyed) or not hasattr(item, 'destroyed')]
 
     def on_resize(self, *args):
-        self._objects_iter_call('on_resize', *args)
+        self._iter_call_meth('on_resize', *args)
 
     def on_key_press(self, *args):
-        self._objects_iter_call('on_key_press', *args)
+        self._iter_call_meth('on_key_press', *args)
 
     def on_key_release(self, *args):
-        self._objects_iter_call('on_key_release', *args)
+        self._iter_call_meth('on_key_release', *args)
 
     def on_mouse_press(self, *args):
-        self._objects_iter_call('on_mouse_press', *args)
+        self._iter_call_meth('on_mouse_press', *args)
 
     def on_mouse_release(self, *args):
-        self._objects_iter_call('on_mouse_release', *args)
+        self._iter_call_meth('on_mouse_release', *args)
 
     def on_mouse_drag(self, *args):
-        self._objects_iter_call('on_mouse_drag', *args)
+        self._iter_call_meth('on_mouse_drag', *args)
 
     def on_mouse_motion(self, *args):
-        self._objects_iter_call('on_mouse_motion', *args)
+        self._iter_call_meth('on_mouse_motion', *args)
 
     def on_mouse_scroll(self, *args):
-        self._objects_iter_call('on_mouse_scroll', *args)
+        self._iter_call_meth('on_mouse_scroll', *args)
 
     def on_text(self, *args):
-        self._objects_iter_call('on_text', *args)
+        self._iter_call_meth('on_text', *args)
 
     def on_text_motion(self, *args):
-        self._objects_iter_call('on_text_motion', *args)
+        self._iter_call_meth('on_text_motion', *args)
 
     def on_text_motion_select(self, *args):
-        self._objects_iter_call('on_text_motion_select', *args)
+        self._iter_call_meth('on_text_motion_select', *args)
