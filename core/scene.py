@@ -41,7 +41,7 @@ class Scene(object):
         return iter(self.objects.values())
 
     def _iter_call_meth(self, method, *args, **kwargs):
-        """ Call meth on this objects __iter__ """
+        """ Call meth on this object's __iter__ """
         for obj in self:
             if hasattr(obj, method):
                 f = op.methodcaller(method, *args, **kwargs)

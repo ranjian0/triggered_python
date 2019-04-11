@@ -4,8 +4,8 @@ class Widget(object):
     """Base class for all widgets"""
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self._name = kwargs.get("name", "")
-        self._parent = kwargs.get("parent", None)
+        self.name = kwargs.get("name", "")
+        self.parent = kwargs.get("parent", None)
 
         # -- position attributes
         self._x = kwargs.get('x', 0)
@@ -68,8 +68,8 @@ class Widget(object):
 
     def _find_root(self):
         root = self
-        while root._parent:
-            root = root._parent
+        while root.parent:
+            root = root.parent
         return root
 
     def update_layout(self):
@@ -84,3 +84,43 @@ class Widget(object):
 
     def hit_test(self, x, y):
         return self._rect.hit(x, y)
+
+    def on_draw(self):
+        pass
+
+    def on_update(self, dt):
+        pass
+
+    def on_resize(self, *args):
+        pass
+
+    def on_key_press(self, *args):
+        pass
+
+    def on_key_release(self, *args):
+        pass
+
+    def on_mouse_press(self, *args):
+        pass
+
+    def on_mouse_release(self, *args):
+        pass
+
+    def on_mouse_drag(self, *args):
+        pass
+
+    def on_mouse_motion(self, *args):
+        pass
+
+    def on_mouse_scroll(self, *args):
+        pass
+
+    def on_text(self, *args):
+        pass
+
+    def on_text_motion(self, *args):
+        pass
+
+    def on_text_motion_select(self, *args):
+        pass
+

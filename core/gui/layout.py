@@ -11,16 +11,67 @@ class Layout(Widget):
         self._children = []
 
     def _add(self, item):
+        item.parent = self
         self._children.append(item)
 
     def __iadd__(self, item):
         self._add(item)
 
     def _remove(self, item):
+        item.parent = None
         self._children.remove(item)
 
     def __isub__(self, item):
         self._children.remove(item)
+
+    def __iter__(self):
+        return iter(self._children)
+
+    def _iter_call_meth(self, method, *args, **kwargs):
+        """ Call meth on this object's __iter__ """
+        for obj in self:
+            if hasattr(obj, method):
+                f = op.methodcaller(method, *args, **kwargs)
+                f(obj)
+
+    def on_draw(self):
+        self.batch.draw()
+
+    def on_update(self, dt):
+        self._iter_call_meth('on_update', dt)
+
+    def on_resize(self, *args):
+        self._iter_call_meth('on_resize', *args)
+
+    def on_key_press(self, *args):
+        self._iter_call_meth('on_key_press', *args)
+
+    def on_key_release(self, *args):
+        self._iter_call_meth('on_key_release', *args)
+
+    def on_mouse_press(self, *args):
+        self._iter_call_meth('on_mouse_press', *args)
+
+    def on_mouse_release(self, *args):
+        self._iter_call_meth('on_mouse_release', *args)
+
+    def on_mouse_drag(self, *args):
+        self._iter_call_meth('on_mouse_drag', *args)
+
+    def on_mouse_motion(self, *args):
+        self._iter_call_meth('on_mouse_motion', *args)
+
+    def on_mouse_scroll(self, *args):
+        self._iter_call_meth('on_mouse_scroll', *args)
+
+    def on_text(self, *args):
+        self._iter_call_meth('on_text', *args)
+
+    def on_text_motion(self, *args):
+        self._iter_call_meth('on_text_motion', *args)
+
+    def on_text_motion_select(self, *args):
+        self._iter_call_meth('on_text_motion_select', *args)
 
 
 class BoxLayout(Layout):
