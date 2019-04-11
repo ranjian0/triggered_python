@@ -94,6 +94,7 @@ class BoxLayout(Layout):
             for c in self._children:
                 c.y = self._gy
                 c.x = self._gx + accumulator
+                c.update_layout()
                 accumulator += c.w  + self._spacing
 
         elif self._orient == 1:
@@ -104,6 +105,7 @@ class BoxLayout(Layout):
             for c in self._children:
                 c.x = self._gx
                 c.y = self._gy + accumulator
+                c.update_layout()
                 accumulator += c.h + self._spacing
 
         self._w, self._h = w, h
