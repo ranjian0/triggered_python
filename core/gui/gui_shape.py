@@ -168,7 +168,7 @@ class CircleShape:
         circle = []
         for r in range(resolution):
             angle = r*arc
-            circle.extend([self._x + cos(r*arc)*self._radius, self._y + sin(r*arc)*self._radius])
+            circle.extend([self._x + cos(angle)*self._radius, self._y + sin(angle)*self._radius])
 
         self._vertices = self._batch.add(len(circle)//2, pg.gl.GL_POLYGON, self._group,
                              ('v2f', circle),
