@@ -33,6 +33,7 @@ class Player(Entity):
     def __init__(self, **kwargs):
         super().__init__(image=Resources.instance.sprite("hitman1_gun"),
             minimap_image=Resources.instance.sprite("minimap_player"), **kwargs)
+        self.speed = 200
         self.direction = (0, 0)
         self.body.tag = "Player"
         self.projectiles = ProjectileCollection()
@@ -51,6 +52,7 @@ class Player(Entity):
         self.bar_im = Resources.instance.sprite("health_bar")
         self.bar_im.anchor_y = self.bar_im.height
         self.bar = pg.sprite.Sprite(self.bar_im, batch=self.hud_batch)
+        self._update_healthbar_indicator()
 
         # Ammo Indicator
         self.ammo = 350
@@ -64,6 +66,12 @@ class Player(Entity):
         self.ammo_text = pg.text.Label(f" X {self.ammo}", bold=True,
             font_size=12, color=(200, 200, 0, 255), batch=self.hud_batch,
             anchor_y='top', anchor_x='left')
+        self._update_ammo_indicator()
+
+    def _update_healthbar_indicator(self):
+        w, h = self._window_size
+        self.border.update(x=10, y=h)
+        self.bar.update(x=10, y=h)
 
     def _update_ammo_indicator(self):
         w, h = self._window_size
@@ -88,10 +96,8 @@ class Player(Entity):
 
     def on_resize(self, w, h):
         super().on_resize(w, h)
-        self.border.update(x=10, y=h)
-        self.bar.update(x=10, y=h)
-
         self._update_ammo_indicator()
+        self._update_healthbar_indicator()
 
     def on_draw(self):
         super().on_draw()

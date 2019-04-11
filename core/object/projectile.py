@@ -31,7 +31,7 @@ def ProjectileCollection():
 
 class Projectile:
     SIZE = (15, 15)
-    SPEED = 300
+    SPEED = 400
 
     def __init__(self, position, direction, batch, tag=""):
         self.batch = batch

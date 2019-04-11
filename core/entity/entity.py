@@ -20,6 +20,7 @@ import pyglet as pg
 import pymunk as pm
 
 from core.object import Map
+from core.app import Application
 from core.physics import PhysicsWorld, PhysicsBody
 from core.utils import (
     reset_matrix,
@@ -47,7 +48,7 @@ class Entity(object):
 
 
         # -- LOAD PROPERTIES
-        self._window_size = (0, 0)
+        self._window_size = Application.instance.size
         if 'image' in kwargs:
             self.image = kwargs.pop('image')
             image_set_size(self.image, self.radius*2, self.radius*2)
@@ -119,7 +120,6 @@ class Entity(object):
 
         if self.minimap_sprite.image:
             mmap = Map.instance._minimap
-
             w, h = mmap.width, mmap.height
             offx, offy = mmap.x-w, mmap.y
             sx, sy = [mini/_map for mini, _map in zip((w,h), Map.instance.size)]

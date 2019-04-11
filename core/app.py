@@ -40,10 +40,23 @@ class Application(object):
         self._window.set_minimum_size(*size)
         self._window.set_caption(name)
         self._window.maximize()
+        self._window.push_handlers(
+            on_key_press=self._skip_escape)
+
+        #XXX A CUSTOM EVENT DISPATCHER
+        # Why? - Guarantees a symmetrical stack with process and remove methods
+        # NOTICE:: we push an on_draw event to the window during run, making its stack unsymmetrical
+        self._events = AppEvents()
+        self._window.push_handlers(
+           **{ev: getattr(self._events, 'do_'+ev[3:]) for ev in EVENTS})
 
     def _clear(self):
         self._window.clear()
         pg.gl.glClearColor(.2,.3,.3,1)
+
+    def _skip_escape(self, symbol, mod):
+        if symbol == pg.window.key.ESCAPE:
+            return True
 
     def _get_window(self):
         return self._window
@@ -80,6 +93,70 @@ class Application(object):
     @classmethod
     def process(cls, obj):
         self = cls.instance
-        self._window.push_handlers(obj)
+        self._events.push_handlers(obj)
         if hasattr(obj, 'on_update'):
             pg.clock.schedule_interval(obj.on_update, 1/60)
+
+    @classmethod
+    def remove(cls, obj):
+        self = cls.instance
+        self._events.pop_handlers()
+        if hasattr(obj, 'on_update'):
+            pg.clock.unschedule(obj.on_update)
+
+class AppEvents(pg.event.EventDispatcher):
+    def do_draw(self):
+        self.dispatch_event("on_draw")
+
+    def do_update(self, dt):
+        self.dispatch_event('on_update', dt)
+
+    def do_resize(self, *args):
+        self.dispatch_event('on_resize', *args)
+
+    def do_key_press(self, *args):
+        self.dispatch_event('on_key_press', *args)
+
+    def do_key_release(self, *args):
+        self.dispatch_event('on_key_release', *args)
+
+    def do_mouse_press(self, *args):
+        self.dispatch_event('on_mouse_press', *args)
+
+    def do_mouse_release(self, *args):
+        self.dispatch_event('on_mouse_release', *args)
+
+    def do_mouse_drag(self, *args):
+        self.dispatch_event('on_mouse_drag', *args)
+
+    def do_mouse_motion(self, *args):
+        self.dispatch_event('on_mouse_motion', *args)
+
+    def do_mouse_scroll(self, *args):
+        self.dispatch_event('on_mouse_scroll', *args)
+
+    def do_text(self, *args):
+        self.dispatch_event('on_text', *args)
+
+    def do_text_motion(self, *args):
+        self.dispatch_event('on_text_motion', *args)
+
+    def do_text_motion_select(self, *args):
+        self.dispatch_event('on_text_motion_select', *args)
+
+EVENTS = [
+    'on_key_press',
+    'on_key_release',
+    'on_text',
+    'on_text_motion',
+    'on_text_motion_select',
+    'on_mouse_motion',
+    'on_mouse_drag',
+    'on_mouse_press',
+    'on_mouse_release',
+    'on_mouse_scroll',
+    'on_resize',
+    'on_draw'
+]
+for ev in EVENTS:
+    AppEvents.register_event_type(ev)

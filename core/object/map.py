@@ -21,6 +21,7 @@ import pyglet as pg
 import pymunk as pm
 import itertools as it
 from resources import Resources
+from core.app import Application
 from core.physics import PhysicsWorld
 from core.utils import image_set_size, reset_matrix
 
@@ -48,9 +49,9 @@ class Map(object):
         self._minimap = None
         self._minimap_drop = None
         self._show_minimap = False
-        self._window_size = (0, 0)
         self._navmap = Astar(self.data, self.node_size)
         self._generate()
+        self._generate_minimap()
 
     def _get_size(self):
         nx, ny = self.node_size
@@ -81,9 +82,12 @@ class Map(object):
                     wall.body.position = (px + nx/2, py + ny/2)
                     world.add(wall)
 
-    def _generate_minimap(self, size):
+    def _generate_minimap(self):
         wall_color = (50, 50, 50, 255)
         background_color = (200, 0, 0, 0)
+        w, h = Application.instance.size
+        size = tuple(map(operator.mul, (w,h), (.9, .95)))
+
         sx, sy = [s/ms for s, ms in zip(size, self.size)]
         nsx, nsy = self.node_size
 
@@ -112,11 +116,18 @@ class Map(object):
                             oy = offy + (i*(nsy//4))
                             background.blit_into(wall_image, offx, oy, 0)
 
-        sp = pg.sprite.Sprite(background)
         sc = min(sx, sy)
-        sp.scale_x = sc
-        sp.scale_y = sc
-        return sp
+        self._minimap = pg.sprite.Sprite(background)
+        self._minimap.scale_x = sc
+        self._minimap.scale_y = sc
+
+        self._minimap.image.anchor_x = self._minimap.image.width
+        self._minimap.image.anchor_y = 0
+        self._minimap.x = w
+        self._minimap.y = 25
+
+        drop = pg.image.SolidColorImagePattern((100, 100, 100, 200))
+        self._minimap_drop = drop.create_image(w, h)
 
     def on_draw(self):
         self.batch.draw()
@@ -128,17 +139,7 @@ class Map(object):
                 self._minimap.draw()
 
     def on_resize(self, w, h):
-        self._window_size = (w,h)
-        minimap_size = tuple(map(operator.mul, (w,h), (.9, .95)))
-        self._minimap = self._generate_minimap(minimap_size)
-
-        self._minimap.image.anchor_x = self._minimap.image.width
-        self._minimap.image.anchor_y = 0
-        self._minimap.x = w
-        self._minimap.y = 25
-
-        drop = pg.image.SolidColorImagePattern((100, 100, 100, 200))
-        self._minimap_drop = drop.create_image(w, h)
+        self._generate_minimap()
 
     def on_key_press(self, symbol, mod):
         if symbol == pg.window.key.TAB:
