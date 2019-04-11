@@ -25,7 +25,8 @@ class Layout(Widget):
 
 class BoxLayout(Layout):
 
-    def __init__(self, orient, spacing=5):
+    def __init__(self, orient, spacing=5, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._orient = orient
         self._spacing = spacing
 
