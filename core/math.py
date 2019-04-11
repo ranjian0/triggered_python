@@ -34,6 +34,9 @@ class Rect(object):
         self.w = w
         self.h = h
 
+    size = property(lambda self: self.w, self.h)
+    position = property(lambda self: self.x, self.y)
+
     def __repr__(self):
         return f"Rect({self.x}, {self.y}, {self.w}, {self.h})"
 
