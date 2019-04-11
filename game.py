@@ -26,7 +26,19 @@ from core.physics import PhysicsWorld
 from core.entity import Player, EnemyCollection
 
 class Game:
-    """ Class to manage all game states """
+    """ Class to manage all game states
+
+    BEWARE::
+        - of closures
+        - of nested classes
+        - of singletons everywhere
+        - of infinite callbacks
+        - of duplicate code
+        - of excessive OOP
+        - of terrible dragons that lie ahead
+
+    P.S :: I KNOW, DON'T CARE!!
+    """
 
     class Manager:
         """ Handle common events for all game scenes """
@@ -43,12 +55,16 @@ class Game:
                     scenes.remove(self.game.current.name)
                     self.game._switch_scene(scenes[-1])
 
+            if symbol == pg.window.key.N:
+                self.game.game.next_level()
+
     def __init__(self):
         self.scenes = []
         self.current = None
 
+        self.game = self._create_game()
+        self.game_scene = self.game.scene()
         self.main_scene = self._create_main_scene()
-        self.game_scene = self._create_game_scene()
         self.pause_scene = self._create_pause_scene()
 
         # -- initialize
@@ -56,26 +72,50 @@ class Game:
         Application.process(Game.Manager(self))
         Application.process(self.current)
 
+    def _create_game(self):
+        """ Create game scene with levels """
+        current_level = 0
+        levels = Resources.instance.levels()
+
+        def dummy():
+            pass
+
+        def _get_scene():
+            level = list(levels.values())[current_level]
+
+            game = Scene("game")
+            game.add("physics", PhysicsWorld())
+            game.add("camera",  Camera())
+            game.add("map",     Map(level.map))
+            game.add("player",  Player(position=level.player))
+            game.add("enemy",   EnemyCollection(level.enemies, level.waypoints))
+
+            # -- setup camera
+            game.camera.bounds = (0, 0, *game.map.size)
+            game.camera.track(game.player)
+            self.scenes.append(game)
+            return game
+
+        def _next_level():
+            nonlocal current_level
+            if current_level < len(levels.values()):
+                current_level += 1
+
+                self.scenes.remove(self.current)
+                Application.remove(self.current)
+                self.current = _get_scene()
+                self.game_scene = self.current
+                Application.process(self.current)
+                self.scenes.append(self.current)
+
+        dummy.scene = _get_scene
+        dummy.next_level = _next_level
+        return dummy
+
     def _create_main_scene(self):
         main = Scene("main")
         self.scenes.append(main)
         return main
-
-    def _create_game_scene(self):
-        level = Resources.instance.level('level_1')
-
-        game = Scene("game")
-        game.add("physics", PhysicsWorld())
-        game.add("camera",  Camera())
-        game.add("map",     Map(level.map))
-        game.add("player",  Player(position=level.player))
-        game.add("enemy",   EnemyCollection(level.enemies, level.waypoints))
-
-        # -- setup camera
-        game.camera.bounds = (0, 0, *game.map.size)
-        game.camera.track(game.player)
-        self.scenes.append(game)
-        return game
 
     def _create_pause_scene(self):
         pause = Scene("pause")
@@ -83,7 +123,9 @@ class Game:
         return pause
 
     def _switch_scene(self, name):
-        if self.current.name == name:
+        already_active = self.current.name == name
+        does_not_exist = name not in [sc.name for sc in self.scenes]
+        if already_active or does_not_exist:
             return
 
         Application.remove(self.current)
