@@ -1,3 +1,4 @@
+import operator
 from .widget import Widget
 
 
@@ -31,7 +32,7 @@ class Layout(Widget):
         """ Call meth on this object's __iter__ """
         for obj in self:
             if hasattr(obj, method):
-                f = op.methodcaller(method, *args, **kwargs)
+                f = operator.methodcaller(method, *args, **kwargs)
                 f(obj)
 
     def on_draw(self):
