@@ -86,41 +86,41 @@ class Widget(object):
         return self._rect.hit(x, y)
 
     def on_draw(self):
-        pass
+        return NotImplementedError()
 
     def on_update(self, dt):
-        pass
+        return NotImplementedError()
 
     def on_resize(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_key_press(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_key_release(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_mouse_press(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_mouse_release(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_mouse_drag(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_mouse_motion(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_mouse_scroll(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_text(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_text_motion(self, *args):
-        pass
+        return NotImplementedError()
 
     def on_text_motion_select(self, *args):
-        pass
+        return NotImplementedError()
 
