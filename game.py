@@ -24,6 +24,11 @@ from core.app import Application
 from core.object import Camera, Map
 from core.physics import PhysicsWorld
 from core.entity import Player, EnemyCollection
+from core.gui import (
+    Text,
+    HBoxLayout,
+    VBoxLayout,
+    )
 
 class Game:
     """ Class to manage all game states
@@ -113,7 +118,16 @@ class Game:
         return dummy
 
     def _create_main_scene(self):
+        gui = VBoxLayout(x=10, y=680)
+        gui += Text("TRIGGERED", font_size=42)
+
+        buttons = VBoxLayout()
+        buttons += Text("MainMenu")
+        buttons += Text("PAUSE")
+        gui += buttons
+
         main = Scene("main")
+        main.add("gui", gui)
         self.scenes.append(main)
         return main
 

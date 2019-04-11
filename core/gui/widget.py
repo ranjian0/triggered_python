@@ -1,3 +1,4 @@
+import pyglet as pg
 from core.math import Rect
 
 class Widget(object):
@@ -23,8 +24,9 @@ class Widget(object):
 
         # -- draw attributes
         self._batch = kwargs.get('batch', pg.graphics.Batch())
-        self._group = kwargs.get('group', pg.graphics.OrderedGroup())
+        self._group = kwargs.get('group', pg.graphics.OrderedGroup(0))
 
+        self._dirty = True
         self.shapes = dict()
         self.elements = dict()
 
@@ -32,31 +34,31 @@ class Widget(object):
         return self._x
     def _set_x(self, val):
         self._x = val
-        self.update_layout()
+        self._dirty = True
     x = property(_get_x, _set_x)
 
     def _get_y(self):
         return self._y
     def _set_y(self, val):
         self._y = val
-        self.update_layout()
+        self._dirty = True
     y = property(_get_y, _set_y)
-    position = property(lambda self: self._x, self.y)
+    position = property(lambda self: (self._x, self._y))
 
     def _get_w(self):
         return self._w
     def _set_w(self, val):
         self._w = val
-        self.update_layout()
+        self._dirty = True
     w = property(_get_w, _set_w)
 
     def _get_h(self):
         return self._h
     def _set_h(self, val):
         self._h = val
-        self.update_layout()
+        self._dirty = True
     h = property(_get_h, _set_h)
-    size = property(lambda self: self._w, self._h)
+    size = property(lambda self: (self._w, self._h))
 
     def _get_batch(self):
         return self._batch
@@ -73,7 +75,7 @@ class Widget(object):
         return root
 
     def update_layout(self):
-        pass
+        self._dirty = False
 
     def update_batch(self, batch, group):
         for idx, shape in enumerate(self.shapes.values()):

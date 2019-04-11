@@ -9,9 +9,12 @@ class Text(Widget):
         self.elements['text'] = TextElement(text, **kwargs)
 
     def update_layout(self):
-        elem = self.elements['text']
+        if self._dirty:
+            elem = self.elements['text']
 
-        elem.x = self.x
-        elem.y = self.y
-        self.w = elem.content_width
-        self.h = elem.content_height
+            elem.x = self.x
+            elem.y = self.y
+            self.w = elem.content_width
+            self.h = elem.content_height
+
+        super().update_layout()

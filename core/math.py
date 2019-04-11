@@ -29,13 +29,14 @@ class Vec2(pm.vec2d.Vec2d):
 
 class Rect(object):
     def __init__(self, x, y, w, h):
+        super().__init__()
         self.x = x
         self.y = y
         self.w = w
         self.h = h
 
-    size = property(lambda self: self.w, self.h)
-    position = property(lambda self: self.x, self.y)
+    size = property(lambda self: (self.w, self.h))
+    position = property(lambda self: (self.x, self.y))
 
     def __repr__(self):
         return f"Rect({self.x}, {self.y}, {self.w}, {self.h})"
