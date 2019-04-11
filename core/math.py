@@ -27,6 +27,20 @@ class Vec2(pm.vec2d.Vec2d):
     def to_tuple(self, precision=4):
         return round(float(self.x), precision), round((self.y), precision)
 
+class Rect(object):
+    def __init__(self, x, y, w, h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+
+    def __repr__(self):
+        return f"Rect({self.x}, {self.y}, {self.w}, {self.h})"
+
+    def hit(self, x, y):
+        return (self.x <= x <= self.w) and (self.y <= y <= self.h)
+
+
 class Bounds(namedtuple('_Bounds', "left bottom right top")):
     pass
 
