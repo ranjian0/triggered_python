@@ -16,18 +16,19 @@
 #  MA 02110-1301, USA.
 
 import math
+import operator
 import pymunk as pm
 from collections import namedtuple
 
-Bounds = namedtuple('_Bounds',
-    "left bottom right top")
-
 class Vec2(pm.vec2d.Vec2d):
     def __init__(self, *args, **kwargs):
-        pm.vec2d.Vec2d.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-    def to_tuple(self, precision=2):
-        return (round(self.x, precision), round(self.y, precision))
+    def to_tuple(self, precision=4):
+        return round(float(self.x), precision), round((self.y), precision)
+
+class Bounds(namedtuple('_Bounds', "left bottom right top")):
+    pass
 
 def clamp(x, _min, _max):
     return max(_min, min(_max, x))
@@ -39,7 +40,26 @@ def angle(p):
 def normalize(p):
     mag = math.hypot(*p)
     if mag:
-        x = p[0] / mag
-        y = p[1] / mag
-        return (x, y)
+        return (p[0] / mag, p[1] / mag)
     return p
+
+def heuristic(a, b):
+    return sum(map(abs, tsub(a, b)))
+
+def dist_sqr(x, y):
+    return sum(map(operator.pow, map(operator.sub, x, y), (2,2)))
+
+def distance(x, y):
+    return math.sqrt(dist_sqr(x, y))
+
+def tadd(x, y):
+    return tuple(map(operator.add, x, y))
+
+def tsub(x, y):
+    return tuple(map(operator.sub, x, y))
+
+def tmul(x, y):
+    return tuple(map(operator.mul, x, y))
+
+def tdiv(x, y):
+    return tuple(map(operator.truediv, x, y))

@@ -23,11 +23,17 @@ import itertools as it
 from resources import Resources
 from core.app import Application
 from core.physics import PhysicsWorld
-from core.utils import image_set_size, reset_matrix
+from core.utils import (
+    reset_matrix,
+    image_set_size,
+    )
+from core.math import (
+    tadd,
+    tmul,
+    dist_sqr,
+    heuristic,
+    )
 
-tadd = lambda x,y : tuple(map(operator.add, x, y))
-tmul = lambda x,y : tuple(map(operator.mul, x, y))
-dist_sqr = lambda x,y: sum(map(operator.pow, map(operator.sub, x, y), (2,2)))
 
 class Map(object):
     """ Create map from level data """
@@ -179,8 +185,7 @@ class Astar:
 
     def calculate_path(self, p1, p2):
         """ Calculate path of walkable nodes from p1 to p2 """
-        cf, cost = self._astar_search(p1, p2)
-        return reconstruct_path(cf, p1, p2)
+        return self._astar_search(p1, p2)
 
     def closest_node(self, p):
         data = [(dist_sqr(p, point), point) for point in self._walkable]
@@ -218,26 +223,21 @@ class Astar:
             if current == goal:
                 break
 
-            for next in self._get_neighbours(current):
-                new_cost = cost_so_far[current] + self._get_cost(current, next)
-                if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    cost_so_far[next] = new_cost
-                    priority = new_cost + heuristic(goal, next)
-                    frontier.put(next, priority)
-                    came_from[next] = current
+            for _next in self._get_neighbours(current):
+                new_cost = cost_so_far[current] + self._get_cost(current, _next)
+                if _next not in cost_so_far or new_cost < cost_so_far[_next]:
+                    cost_so_far[_next] = new_cost
+                    priority = new_cost + heuristic(goal, _next)
+                    frontier.put(_next, priority)
+                    came_from[_next] = current
 
-        return came_from, cost_so_far
+        return self._reconstruct_path(came_from, start, goal)
 
-def heuristic(a, b):
-    (x1, y1) = a
-    (x2, y2) = b
-    return abs(x1 - x2) + abs(y1 - y2)
-
-def reconstruct_path(came_from, start, goal):
-    current = goal
-    path = [current]
-    while current != start:
-        current = came_from[current]
-        path.append(current)
-    path.reverse()
-    return path
+    def _reconstruct_path(came_from, start, goal):
+        current = goal
+        path = [current]
+        while current != start:
+            current = came_from[current]
+            path.append(current)
+        path.reverse()
+        return path
