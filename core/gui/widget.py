@@ -73,6 +73,7 @@ class Widget(object):
         while root.parent:
             root = root.parent
         return root
+    root = property(_find_root)
 
     def update_layout(self):
         self._dirty = False

@@ -93,7 +93,7 @@ class BoxLayout(Layout):
             c.update_layout()
 
         if self._dirty:
-            self._gx, self._gy = self._find_root().position
+            self._gx, self._gy = self.root.position
 
             w, h = 0, 0
             if self._orient == Layout.HORIZONTAL:
