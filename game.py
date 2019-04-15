@@ -25,7 +25,8 @@ from core.object import Camera, Map
 from core.physics import PhysicsWorld
 from core.entity import Player, EnemyCollection
 from core.gui import (
-    Text,
+    Label,
+    Frame,
     HBoxLayout,
     VBoxLayout,
     )
@@ -62,6 +63,10 @@ class Game:
 
             if symbol == pg.window.key.N:
                 self.game.game.next_level()
+
+            if symbol == pg.window.key.Q:
+                if mod & pg.window.key.MOD_CTRL:
+                    pg.app.exit()
 
     def __init__(self):
         self.scenes = []
@@ -108,8 +113,10 @@ class Game:
 
                 self.scenes.remove(self.current)
                 Application.remove(self.current)
+
                 self.current = _get_scene()
                 self.game_scene = self.current
+
                 Application.process(self.current)
                 self.scenes.append(self.current)
 
@@ -118,14 +125,30 @@ class Game:
         return dummy
 
     def _create_main_scene(self):
-        gui = VBoxLayout(x=10, y=680)
-        gui += Text("TRIGGERED", font_size=42)
+        w, h = Application.instance.size
+        gui = Frame(x=10, y=680, w=w, h=h)
 
-        buttons = VBoxLayout()
-        buttons += Text("MainMenu")
-        buttons += Text("PAUSE")
-        gui += buttons
+        # Main Layout
+        layout = VBoxLayout()
+        layout.expand(True)
+        layout.align("center", "center")
 
+        layout += (
+            # -- title text
+            HBoxLayout(
+                Label("TRIGGERED", font_size=42)
+            ),
+
+            # -- buttons
+            VBoxLayout(
+                Label("Play"),
+                Label("Settings"),
+                Label("Exit")
+            )
+        )
+        gui += layout
+
+        # -- Create the scene
         main = Scene("main")
         main.add("gui", gui)
         self.scenes.append(main)
