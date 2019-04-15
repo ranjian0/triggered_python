@@ -36,6 +36,9 @@ class Point(object):
         else:
             self.x, self.y = 0, 0
 
+    def __repr__(self):
+        return f"Point({self.x}, {self.y})"
+
     def __getitem__(self, i):
         return (self.x, self.y)[i]
 
@@ -56,6 +59,9 @@ class Size(object):
             self.w, self.h = args[0][0], args[0][1]
         else:
             self.w, self.h = 0, 0
+
+    def __repr__(self):
+        return f"Size({self.w}, {self.h})"
 
     def __getitem__(self, i):
         return (self.w, self.h)[i]
