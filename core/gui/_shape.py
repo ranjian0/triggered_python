@@ -59,15 +59,16 @@ class RectangleShape:
         self._update()
     radius = property(_get_radius, _set_radius)
 
-    def update(self, batch, group):
-        self._batch = batch
-        self._group = group
+    def update_batch(self, batch, group):
+        self._batch, self._group = batch, group
+        if self._vertices:
+            self._vertices.delete()
+            self._vertices = None
+
         self._update()
 
     def _update(self):
         x, y, w, h = self._x, self._y, self._w, self._h
-        if self._vertices:
-            self._vertices.delete()
 
         if radius == 0:
             x1, y1 = x, y
@@ -153,15 +154,15 @@ class CircleShape:
         self._update()
     radius = property(_get_radius, _set_radius)
 
-    def update(self, batch, group):
-        self._batch = batch
-        self._group = group
+    def update_batch(self, batch, group):
+        self._batch, self._group = batch, group
+        if self._vertices:
+            self._vertices.delete()
+            self._vertices = None
+
         self._update()
 
     def _update(self):
-        if self._vertices:
-            self._vertices.delete()
-
         resolution = 64
         arc = (2*pi) / resolution
 
