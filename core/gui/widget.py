@@ -81,11 +81,15 @@ class Widget(object):
 
     def update_batch(self, batch, group):
         self._batch, self._group = batch, group
+
+        shape_group = pg.graphics.OrderedGroup(0, group)
+        elem_group = pg.graphics.OrderedGroup(1, group)
+
         for idx, shape in enumerate(self.shapes.values()):
-            shape.update(batch, pg.graphics.OrderedGroup(idx, group))
+            shape.update_batch(batch, shape_group)
 
         for idx, elem in enumerate(self.elements.values()):
-            elem.update(batch, pg.graphics.OrderedGroup(idx, group))
+            elem.update_batch(batch, elem_group)
 
         self._dirty = True
 
