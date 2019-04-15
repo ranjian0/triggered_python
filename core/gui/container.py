@@ -1,3 +1,4 @@
+import operator
 from .widget import Widget
 
 class Container(Widget):
@@ -15,7 +16,11 @@ class Container(Widget):
         self.root.update_layout()
 
     def __iadd__(self, item):
-        self._add(item)
+        if isinstance(item, (list, tuple)):
+            for it in item:
+                self._add(it)
+        else:
+            self._add(item)
         return self
 
     def _remove(self, item):
@@ -26,7 +31,11 @@ class Container(Widget):
         self.root.update_layout()
 
     def __isub__(self, item):
-        self._remove(item)
+        if isinstance(item, (list, tuple)):
+            for it in item:
+                self._remove(it)
+        else:
+            self._remove(item)
         return self
 
     def __iter__(self):
@@ -42,6 +51,14 @@ class Container(Widget):
     def update_batch(self, batch, group):
         super().update_batch(batch, group)
         self._iter_call_meth("update_batch", batch, group)
+
+    def update_elements(self):
+        super().update_elements()
+        self._iter_call_meth("update_elements")
+
+    def update_global_coords(self):
+        super().update_global_coords()
+        self._iter_call_meth("update_global_coords")
 
     def on_update(self, dt):
         super().on_update(dt)
