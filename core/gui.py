@@ -467,3 +467,18 @@ class InputElement(object):
             self.layout.width, self.layout.height, multiline=False, batch=batch, group=group)
         self.caret = pg.text.caret.Caret(self.layout)
         self.caret.visible = False
+
+
+class Label(Widget):
+
+    def __init__(self, text, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text = text
+        self.content = LabelElement(text, **kwargs)
+        self.elements['text'] = self.content
+
+    def _get_text(self):
+        return self.elements['text'].text
+    def _set_text(self, val):
+        self.elements['text'].text = val
+    text = property(_get_text, _set_text)
