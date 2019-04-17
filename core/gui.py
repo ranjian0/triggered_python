@@ -48,12 +48,14 @@ class Widget(object):
         return self._x
     def _set_x(self, val):
         self._x = val
+        self._dirty = True
     x = property(_get_x, _set_x)
 
     def _get_y(self):
         return self._y
     def _set_y(self, val):
         self._y = val
+        self._dirty = True
     y = property(_get_y, _set_y)
     position = property(lambda self: (self._x, self._y))
 
@@ -61,12 +63,14 @@ class Widget(object):
         return self._w
     def _set_w(self, val):
         self._w = val
+        self._dirty = True
     w = property(_get_w, _set_w)
 
     def _get_h(self):
         return self._h
     def _set_h(self, val):
         self._h = val
+        self._dirty = True
     h = property(_get_h, _set_h)
     size = property(lambda self: (self._w, self._h))
 
@@ -82,7 +86,13 @@ class Widget(object):
         self._batch.draw()
 
     def on_update(self, dt):
-        pass
+        if self._dirty:
+            # -- update batches and groups
+            for k.v in self.shapes.items():
+                v.update_batch(self._batch, self._group)
+            for k,v in self.elements.items():
+                v.update_batch(self._batch, self._group)
+            self._dirty = False
 
     def on_resize(self, *args):
         pass
@@ -125,6 +135,7 @@ class Container(Widget):
 
     def _add(self, item):
         self.children.append(item)
+        item._dirty = True
         self._dirty = True
 
     def __iadd__(self, item):
@@ -229,6 +240,14 @@ class Layout(Container):
         if args:
             for item in args:
                 self._add(item)
+
+    def _layout(self):
+        pass
+
+    def on_update(self, dt):
+        if self._dirty:
+            self._layout()
+        super().on_update(dt)
 
 class HLayout(Layout):
     def __init__(self, *args, **kwargs):
@@ -430,7 +449,7 @@ class CircleShape:
 class LabelElement(pg.text.Label):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.anchor_y = "top"
+        self.anchor_y = "bottom"
         self.anchor_x = "left"
 
     def update_batch(self, batch, group):
@@ -476,7 +495,6 @@ class Label(Widget):
     def __init__(self, text, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.content = LabelElement(text, **kwargs)
-        self.content.update_batch(self._batch, self._group)
         self.elements['text'] = self.content
 
     def _get_text(self):
