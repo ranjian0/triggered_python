@@ -233,3 +233,17 @@ class HLayout(Layout):
 class VLayout(Layout):
     def __init__(self, *args, **kwargs):
         super().__init__(Layout.VERTICAL, *args, **kwargs)
+
+class Frame(Container):
+    """Root gui container"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+    def on_draw(self):
+        glPushAttrib(GL_ENABLE_BIT)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        super().draw()
+
+        glPopAttrib()
