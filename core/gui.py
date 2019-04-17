@@ -15,9 +15,11 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import math
 import operator
 import pyglet as pg
-from math import pi, sin, cos
+from pyglet.gl import *
+from .math import Rect
 
 class Widget(object):
     """Base class for all widgets"""
@@ -220,7 +222,7 @@ class Layout(Container):
     def __init__(self, axis, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._axis = axis
-        self._align = kwargs.get("align", (ALIGN_LEFT, ALIGN_TOP))
+        self._align = kwargs.get("align", (Layout.ALIGN_LEFT, Layout.ALIGN_TOP))
         self._padding = kwargs.get("padding", (5, 5))
 
         # -- add children (alternative for quick definitions)
@@ -246,7 +248,7 @@ class Frame(Container):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        super().draw()
+        super().on_draw()
 
         glPopAttrib()
 
@@ -323,7 +325,7 @@ class RectangleShape:
         if radius == 0:
             x1, y1 = x, y
             x2, y2 = x + w, y - h
-            self._vertices = self._batch.add(4, pg.gl.GL_POLYGON, self._group,
+            self._vertices = self._batch.add(4, GL_POLYGON, self._group,
                                      ('v2f', [x1, y1, x2, y1, x2, y2, x1, y2]),
                                      ('c4B', self._color * 4))
 
@@ -331,7 +333,7 @@ class RectangleShape:
         else:
             # -- create circle vertices
             resolution = 32
-            arc = (2*pi) / resolution
+            arc = (2*math.pi) / resolution
             x += self._radius
             y -= self._radius
             w -= self._radius*2
@@ -355,9 +357,9 @@ class RectangleShape:
                 if r > resolution*.75:
                     tindex = 3
                 tx, ty = transform[tindex]
-                circle.extend([tx + cos(angle)*self._radius, ty + sin(angle)*self._radius])
+                circle.extend([tx + math.cos(angle)*self._radius, ty + math.sin(angle)*self._radius])
 
-            self._vertices = self._batch.add(len(circle)//2, pg.gl.GL_POLYGON, self._group,
+            self._vertices = self._batch.add(len(circle)//2, GL_POLYGON, self._group,
                                  ('v2f', circle),
                                  ('c4B', self._color * (len(circle)//2)))
 
@@ -413,14 +415,14 @@ class CircleShape:
 
     def _update(self):
         resolution = 64
-        arc = (2*pi) / resolution
+        arc = (2*math.pi) / resolution
 
         circle = []
         for r in range(resolution):
             angle = r*arc
-            circle.extend([self._x + cos(angle)*self._radius, self._y + sin(angle)*self._radius])
+            circle.extend([self._x + math.cos(angle)*self._radius, self._y + math.sin(angle)*self._radius])
 
-        self._vertices = self._batch.add(len(circle)//2, pg.gl.GL_POLYGON, self._group,
+        self._vertices = self._batch.add(len(circle)//2, GL_POLYGON, self._group,
                              ('v2f', circle),
                              ('c4B', self._color * (len(circle)//2)))
 
@@ -473,8 +475,8 @@ class Label(Widget):
 
     def __init__(self, text, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.text = text
         self.content = LabelElement(text, **kwargs)
+        self.content.update_batch(self._batch, self._group)
         self.elements['text'] = self.content
 
     def _get_text(self):

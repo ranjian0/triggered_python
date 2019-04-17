@@ -27,8 +27,8 @@ from core.entity import Player, EnemyCollection
 from core.gui import (
     Label,
     Frame,
-    HBoxLayout,
-    VBoxLayout,
+    HLayout,
+    VLayout,
     )
 
 class Game:
@@ -129,15 +129,15 @@ class Game:
         gui = Frame(x=10, y=600, w=w, h=h)
 
         # Main Layout
-        layout = VBoxLayout()
+        layout = VLayout()
         layout += (
             # -- title text
-            HBoxLayout(
+            HLayout(
                 Label("TRIGGERED", font_size=42)
             ),
 
             # -- buttons
-            VBoxLayout(
+            VLayout(
                 Label("Play"),
                 Label("Settings"),
                 Label("Exit")
