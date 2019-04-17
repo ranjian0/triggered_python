@@ -7,7 +7,6 @@ class Frame(Container):
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
 
-
     def update_batch(self, batch, group):
         self._batch, self._group = batch, group
         count = len(self._children)
