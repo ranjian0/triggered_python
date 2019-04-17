@@ -15,11 +15,6 @@ class Frame(Container):
             order = pg.graphics.OrderedGroup(i, group)
             c.update_batch(batch, order)
 
-    def update_layout(self):
-        for c in self._children:
-            c.determine_size()
-            c.reset_size(c._pref_size)
-
     def _add(self, child):
         super()._add(child)
         self.update_batch(pg.graphics.Batch(), self._group)

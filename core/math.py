@@ -78,6 +78,12 @@ class Size(object):
     def __add__(self, other):
         return Size(self.w + other[0], self.h + other[1])
 
+    def __truediv__(self, other):
+        if isinstance(other, (float, int)):
+            return Size(self.w/other, self.h/other)
+        return self
+
+
 class Rect(object):
     '''Fast and simple rectangular collision structure'''
 

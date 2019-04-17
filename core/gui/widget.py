@@ -18,7 +18,6 @@ class Widget(object):
         # -- size attributes
         self._w = kwargs.get('w', 1)
         self._h = kwargs.get('h', 1)
-        self._pref_size = Size()
 
         # -- layout attributes
         self._rect = Rect(0, 0, 1, 1)
@@ -104,13 +103,6 @@ class Widget(object):
 
     def hit_test(self, x, y):
         return self._rect.hit(x, y)
-
-    def determine_size(self):
-        pass
-
-    def reset_size(self, size):
-        self._w, self._h = size
-        self._dirty = True
 
     def on_draw(self):
         pass

@@ -126,13 +126,10 @@ class Game:
 
     def _create_main_scene(self):
         w, h = Application.instance.size
-        gui = Frame(x=10, y=680, w=w, h=h)
+        gui = Frame(x=10, y=600, w=w, h=h)
 
         # Main Layout
         layout = VBoxLayout()
-        layout.expand(True)
-        layout.align("center", "center")
-
         layout += (
             # -- title text
             HBoxLayout(
