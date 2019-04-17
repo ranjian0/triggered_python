@@ -17,4 +17,3 @@
 
 from .app import Application
 from .physics import PhysicsWorld
-from .utils import *
