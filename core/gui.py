@@ -121,6 +121,7 @@ class Container(Widget):
 
     def _add(self, item):
         self.children.append(item)
+        self._dirty = True
 
     def __iadd__(self, item):
         if isinstance(item, (list, tuple)):
@@ -132,6 +133,7 @@ class Container(Widget):
 
     def _remove(self, item):
         self.children.remove(item)
+        self._dirty = True
 
     def __isub__(self, item):
         if isinstance(item, (list, tuple)):
@@ -202,3 +204,32 @@ class Container(Widget):
     def on_text_motion_select(self, *args):
         super().on_text_motion_select(*args)
         self._iter_call_meth('on_text_motion_select', *args)
+
+class Layout(Container):
+    """ Base class for arranging & sizing widgets """
+    VERTICAL = 1
+    HORIZONTAL = 2
+
+    ALIGN_TOP    = 1
+    ALIGN_LEFT   = 2
+    ALIGN_RIGHT  = 3
+    ALIGN_CENTER = 4
+    ALIGN_BOTTOM = 5
+    def __init__(self, axis, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._axis = axis
+        self._align = kwargs.get("align", (ALIGN_LEFT, ALIGN_TOP))
+        self._padding = kwargs.get("padding", (5, 5))
+
+        # -- add children (alternative for quick definitions)
+        if args:
+            for item in args:
+                self._add(item)
+
+class HLayout(Layout):
+    def __init__(self, *args, **kwargs):
+        super().__init__(Layout.HORIZONTAL, *args, **kwargs)
+
+class VLayout(Layout):
+    def __init__(self, *args, **kwargs):
+        super().__init__(Layout.VERTICAL, *args, **kwargs)
