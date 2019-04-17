@@ -83,7 +83,6 @@ class Size(object):
             return Size(self.w/other, self.h/other)
         return self
 
-
 class Rect(object):
     '''Fast and simple rectangular collision structure'''
 
@@ -129,9 +128,9 @@ class Rect(object):
     def __repr__(self):
         return 'Rect(%d %d %d %d)' % (self.x, self.y, self.w, self.h)
 
-
 class Bounds(namedtuple('_Bounds', "left bottom right top")):
     pass
+
 
 def clamp(x, _min, _max):
     return max(_min, min(_max, x))
