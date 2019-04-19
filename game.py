@@ -126,7 +126,8 @@ class Game:
 
     def _create_main_scene(self):
         w, h = Application.instance.size
-        gui = Frame(x=10, y=600, w=w, h=h)
+        gui = Frame()
+        fs = 24
 
         # Main Layout
         layout = VLayout()
@@ -138,9 +139,9 @@ class Game:
 
             # -- buttons
             VLayout(
-                Label("Play"),
-                Label("Settings"),
-                Label("Exit")
+                Label("Play", font_size=fs),
+                Label("Settings", font_size=fs),
+                Label("Exit", font_size=fs)
             )
         )
         gui += layout
