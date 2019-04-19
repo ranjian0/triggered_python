@@ -25,6 +25,8 @@ class Widget(object):
     """Base class for all widgets"""
     def __init__(self, *args, **kwargs):
         super().__init__()
+        self.parent = None
+
         # -- position attributes
         self._x = kwargs.get('x', 0)
         self._y = kwargs.get('y', 0)
@@ -82,11 +84,17 @@ class Widget(object):
         return self._group
     group = property(_get_group)
 
+    def determine_size(self):
+        pass
+
     def on_draw(self):
         self._batch.draw()
 
     def on_update(self, dt):
         if self._dirty:
+            # -- update size
+            self.determine_size()
+
             # -- update batches and groups
             for k.v in self.shapes.items():
                 v.update_batch(self._batch, self._group)
@@ -135,6 +143,7 @@ class Container(Widget):
 
     def _add(self, item):
         self.children.append(item)
+        item.parent = self
         item._dirty = True
         self._dirty = True
 
@@ -148,6 +157,7 @@ class Container(Widget):
 
     def _remove(self, item):
         self.children.remove(item)
+        item.parent = None
         self._dirty = True
 
     def __isub__(self, item):
@@ -167,6 +177,15 @@ class Container(Widget):
             if hasattr(obj, method):
                 f = operator.methodcaller(method, *args, **kwargs)
                 f(obj)
+
+    def determine_size(self):
+        if self.parent: # Ensures that we don't do this for Frames
+            w, h = 0, 0
+            for c in self.children:
+                c.determine_size()
+                w += c.w
+                h += c.h
+            self._w, self._h = w, h
 
     def on_draw(self):
         super().on_draw()
@@ -235,14 +254,71 @@ class Layout(Container):
         self._axis = axis
         self._align = kwargs.get("align", (Layout.ALIGN_LEFT, Layout.ALIGN_TOP))
         self._padding = kwargs.get("padding", (5, 5))
+        self._margins = kwargs.get("margin", (15, 15))
 
         # -- add children (alternative for quick definitions)
         if args:
             for item in args:
                 self._add(item)
 
+    def _get_align(self):
+        align_map = {
+            "top"       : Layout.ALIGN_TOP,
+            "left"      : Layout.ALIGN_LEFT,
+            "right"     : Layout.ALIGN_RIGHT,
+            "center"    : Layout.ALIGN_CENTER,
+            "bottom"    : Layout.ALIGN_BOTTOM
+        }
+
+        ax, ay = self._align
+        if isinstance(ax, str):
+            ax = align_map.get(ax.lower(), None)
+            if not ax:
+                raise ValueError(f"Alignment must be str in {align_map.keys()}")
+        if isinstance(ay, str):
+            ay = align_map.get(ay.lower(), None)
+            if not ay:
+                raise ValueError(f"Alignment must be str in {align_map.keys()}")
+
+        return ax, ay
+
     def _layout(self):
-        pass
+        """ Arrange this containers children """
+        axis = self._axis
+        padx, pady = self._padding
+        marginx, marginy = self._margins
+        alignx, aligny = self._get_align()
+
+        # -- update the size and position of this container based on its parent, if any
+        psx, psy = self.parent.size
+        px, py = self.parent.position
+        self._x, self._y = px + marginx, py - marginy
+        for c in self.parent.children:
+            if c == self: break
+            if axis == Layout.VERTICAL:
+                self._y -= c.h + pady
+            elif axis == Layout.HORIZONTAL:
+                self._X += c.w + padx
+
+
+        # -- update position of children in this container
+        if axis == Layout.HORIZONTAL:
+            width_accumulator = 0
+            for c in self.children:
+                c.x = self._x + width_accumulator
+                c.y = self._y
+                width_accumulator += c.w + padx
+            self._w = width_accumulator
+            self._h = psy
+
+        elif axis == Layout.VERTICAL:
+            height_accumulator = 0
+            for c in self.children:
+                c.x = self._x
+                c.y = self._y + height_accumulator
+                height_accumulator -= c.h + pady
+            self._w = psx
+            self._h = height_accumulator
 
     def on_update(self, dt):
         if self._dirty:
@@ -261,6 +337,12 @@ class Frame(Container):
     """Root gui container"""
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
+
+    def on_resize(self, w, h):
+        self.x = 0
+        self.y = h
+        self.w = w
+        self.h = h
 
     def on_draw(self):
         glPushAttrib(GL_ENABLE_BIT)
@@ -449,7 +531,7 @@ class CircleShape:
 class LabelElement(pg.text.Label):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.anchor_y = "bottom"
+        self.anchor_y = "top"
         self.anchor_x = "left"
 
     def update_batch(self, batch, group):
@@ -502,3 +584,16 @@ class Label(Widget):
     def _set_text(self, val):
         self.elements['text'].text = val
     text = property(_get_text, _set_text)
+
+    def determine_size(self):
+        font = self.content.document.get_font()
+        height = font.ascent - font.descent
+
+        self._w = self.content.content_width
+        self._h = height
+
+    def on_update(self, dt):
+        if self._dirty:
+            self.content.x = self.x
+            self.content.y = self.y
+        super().on_update(dt)
