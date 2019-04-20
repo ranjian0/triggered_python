@@ -54,7 +54,10 @@ class Game:
 
         def on_key_press(self, symbol, mod):
             if symbol == pg.window.key.SPACE:
-                self.game._switch_scene("game")
+                if self.game.current.name == "main":
+                    self.game._switch_scene("game")
+                else:
+                    self.game._switch_scene("main")
 
             if symbol == pg.window.key.ESCAPE:
                 scenes = ["game", "pause"]
@@ -77,6 +80,7 @@ class Game:
         self.game_scene = self.game.scene()
         self.main_scene = self._create_main_scene()
         self.pause_scene = self._create_pause_scene()
+        self.settings_scene = self._create_settings_scene()
 
         # -- initialize
         self.current = self.main_scene
@@ -109,7 +113,7 @@ class Game:
 
         def _next_level():
             nonlocal current_level
-            if current_level < len(levels.values()):
+            if current_level < len(levels.values())-1:
                 current_level += 1
 
                 self.scenes.remove(self.current)
@@ -126,9 +130,7 @@ class Game:
         return dummy
 
     def _create_main_scene(self):
-        w, h = Application.instance.size
         gui = Frame()
-        fs = 24
 
         # Main Layout
         layout = VLayout()
@@ -140,9 +142,9 @@ class Game:
 
             # -- buttons
             VLayout(
-                TextButton("Play", font_size=fs),
-                TextButton("Settings", font_size=fs),
-                TextButton("Exit", font_size=fs)
+                TextButton("Play", font_size=24, callback=lambda : self._switch_scene("game")),
+                TextButton("Settings", font_size=24, callback=lambda : self._switch_scene("settings")),
+                TextButton("Exit", font_size=24, callback=lambda : pg.app.exit())
             )
         )
         gui += layout
@@ -154,9 +156,52 @@ class Game:
         return main
 
     def _create_pause_scene(self):
+        gui = Frame()
+
+        # Main Layout
+        layout = VLayout()
+        layout += (
+            # -- title text
+            HLayout(
+                Label("PAUSE", font_size=42)
+            ),
+
+            # -- buttons
+            HLayout(
+                TextButton("Continue", font_size=24, callback=lambda : self._switch_scene("game")),
+                TextButton("Main", font_size=24, callback=lambda : self._switch_scene("main"))
+            )
+        )
+        gui += layout
+
         pause = Scene("pause")
+        pause.add("gui", gui)
         self.scenes.append(pause)
         return pause
+
+    def _create_settings_scene(self):
+        gui = Frame()
+
+        # Main Layout
+        layout = VLayout()
+        layout += (
+            # -- title text
+            HLayout(
+                Label("SETTINGS", font_size=42)
+            ),
+
+            # -- buttons
+            HLayout(
+                TextButton("Back to MainMenu", font_size=24, callback=lambda : self._switch_scene("main")),
+                TextButton("Exit", font_size=24, callback=lambda : pg.app.exit())
+            )
+        )
+        gui += layout
+
+        settings = Scene("settings")
+        settings.add("gui", gui)
+        self.scenes.append(settings)
+        return settings
 
     def _switch_scene(self, name):
         already_active = self.current.name == name
