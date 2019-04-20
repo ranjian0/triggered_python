@@ -112,7 +112,7 @@ class Rect(object):
 
     def hit_test(self, x, y):
         '''Determine whether a point is inside the rectangle'''
-        return (x >= self.x and x <= self.x + self.w) and (y >= self.y and y <= self.y + self.h)
+        return (x >= self.x and x <= self.x + self.w) and (y <= self.y and y >= self.y - self.h)
 
     @property
     def min(self):

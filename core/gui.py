@@ -96,7 +96,7 @@ class Widget(object):
             self.determine_size()
 
             # -- update batches and groups
-            for k.v in self.shapes.items():
+            for k,v in self.shapes.items():
                 v.update_batch(self._batch, self._group)
             for k,v in self.elements.items():
                 v.update_batch(self._batch, self._group)
@@ -356,7 +356,7 @@ class Frame(Container):
 
 class RectangleShape:
 
-    def __init__(self, x, y, w, h,
+    def __init__(self, x=0, y=0, w=1, h=1,
                     color=(100, 100, 100, 255), radius=0):
         self._x = x
         self._y = y
@@ -420,13 +420,20 @@ class RectangleShape:
 
         self._update()
 
+    def update(self, x, y, w, h):
+        self._x, self._y, self._w, self._h = x, y, w, h
+        if self._vertices:
+            self._vertices.delete()
+            self._vertices = None
+        self._update()
+
     def _update(self):
         x, y, w, h = self._x, self._y, self._w, self._h
 
-        if radius == 0:
+        if self._radius == 0:
             x1, y1 = x, y
             x2, y2 = x + w, y - h
-            self._vertices = self._batch.add(4, GL_POLYGON, self._group,
+            self._vertices = self._batch.add(4, GL_QUADS, self._group,
                                      ('v2f', [x1, y1, x2, y1, x2, y2, x1, y2]),
                                      ('c4B', self._color * 4))
 
@@ -596,4 +603,78 @@ class Label(Widget):
         if self._dirty:
             self.content.x = self.x
             self.content.y = self.y
+        super().on_update(dt)
+
+class BaseButton(Widget):
+    """ Base class for button behaviour """
+
+    STATE_DEFAULT = 1
+    STATE_PRESSED = 2
+    STATE_HOVERED = 3
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._callback = kwargs.get("callback", None)
+        self._state = BaseButton.STATE_DEFAULT
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        if self._rect.hit_test(x, y):
+            self._state = BaseButton.STATE_HOVERED
+        else:
+            self._state = BaseButton.STATE_DEFAULT
+        self._dirty = True
+
+    def on_mouse_press(self, x, y, button, mod):
+        if button == pg.window.mouse.LEFT:
+            if self._rect.hit_test(x, y):
+                self._state = BaseButton.STATE_PRESSED
+                self._dirty = True
+
+                if self._callback:
+                    self._callback()
+
+    def on_mouse_release(self, x, y, button, mod):
+        if button == pg.window.mouse.LEFT:
+            if self._state == BaseButton.STATE_PRESSED:
+                self._state = BaseButton.STATE_DEFAULT
+                self._dirty = True
+
+
+class TextButton(BaseButton):
+
+    def __init__(self, text, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.content = LabelElement(text, **kwargs)
+        self.elements['text'] = self.content
+        self.shapes['background'] = RectangleShape()
+
+    def _get_text(self):
+        return self.elements['text'].text
+    def _set_text(self, val):
+        self.elements['text'].text = val
+    text = property(_get_text, _set_text)
+
+    def determine_size(self):
+        font = self.content.document.get_font()
+        height = font.ascent - font.descent
+
+        self._w = self.content.content_width
+        self._h = height
+
+    def on_update(self, dt):
+        if self._dirty:
+            self.content.x = self.x
+            self.content.y = self.y
+            self._rect = Rect(self.x, self.y, self.w, self.h)
+
+            background = self.shapes['background']
+            if self._state == BaseButton.STATE_DEFAULT:
+                background.color = (100, 100, 100, 255)
+            elif self._state == BaseButton.STATE_HOVERED:
+                background.color = (200, 200, 0, 255)
+            elif self._state == BaseButton.STATE_PRESSED:
+                background.color = (200, 200, 200, 255)
+
+            background.update(self.x, self.y, self.w, self.h)
         super().on_update(dt)

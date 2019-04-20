@@ -29,6 +29,7 @@ from core.gui import (
     Frame,
     HLayout,
     VLayout,
+    TextButton,
     )
 
 class Game:
@@ -139,9 +140,9 @@ class Game:
 
             # -- buttons
             VLayout(
-                Label("Play", font_size=fs),
-                Label("Settings", font_size=fs),
-                Label("Exit", font_size=fs)
+                TextButton("Play", font_size=fs),
+                TextButton("Settings", font_size=fs),
+                TextButton("Exit", font_size=fs)
             )
         )
         gui += layout
