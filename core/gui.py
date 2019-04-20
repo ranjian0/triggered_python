@@ -20,6 +20,7 @@ import operator
 import pyglet as pg
 from pyglet.gl import *
 from .math import Rect
+from .utils import reset_matrix
 
 class Widget(object):
     """Base class for all widgets"""
@@ -298,7 +299,7 @@ class Layout(Container):
             if axis == Layout.VERTICAL:
                 self._y -= c.h + pady
             elif axis == Layout.HORIZONTAL:
-                self._X += c.w + padx
+                self._x += c.w + padx
 
 
         # -- update position of children in this container
@@ -345,13 +346,14 @@ class Frame(Container):
         self.h = h
 
     def on_draw(self):
-        glPushAttrib(GL_ENABLE_BIT)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        with reset_matrix(self.w, self.h):
+            glPushAttrib(GL_ENABLE_BIT)
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        super().on_draw()
+            super().on_draw()
 
-        glPopAttrib()
+            glPopAttrib()
 
 
 class RectangleShape:
@@ -644,8 +646,7 @@ class TextButton(BaseButton):
 
     def __init__(self, text, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.content = LabelElement(text, **kwargs)
+        self.content = LabelElement(text, **{k:v for k,v in kwargs.items() if k in dir(pg.text.Label)})
         self.elements['text'] = self.content
         self.shapes['background'] = RectangleShape()
 
