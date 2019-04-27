@@ -140,7 +140,7 @@ class Map(object):
 
     def on_draw_last(self):
         if self._show_minimap:
-            with reset_matrix(*self._window_size):
+            with reset_matrix(*Application.instance.size):
                 self._minimap_drop.blit(0, 0)
                 self._minimap.draw()
 
