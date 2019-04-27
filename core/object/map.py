@@ -233,7 +233,7 @@ class Astar:
 
         return self._reconstruct_path(came_from, start, goal)
 
-    def _reconstruct_path(came_from, start, goal):
+    def _reconstruct_path(self, came_from, start, goal):
         current = goal
         path = [current]
         while current != start:
