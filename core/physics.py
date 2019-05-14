@@ -22,10 +22,12 @@ from pymunk import pyglet_util as putils
 DEBUG = 0
 PHYSICS_STEPS = 60
 
+
 class PhysicsWorld:
 
     # -- singleton
     instance = None
+
     def __new__(cls):
         if PhysicsWorld.instance is None:
             PhysicsWorld.instance = object.__new__(cls)
@@ -51,7 +53,7 @@ class PhysicsWorld:
 
     def on_update(self, dt):
         for _ in it.repeat(None, PHYSICS_STEPS):
-            self.space.step(1. / PHYSICS_STEPS)
+            self.space.step(1.0 / PHYSICS_STEPS)
 
     def register_collision(self, _type, on_enter, on_exit):
         handler = self.space.add_wildcard_collision_handler(_type)
@@ -60,11 +62,13 @@ class PhysicsWorld:
             this, other = arbiter.shapes
             on_enter(other.body)
             return True
+
         handler.begin = handler_begin
 
         def handler_separate(arbiter, space, data):
             this, other = arbiter.shapes
             on_exit(other.body)
+
         handler.separate = handler_separate
 
     def on_draw(self):
@@ -75,6 +79,7 @@ class PhysicsWorld:
     def reindex(self, b):
         self.space.reindex_shapes_for_body(b)
 
+
 class PhysicsBody(pm.Body):
     """ Convinience class for tagging physics bodies """
 
@@ -84,6 +89,8 @@ class PhysicsBody(pm.Body):
 
     def _get_tag(self):
         return self._tag
+
     def _set_tag(self, name):
         self._tag = name
+
     tag = property(_get_tag, _set_tag)

@@ -22,17 +22,16 @@ from .entity import Entity
 from resources import Resources
 from core.math import Vec2
 from core.object import ProjectileCollection
-from core.utils import (
-    reset_matrix,
-    image_set_size,
-    global_position)
+from core.utils import reset_matrix, image_set_size, global_position
 
 
 class Player(Entity):
-
     def __init__(self, **kwargs):
-        super().__init__(image=Resources.instance.sprite("hitman1_gun"),
-            minimap_image=Resources.instance.sprite("minimap_player"), **kwargs)
+        super().__init__(
+            image=Resources.instance.sprite("hitman1_gun"),
+            minimap_image=Resources.instance.sprite("minimap_player"),
+            **kwargs,
+        )
         self.speed = 200
         self.direction = (0, 0)
         self.body.tag = "Player"
@@ -41,7 +40,7 @@ class Player(Entity):
         self.running = False
         self.run_speed = self.speed * 1.5
 
-        #XXX HUD Elements
+        # XXX HUD Elements
         self.hud_batch = pg.graphics.Batch()
 
         # Health Bar
@@ -58,14 +57,22 @@ class Player(Entity):
         self.ammo = 350
         self.ammo_h = 30
         self.ammo_im = Resources.instance.sprite("ammo_bullet")
-        image_set_size(self.ammo_im, self.ammo_h//3, self.ammo_h)
+        image_set_size(self.ammo_im, self.ammo_h // 3, self.ammo_h)
         self.ammo_im.anchor_y = self.ammo_im.height
-        self.ammo_sprites = [pg.sprite.Sprite(self.ammo_im, batch=self.hud_batch)
-            for _ in range(self.ammo // 100)]
+        self.ammo_sprites = [
+            pg.sprite.Sprite(self.ammo_im, batch=self.hud_batch)
+            for _ in range(self.ammo // 100)
+        ]
 
-        self.ammo_text = pg.text.Label(f" X {self.ammo}", bold=True,
-            font_size=12, color=(200, 200, 0, 255), batch=self.hud_batch,
-            anchor_y='top', anchor_x='left')
+        self.ammo_text = pg.text.Label(
+            f" X {self.ammo}",
+            bold=True,
+            font_size=12,
+            color=(200, 200, 0, 255),
+            batch=self.hud_batch,
+            anchor_y="top",
+            anchor_x="left",
+        )
         self._update_ammo_indicator()
 
     def _update_healthbar_indicator(self):
@@ -75,7 +82,7 @@ class Player(Entity):
 
     def _update_ammo_indicator(self):
         w, h = self._window_size
-        px, py = 10, h-(self.ammo_h*1.5)
+        px, py = 10, h - (self.ammo_h * 1.5)
 
         # Sprites
         offx = self.ammo_im.width + 2
@@ -89,8 +96,9 @@ class Player(Entity):
         self.ammo_text.y = py
 
     def on_damage(self, health_percent):
-        region = self.bar_im.get_region(0, 0,
-            int(self.bar_im.width*health_percent), self.bar_im.height)
+        region = self.bar_im.get_region(
+            0, 0, int(self.bar_im.width * health_percent), self.bar_im.height
+        )
         region.anchor_y = self.bar_im.height
         self.bar.image = region
 
@@ -111,9 +119,7 @@ class Player(Entity):
 
         dx, dy = self.direction
         speed = self.run_speed if self.running else self.speed
-        self.velocity = (
-            dx * speed * dt,
-            dy * speed * dt)
+        self.velocity = (dx * speed * dt, dy * speed * dt)
 
     def on_key_press(self, symbol, mod):
         super().on_key_press(symbol, mod)
@@ -167,22 +173,21 @@ class Player(Entity):
     def on_mouse_motion(self, x, y, dx, dy):
         px, py = self.position
         mx, my = global_position(x, y)
-        self.rotation = math.atan2(
-            my - py, mx - px)
+        self.rotation = math.atan2(my - py, mx - px)
 
     def on_collision_enter(self, other):
         super().on_collision_enter(other)
 
-        if hasattr(other, 'tag') and other.tag == 'Enemy':
+        if hasattr(other, "tag") and other.tag == "Enemy":
             pass
 
-        if hasattr(other, 'tag') and other.tag == 'EnemyBullet':
+        if hasattr(other, "tag") and other.tag == "EnemyBullet":
             self.damage()
 
     def shoot(self):
         """ Eject projectile """
         # -- set relative muzzle location
-        muzzle_loc = Vec2(self.radius*1.5, -self.radius*.4)
+        muzzle_loc = Vec2(self.radius * 1.5, -self.radius * 0.4)
 
         # -- calculate direction of (1.muzzle location), (2.player rotation)
         rotation = muzzle_loc.angle + self.rotation

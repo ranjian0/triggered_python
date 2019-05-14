@@ -24,11 +24,7 @@ from contextlib import contextmanager
 
 from core.math import clamp
 from core.app import Application
-from resources import (
-    LevelData,
-    Resources,
-    sorted_levels,
-    )
+from resources import LevelData, Resources, sorted_levels
 from core.utils import (
     set_flag,
     draw_path,
@@ -37,11 +33,10 @@ from core.utils import (
     image_set_size,
     mouse_over_rect,
     image_set_anchor_center,
-    )
+)
 
 
 class Editor:
-
     def __init__(self):
         self.levels = Resources.instance.levels()
         self.current = sorted_levels(0) if len(self.levels) else None
@@ -78,18 +73,18 @@ class Editor:
 
     def save(self):
         # -- remove temp data from self.data
-        tmp_items = [key for key,v in self.data.items() if key.startswith('_')]
-        tmp_data = [v for key,v in self.data.items() if key.startswith('_')]
+        tmp_items = [key for key, v in self.data.items() if key.startswith("_")]
+        tmp_data = [v for key, v in self.data.items() if key.startswith("_")]
         for it in tmp_items:
             del self.data[it]
 
         # -- save data
         ldata = LevelData(**self.data)
-        f = open(self.current, 'wb')
+        f = open(self.current, "wb")
         pickle.dump(ldata, f)
 
         # -- restore temp data from self.data
-        for key,val in zip(tmp_items, tmp_data):
+        for key, val in zip(tmp_items, tmp_data):
             self.data[key] = val
 
         # # --  update viewport
@@ -127,37 +122,37 @@ class Editor:
             tool.set_viewport_transform(self.viewport.get_transform())
 
     def on_resize(self, *args):
-        self._iter_call_meth('on_resize', *args)
+        self._iter_call_meth("on_resize", *args)
 
     def on_key_press(self, *args):
-        self._iter_call_meth('on_key_press', *args)
+        self._iter_call_meth("on_key_press", *args)
 
     def on_key_release(self, *args):
-        self._iter_call_meth('on_key_release', *args)
+        self._iter_call_meth("on_key_release", *args)
 
     def on_mouse_press(self, *args):
-        self._iter_call_meth('on_mouse_press', *args)
+        self._iter_call_meth("on_mouse_press", *args)
 
     def on_mouse_release(self, *args):
-        self._iter_call_meth('on_mouse_release', *args)
+        self._iter_call_meth("on_mouse_release", *args)
 
     def on_mouse_drag(self, *args):
-        self._iter_call_meth('on_mouse_drag', *args)
+        self._iter_call_meth("on_mouse_drag", *args)
 
     def on_mouse_motion(self, *args):
-        self._iter_call_meth('on_mouse_motion', *args)
+        self._iter_call_meth("on_mouse_motion", *args)
 
     def on_mouse_scroll(self, *args):
-        self._iter_call_meth('on_mouse_scroll', *args)
+        self._iter_call_meth("on_mouse_scroll", *args)
 
     def on_text(self, *args):
-        self._iter_call_meth('on_text', *args)
+        self._iter_call_meth("on_text", *args)
 
     def on_text_motion(self, *args):
-        self._iter_call_meth('on_text_motion', *args)
+        self._iter_call_meth("on_text_motion", *args)
 
     def on_text_motion_select(self, *args):
-        self._iter_call_meth('on_text_motion_select', *args)
+        self._iter_call_meth("on_text_motion_select", *args)
 
 
 class EditorTopbar:
@@ -169,28 +164,38 @@ class EditorTopbar:
 
         # -- topbar background
         self.topbar_settings = {
-            "size" : (Application.instance.window.width, self.HEIGHT),
-            "color" : (207, 188, 188, 255)
+            "size": (Application.instance.window.width, self.HEIGHT),
+            "color": (207, 188, 188, 255),
         }
-        self.topbar = pg.image.SolidColorImagePattern(
-            self.topbar_settings.get("color"))
-        self.topbar_image = self.topbar.create_image(
-            *self.topbar_settings.get("size"))
+        self.topbar = pg.image.SolidColorImagePattern(self.topbar_settings.get("color"))
+        self.topbar_image = self.topbar.create_image(*self.topbar_settings.get("size"))
 
         # -- action buttons
         # -- images are 22x22, Toolbar width = 60
         hw = EditorToolbar.WIDTH / 2
-        self.new_btn  = ImageButton("new",  (hw/2, Application.instance.window.height - self.HEIGHT/2))
-        self.save_btn = ImageButton("save", (hw*1.5, Application.instance.window.height - self.HEIGHT/2))
+        self.new_btn = ImageButton(
+            "new", (hw / 2, Application.instance.window.height - self.HEIGHT / 2)
+        )
+        self.save_btn = ImageButton(
+            "save", (hw * 1.5, Application.instance.window.height - self.HEIGHT / 2)
+        )
 
         # -- tab buttons
         self.max_tabs = 4
         self.tabs_batch = pg.graphics.Batch()
         self.inactive_color = (50, 50, 50, 200)
         self.tabs = [
-            TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
-                        anchor_x='center', anchor_y='center', batch=self.tabs_batch)
-            for idx, level in enumerate(sorted_levels())]
+            TextButton(
+                os.path.basename(level),
+                bold=False,
+                font_size=14,
+                color=self.inactive_color,
+                anchor_x="center",
+                anchor_y="center",
+                batch=self.tabs_batch,
+            )
+            for idx, level in enumerate(sorted_levels())
+        ]
 
         if self.tabs:
             self.tabs[self.active_level].bold = True
@@ -204,7 +209,10 @@ class EditorTopbar:
     def get_rect(self):
         width = Application.instance.window.width - EditorToolbar.WIDTH
         size = (width, self.HEIGHT)
-        center = (width/2 + EditorToolbar.WIDTH, Application.instance.window.height - self.HEIGHT/2)
+        center = (
+            width / 2 + EditorToolbar.WIDTH,
+            Application.instance.window.height - self.HEIGHT / 2,
+        )
         return [center, size]
 
     def switch_level(self, level_txt):
@@ -225,12 +233,19 @@ class EditorTopbar:
         # -- update list of levels from resources
         self.levels = Resources.instance.levels()
         # -- add a new tab and set as active
-        ntab =  TextButton(os.path.basename(level), bold=False, font_size=14, color=self.inactive_color,
-            anchor_x='center', anchor_y='center', batch=self.tabs_batch)
+        ntab = TextButton(
+            os.path.basename(level),
+            bold=False,
+            font_size=14,
+            color=self.inactive_color,
+            anchor_x="center",
+            anchor_y="center",
+            batch=self.tabs_batch,
+        )
         ntab.on_click(self.switch_level, ntab.text)
         self.tabs.append(ntab)
 
-        self.active_level = len(self.tabs)-1
+        self.active_level = len(self.tabs) - 1
         self.switch_level(ntab.text)
         self.init_tabs()
 
@@ -241,26 +256,33 @@ class EditorTopbar:
 
         update = lambda tab: 0 if len(tab.text) == 13 else 5
         if _range is not None:
-            for idx, tab in enumerate(map(lambda i:self.tabs[i], _range)):
+            for idx, tab in enumerate(map(lambda i: self.tabs[i], _range)):
                 margin += update(tab)
-                tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
-                tab.y = Application.instance.window.height - self.HEIGHT/2
+                tab.x = start_x + (w / 2) + (idx * w) + ((idx + 1) * margin)
+                tab.y = Application.instance.window.height - self.HEIGHT / 2
         else:
             for idx, tab in enumerate(self.tabs):
                 margin += update(tab)
-                tab.x = start_x + (w/2) + (idx*w) + ((idx+1) * margin)
-                tab.y = Application.instance.window.height - self.HEIGHT/2
+                tab.x = start_x + (w / 2) + (idx * w) + ((idx + 1) * margin)
+                tab.y = Application.instance.window.height - self.HEIGHT / 2
 
         # -- recalculate max_tabs based on tabs and Application.instance.window width
         bar_width = Application.instance.window.width - EditorToolbar.WIDTH
-        tab_averge_width = sum([t.get_size()[0] + margin for t in self.tabs]) / len(self.tabs)
-        self.max_tabs  = int(bar_width / tab_averge_width)
+        tab_averge_width = sum([t.get_size()[0] + margin for t in self.tabs]) / len(
+            self.tabs
+        )
+        self.max_tabs = int(bar_width / tab_averge_width)
 
     def on_draw(self):
         # -- draw background
         w, h = Application.instance.size
-        self.topbar_image.blit(0, h-self.HEIGHT)
-        draw_line((0,h-self.HEIGHT), (w, h-self.HEIGHT), color=(.1, .1, .1, .8), width=5)
+        self.topbar_image.blit(0, h - self.HEIGHT)
+        draw_line(
+            (0, h - self.HEIGHT),
+            (w, h - self.HEIGHT),
+            color=(0.1, 0.1, 0.1, 0.8),
+            width=5,
+        )
 
         # -- draw action buttons
         self.new_btn.draw()
@@ -275,10 +297,10 @@ class EditorTopbar:
                 for i in range(self.max_tabs):
                     self.tabs[i].draw()
             else:
-                st = max(0, self.active_level - int(self.max_tabs/2))
-                sp = min(len(self.tabs)-1, self.active_level + int(self.max_tabs/2))
-                self.init_tabs(range(st, sp+1, 1))
-                for i in range(st, sp+1, 1):
+                st = max(0, self.active_level - int(self.max_tabs / 2))
+                sp = min(len(self.tabs) - 1, self.active_level + int(self.max_tabs / 2))
+                self.init_tabs(range(st, sp + 1, 1))
+                for i in range(st, sp + 1, 1):
                     self.tabs[i].draw()
 
     def on_update(self, dt):
@@ -287,19 +309,18 @@ class EditorTopbar:
     def on_resize(self, w, h):
         if self.tabs:
             self.init_tabs()
-        self.new_btn.update(EditorToolbar.WIDTH*.25,  h - self.HEIGHT/2)
-        self.save_btn.update(EditorToolbar.WIDTH*.75, h - self.HEIGHT/2)
+        self.new_btn.update(EditorToolbar.WIDTH * 0.25, h - self.HEIGHT / 2)
+        self.save_btn.update(EditorToolbar.WIDTH * 0.75, h - self.HEIGHT / 2)
 
-        self.topbar_settings['size'] = (w, self.HEIGHT)
-        self.topbar_image = self.topbar.create_image(
-            *self.topbar_settings.get("size"))
+        self.topbar_settings["size"] = (w, self.HEIGHT)
+        self.topbar_image = self.topbar.create_image(*self.topbar_settings.get("size"))
 
     def on_mouse_scroll(self, x, y, sx, sy):
         if not mouse_over_rect((x, y), *self.get_rect()):
             return
 
         # -- update active level based on scroll
-        self.active_level = clamp(self.active_level + sy, 0, len(self.tabs)-1)
+        self.active_level = clamp(self.active_level + sy, 0, len(self.tabs) - 1)
         self.switch_level(self.tabs[self.active_level].text)
 
     def on_mouse_motion(self, x, y, dx, dy):
@@ -314,34 +335,36 @@ class EditorTopbar:
         for tab in self.tabs:
             tab.on_mouse_press(x, y, button, mod)
 
+
 class EditorToolbar:
     WIDTH = 60
 
     def __init__(self, data):
         # -- toolbar
         self.toolbar_settings = {
-            "size" : (self.WIDTH, Application.instance.window.height),
-            "color" : (207, 188, 188, 255)
+            "size": (self.WIDTH, Application.instance.window.height),
+            "color": (207, 188, 188, 255),
         }
         self.toolbar = pg.image.SolidColorImagePattern(
-            self.toolbar_settings.get("color"))
+            self.toolbar_settings.get("color")
+        )
         self.toolbar_image = self.toolbar.create_image(
-            *self.toolbar_settings.get("size"))
+            *self.toolbar_settings.get("size")
+        )
 
         # -- tools
         self.tools = [
             AddTileTool(data),
             AddAgentTool(data),
             AddWaypointTool(data),
-            ObjectivesTool(data)
+            ObjectivesTool(data),
         ]
 
-        self.tool_start_loc = (0, Application.instance.window.height - EditorTopbar.HEIGHT)
-        self.tool_settings = {
-            "size" : (50, 50),
-            "border" : (5, 5),
-            "anchor" : (25, 25)
-        }
+        self.tool_start_loc = (
+            0,
+            Application.instance.window.height - EditorTopbar.HEIGHT,
+        )
+        self.tool_settings = {"size": (50, 50), "border": (5, 5), "anchor": (25, 25)}
         self.init_tools()
 
     def init_tools(self):
@@ -356,8 +379,11 @@ class EditorToolbar:
             tool.size = self.tool_settings.get("size")
 
     def get_rect(self):
-        center = (self.WIDTH/2, (Application.instance.window.height-EditorTopbar.HEIGHT)/2)
-        size = (self.WIDTH, Application.instance.window.height-EditorTopbar.HEIGHT)
+        center = (
+            self.WIDTH / 2,
+            (Application.instance.window.height - EditorTopbar.HEIGHT) / 2,
+        )
+        size = (self.WIDTH, Application.instance.window.height - EditorTopbar.HEIGHT)
         return [center, size]
 
     def __iter__(self):
@@ -370,77 +396,83 @@ class EditorToolbar:
                 f = operator.methodcaller(method, *args, **kwargs)
                 f(obj)
 
-    #XXX Event handlers
+    # XXX Event handlers
     def on_draw(self):
         self.toolbar_image.blit(0, -EditorTopbar.HEIGHT)
-        self._iter_call_meth('on_draw_first')
-        self._iter_call_meth('on_draw')
-        self._iter_call_meth('on_draw_last')
+        self._iter_call_meth("on_draw_first")
+        self._iter_call_meth("on_draw")
+        self._iter_call_meth("on_draw_last")
 
     def on_update(self, dt):
-        self._iter_call_meth('on_update', dt)
+        self._iter_call_meth("on_update", dt)
 
         for tool in self:
             if tool.activated:
                 # -- set all tools as inactive
-                set_flag('is_active', False, self.tools)
-                set_flag('activated', False, self.tools)
+                set_flag("is_active", False, self.tools)
+                set_flag("activated", False, self.tools)
 
                 # -- activate current tool
                 tool.is_active = True
 
     def on_resize(self, w, h):
-        self._iter_call_meth('on_resize', w, h)
+        self._iter_call_meth("on_resize", w, h)
 
-        self.tool_start_loc = (0, h-EditorTopbar.HEIGHT)
+        self.tool_start_loc = (0, h - EditorTopbar.HEIGHT)
         self.init_tools()
 
-        self.toolbar_settings['size'] = (self.WIDTH, h)
+        self.toolbar_settings["size"] = (self.WIDTH, h)
         self.toolbar_image = self.toolbar.create_image(
-            *self.toolbar_settings.get("size"))
+            *self.toolbar_settings.get("size")
+        )
 
     def on_key_press(self, *args):
-        self._iter_call_meth('on_key_press', *args)
+        self._iter_call_meth("on_key_press", *args)
 
     def on_key_release(self, *args):
-        self._iter_call_meth('on_key_release', *args)
+        self._iter_call_meth("on_key_release", *args)
 
     def on_mouse_press(self, x, y, button, mod):
-        self._iter_call_meth('on_mouse_press',  x, y, button, mod)
+        self._iter_call_meth("on_mouse_press", x, y, button, mod)
 
         # -- deactivate all tools if click over empty toolbar area
         if button == pg.window.mouse.LEFT and mouse_over_rect((x, y), *self.get_rect()):
             # -- check if mouse was clicked over toolbar but not over a tool,
-            if not any([mouse_over_rect((x, y), tool.position, tool.size) for tool in self.tools]):
+            if not any(
+                [
+                    mouse_over_rect((x, y), tool.position, tool.size)
+                    for tool in self.tools
+                ]
+            ):
                 # -- set all tools as inactive
-                set_flag('is_active', False, self.tools)
-                set_flag('activated', False, self.tools)
-
+                set_flag("is_active", False, self.tools)
+                set_flag("activated", False, self.tools)
 
     def on_mouse_release(self, *args):
-        self._iter_call_meth('on_mouse_release', *args)
+        self._iter_call_meth("on_mouse_release", *args)
 
     def on_mouse_drag(self, *args):
-        self._iter_call_meth('on_mouse_drag', *args)
+        self._iter_call_meth("on_mouse_drag", *args)
 
     def on_mouse_motion(self, *args):
-        self._iter_call_meth('on_mouse_motion', *args)
+        self._iter_call_meth("on_mouse_motion", *args)
 
     def on_mouse_scroll(self, *args):
-        self._iter_call_meth('on_mouse_scroll', *args)
+        self._iter_call_meth("on_mouse_scroll", *args)
 
     def on_text(self, *args):
-        self._iter_call_meth('on_text', *args)
+        self._iter_call_meth("on_text", *args)
 
     def on_text_motion(self, *args):
-        self._iter_call_meth('on_text_motion', *args)
+        self._iter_call_meth("on_text_motion", *args)
 
     def on_text_motion_select(self, *args):
-        self._iter_call_meth('on_text_motion_select', *args)
+        self._iter_call_meth("on_text_motion_select", *args)
+
 
 class EditorViewport:
     LINE_WIDTH = 2
-    OFFSET = (EditorToolbar.WIDTH+LINE_WIDTH, LINE_WIDTH)
+    OFFSET = (EditorToolbar.WIDTH + LINE_WIDTH, LINE_WIDTH)
 
     GRID_SIZE = 20000
     GRID_SPACING = 100
@@ -457,24 +489,28 @@ class EditorViewport:
         self._zoom_sensitivity = 0.1
 
         # -- map options
-        self.wall_img   = Resources.instance.sprite("wall")
+        self.wall_img = Resources.instance.sprite("wall")
         image_set_size(self.wall_img, self.GRID_SPACING, self.GRID_SPACING)
 
-        self.floor_img   = Resources.instance.sprite("floor")
+        self.floor_img = Resources.instance.sprite("floor")
         image_set_size(self.floor_img, self.GRID_SPACING, self.GRID_SPACING)
 
         # -- player options
         self.player_img = Resources.instance.sprite("hitman1_stand")
-        image_set_size(self.player_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
+        image_set_size(
+            self.player_img, self.GRID_SPACING * 0.75, self.GRID_SPACING * 0.75
+        )
         image_set_anchor_center(self.player_img)
 
         # -- enemy options
         self.enemy_img = Resources.instance.sprite("robot1_stand")
-        image_set_size(self.enemy_img, self.GRID_SPACING*.75, self.GRID_SPACING*.75)
+        image_set_size(
+            self.enemy_img, self.GRID_SPACING * 0.75, self.GRID_SPACING * 0.75
+        )
         image_set_anchor_center(self.enemy_img)
 
         self.enemy_target = Resources.instance.sprite("enemy_target")
-        image_set_size(self.enemy_target, *(EditorViewport.GRID_SPACING,)*2)
+        image_set_size(self.enemy_target, *(EditorViewport.GRID_SPACING,) * 2)
         image_set_anchor_center(self.enemy_target)
 
     def reload(self, data):
@@ -485,7 +521,7 @@ class EditorViewport:
         width = Application.instance.window.width - EditorToolbar.WIDTH
         height = Application.instance.window.height - EditorTopbar.HEIGHT
         size = (width, height)
-        center = (width/2 + EditorToolbar.WIDTH, height/2)
+        center = (width / 2 + EditorToolbar.WIDTH, height / 2)
         return [center, size]
 
     def get_transform(self):
@@ -526,44 +562,48 @@ class EditorViewport:
         glEnd()
 
     def _editor_draw_map(self):
-        for y, row in enumerate(self.data['map']):
+        for y, row in enumerate(self.data["map"]):
             for x, data in enumerate(row):
                 offx, offy = x * self.GRID_SPACING, y * self.GRID_SPACING
                 if data == "#":
                     self.wall_img.blit(offx, offy, 0)
-                elif data == ' ':
+                elif data == " ":
                     self.floor_img.blit(offx, offy, 0)
 
     def _editor_draw_player(self):
-        self.player_img.blit(*self.data['player'], 0)
+        self.player_img.blit(*self.data["player"], 0)
 
     def _editor_draw_enemies(self):
-        for pos in self.data['enemies']:
+        for pos in self.data["enemies"]:
             self.enemy_img.blit(*pos, 0)
 
     def _editor_draw_waypoints(self):
         # -- check if waypoint tool is active
-        waypoint_tool = [t for t in EditorTool.tools if isinstance(t, AddWaypointTool)][-1]
-        if not waypoint_tool.is_active: return
+        waypoint_tool = [t for t in EditorTool.tools if isinstance(t, AddWaypointTool)][
+            -1
+        ]
+        if not waypoint_tool.is_active:
+            return
 
-        waypoints = self.data.get('waypoints')
+        waypoints = self.data.get("waypoints")
         if waypoints:
             # -- check if we have active enemy
-            enemy_id = self.data.get('_active_enemy')
+            enemy_id = self.data.get("_active_enemy")
             if enemy_id:
                 # -- select waypoints for active enemy
-                points = waypoints[enemy_id-1]
+                points = waypoints[enemy_id - 1]
 
                 # -- draw active enemy
-                self.enemy_target.blit(*self.data['enemies'][enemy_id-1], 0)
+                self.enemy_target.blit(*self.data["enemies"][enemy_id - 1], 0)
 
                 # -- draw waypoints
-                draw_path(points, color=(0,0,1,1))
+                draw_path(points, color=(0, 0, 1, 1))
                 for point in points:
-                    draw_point(point, color=(1,1,1,1))
+                    draw_point(point, color=(1, 1, 1, 1))
 
     def on_draw(self):
-        if not self.data: return
+        if not self.data:
+            return
 
         glPushMatrix()
         glTranslatef(*self.OFFSET, 1)
@@ -586,8 +626,8 @@ class EditorViewport:
         if button == pg.window.mouse.MIDDLE:
             self._is_panning = True
             px, py = self._pan_offset
-            px = 0 if (px+dx) > 0 else px+dx
-            py = 0 if (py+dy) > 0 else py+dy
+            px = 0 if (px + dx) > 0 else px + dx
+            py = 0 if (py + dy) > 0 else py + dy
             self._pan_offset = (px, py)
         else:
             self._is_panning = False
@@ -596,11 +636,11 @@ class EditorViewport:
         if not mouse_over_rect((x, y), *self.get_rect()):
             return
 
-        _sum = lambda x,y,val: (x+val, y+val)
+        _sum = lambda x, y, val: (x + val, y + val)
         if sy < 0:
             self._zoom = _sum(*self._zoom, -self._zoom_sensitivity)
         else:
-            self._zoom = _sum(*self._zoom,  self._zoom_sensitivity)
+            self._zoom = _sum(*self._zoom, self._zoom_sensitivity)
 
         # -- clamp zoom to (0.2, 10.0) and round to  d.p
         self._zoom = tuple(map(lambda x: clamp(x, 0.2, 10.0), self._zoom))
@@ -610,6 +650,7 @@ class EditorViewport:
 class EditorTool:
 
     tools = []
+
     def __new__(cls, *args, **kwargs):
         instance = object.__new__(cls)
         EditorTool.tools.append(instance)
@@ -625,7 +666,7 @@ class EditorTool:
         self.size = (0, 0)
 
         # -- set image anchors to center:
-        for _,img in self.options.items():
+        for _, img in self.options.items():
             image_set_anchor_center(img)
 
         self.default = list(options)[0]
@@ -641,7 +682,7 @@ class EditorTool:
 
         # -- flags to show optional tools
         self.mouse_down_duration = 0
-        self.mouse_hold_duration = .5
+        self.mouse_hold_duration = 0.5
         self.start_show_event = False
         self.show_options = False
 
@@ -661,15 +702,15 @@ class EditorTool:
         # -- convert mouse position to viewport position
         # -- subtract editor offset
         ox, oy = EditorViewport.OFFSET
-        px, py = x-ox, y-oy
+        px, py = x - ox, y - oy
 
         # -- transform viewport pan
         panx, pany = self._viewport_pan
-        px, py = px-panx, py-pany
+        px, py = px - panx, py - pany
 
         # -- transform viewport scale
         zx, zy = self._viewport_zoom
-        px, py = px*(1/zx), py*(1/zy)
+        px, py = px * (1 / zx), py * (1 / zy)
         return px, py
 
     def mouse_pos_to_map(self, x, y):
@@ -702,7 +743,7 @@ class EditorTool:
             offx = 50
             for idx, (name, image) in enumerate(self.options.items(), 1):
                 px, py = self.position
-                loc = (px + (idx*offx), py)
+                loc = (px + (idx * offx), py)
                 self.tool_background.blit(*loc)
                 image.blit(*loc)
 
@@ -735,73 +776,74 @@ class EditorTool:
                 for idx, (name, image) in enumerate(self.options.items()):
                     idx += 1
                     px, py = self.position
-                    loc = (px + (idx*offx), py)
-                    if mouse_over_rect((x,y), loc, self.size):
-                        self.default = list(self.options)[idx-1]
+                    loc = (px + (idx * offx), py)
+                    if mouse_over_rect((x, y), loc, self.size):
+                        self.default = list(self.options)[idx - 1]
 
                 self.show_options = False
+
 
 class AddTileTool(EditorTool):
     def __init__(self, data):
         opts = {
-            "Wall" : Resources.instance.sprite("tool_wall"),
-            "Floor" : Resources.instance.sprite("tool_floor")
+            "Wall": Resources.instance.sprite("tool_wall"),
+            "Floor": Resources.instance.sprite("tool_floor"),
         }
         super().__init__(opts, data)
 
     def _map_add_tile(self, idx, idy, data):
-        _map = self.level_data.get('map')
+        _map = self.level_data.get("map")
 
         # -- modifiy map list to accomodate new wall
-        items_to_add = (idx+1) - len(_map[0])
-        rows_to_add = (idy+1) - len(_map)
+        items_to_add = (idx + 1) - len(_map[0])
+        rows_to_add = (idy + 1) - len(_map)
         len_rows = len(_map[0])
 
         # -- add new rows
         if rows_to_add:
             for i in range(rows_to_add):
-                _map.append(['' for _ in range(len_rows)])
+                _map.append(["" for _ in range(len_rows)])
 
         # -- add new items
         if items_to_add:
             for row in _map:
-                    for _ in range(items_to_add):
-                        row.append('')
+                for _ in range(items_to_add):
+                    row.append("")
 
         # -- set wall at target index
         _map[idy][idx] = data
 
     def _map_add_wall_at(self, idx, idy):
-        _map = self.level_data.get('map')
+        _map = self.level_data.get("map")
         if _map:
             # -- ensure list contains data
             if idy < len(_map) and idx < len(_map[0]):
-                _map[idy][idx] = '#'
+                _map[idy][idx] = "#"
             else:
-                self._map_add_tile(idx, idy, '#')
+                self._map_add_tile(idx, idy, "#")
 
     def _map_remove_wall_at(self, idx, idy):
-        _map = self.level_data.get('map')
+        _map = self.level_data.get("map")
         if _map:
             # -- ensure list contains data
             if idy < len(_map) and idx < len(_map[0]):
-                _map[idy][idx] = ''
+                _map[idy][idx] = ""
 
     def _map_add_floor_at(self, idx, idy):
-        _map = self.level_data.get('map')
+        _map = self.level_data.get("map")
         if _map:
             # -- ensure list contains data
             if idy < len(_map) and idx < len(_map[0]):
-                _map[idy][idx] = ' '
+                _map[idy][idx] = " "
             else:
-                self._map_add_tile(idx, idy, ' ')
+                self._map_add_tile(idx, idy, " ")
 
     def _map_remove_floor_at(self, idx, idy):
-        _map = self.level_data.get('map')
+        _map = self.level_data.get("map")
         if _map:
             # -- ensure list contains data
             if idy < len(_map) and idx < len(_map[0]):
-                _map[idy][idx] = ''
+                _map[idy][idx] = ""
 
     def _do_add_tile(self, x, y, mod):
         # -- if we are showing tool options for other tools, return
@@ -810,12 +852,12 @@ class AddTileTool(EditorTool):
                 return
 
         map_id = self.mouse_pos_to_map(x, y)
-        if self.default == 'Wall':
+        if self.default == "Wall":
             if mod & pg.window.key.MOD_CTRL:
                 self._map_remove_wall_at(*map_id)
             else:
                 self._map_add_wall_at(*map_id)
-        elif self.default == 'Floor':
+        elif self.default == "Floor":
             if mod & pg.window.key.MOD_CTRL:
                 self._map_remove_floor_at(*map_id)
             else:
@@ -823,25 +865,30 @@ class AddTileTool(EditorTool):
 
     def on_mouse_press(self, x, y, button, mod):
         super().on_mouse_press(x, y, button, mod)
-        if not self.is_active: return
-        if x < EditorToolbar.WIDTH: return
+        if not self.is_active:
+            return
+        if x < EditorToolbar.WIDTH:
+            return
 
         if button == pg.window.mouse.LEFT:
             self._do_add_tile(x, y, mod)
 
     def on_mouse_drag(self, x, y, dx, dy, button, mod):
         # super().on_mouse_drag(x, y, button, mod)
-        if not self.is_active: return
-        if x < EditorToolbar.WIDTH: return
+        if not self.is_active:
+            return
+        if x < EditorToolbar.WIDTH:
+            return
 
         if button == pg.window.mouse.LEFT:
             self._do_add_tile(x, y, mod)
 
+
 class AddAgentTool(EditorTool):
     def __init__(self, data):
         opts = {
-            "Player" : Resources.instance.sprite("tool_player"),
-            "Enemy" : Resources.instance.sprite("tool_enemy"),
+            "Player": Resources.instance.sprite("tool_player"),
+            "Enemy": Resources.instance.sprite("tool_enemy"),
         }
         super().__init__(opts, data)
 
@@ -858,27 +905,27 @@ class AddAgentTool(EditorTool):
         if button == pg.window.mouse.LEFT:
             px, py = self.mouse_pos_to_viewport(x, y)
 
-            if self.default == 'Player':
-                self.level_data['player'] = (px, py)
-            elif self.default == 'Enemy':
+            if self.default == "Player":
+                self.level_data["player"] = (px, py)
+            elif self.default == "Enemy":
                 if mod & pg.window.key.MOD_CTRL:
-                    enemies = self.level_data['enemies']
-                    waypoints = self.level_data['waypoints']
+                    enemies = self.level_data["enemies"]
+                    waypoints = self.level_data["waypoints"]
                     for idx, en in enumerate(enemies):
-                        if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
-                            self.level_data['enemies'].remove(en)
-                            self.level_data['waypoints'].remove(waypoints[idx])
+                        if mouse_over_rect(
+                            (px, py), en, (EditorViewport.GRID_SPACING * 0.75,) * 2
+                        ):
+                            self.level_data["enemies"].remove(en)
+                            self.level_data["waypoints"].remove(waypoints[idx])
                 else:
-                    self.level_data['enemies'].append((px, py))
-                    self.level_data['waypoints'].append([])
+                    self.level_data["enemies"].append((px, py))
+                    self.level_data["waypoints"].append([])
+
 
 class AddWaypointTool(EditorTool):
     def __init__(self, data):
-        opts = {
-            "Waypoint" : Resources.instance.sprite("tool_waypoint"),
-        }
+        opts = {"Waypoint": Resources.instance.sprite("tool_waypoint")}
         super().__init__(opts, data)
-
 
     def on_mouse_press(self, x, y, button, mod):
         super().on_mouse_press(x, y, button, mod)
@@ -895,53 +942,53 @@ class AddWaypointTool(EditorTool):
         px, py = self.mouse_pos_to_viewport(x, y)
         if button == pg.window.mouse.LEFT:
             # -- check if an enemy is selected
-            enemy_id = self.level_data.get('_active_enemy')
+            enemy_id = self.level_data.get("_active_enemy")
             if enemy_id:
                 # -- ensure waypoint list exist
-                waypoints = self.level_data.get('waypoints')
+                waypoints = self.level_data.get("waypoints")
                 if not waypoints:
-                    self.level_data['waypoints'] = []
-                    waypoints = self.level_data['waypoints']
+                    self.level_data["waypoints"] = []
+                    waypoints = self.level_data["waypoints"]
 
                 # -- check if waypoints exist for all enemies
-                missing = len(self.level_data['enemies']) > len(waypoints)
+                missing = len(self.level_data["enemies"]) > len(waypoints)
                 if missing:
-                    for _ in range(len(self.level_data['enemies']) - len(waypoints)):
+                    for _ in range(len(self.level_data["enemies"]) - len(waypoints)):
                         waypoints.append([])
-
 
                 if mod & pg.window.key.MOD_CTRL:
                     # -- remove waypoint at mouse location
                     selected = None
-                    for point in waypoints[enemy_id-1]:
+                    for point in waypoints[enemy_id - 1]:
                         if mouse_over_rect((px, py), point, (10, 10)):
                             selected = point
                             break
                     if selected:
-                        waypoints[enemy_id-1].remove(selected)
+                        waypoints[enemy_id - 1].remove(selected)
                 else:
                     # -- add mouse location to the selected enemy waypoints
-                    waypoints[enemy_id-1].append((px, py))
+                    waypoints[enemy_id - 1].append((px, py))
 
         # -- select enemy
         elif button == pg.window.mouse.RIGHT:
             if mod & pg.window.key.MOD_CTRL:
-                if self.level_data.get('_active_enemy'):
-                    del self.level_data['_active_enemy']
+                if self.level_data.get("_active_enemy"):
+                    del self.level_data["_active_enemy"]
             else:
-                enemies = self.level_data['enemies']
+                enemies = self.level_data["enemies"]
                 for idx, en in enumerate(enemies):
-                    if mouse_over_rect((px,py), en, (EditorViewport.GRID_SPACING*.75,)*2):
-                        self.level_data['_active_enemy'] = idx+1
+                    if mouse_over_rect(
+                        (px, py), en, (EditorViewport.GRID_SPACING * 0.75,) * 2
+                    ):
+                        self.level_data["_active_enemy"] = idx + 1
+
 
 class ObjectivesTool(EditorTool):
-    WIDTH  = 400
+    WIDTH = 400
     HEIGHT = 180
 
     def __init__(self, data):
-        opts = {
-            "Objectives" : Resources.instance.sprite("tool_objectives"),
-        }
+        opts = {"Objectives": Resources.instance.sprite("tool_objectives")}
         super().__init__(opts, data)
 
         self.batch = pg.graphics.Batch()
@@ -949,41 +996,65 @@ class ObjectivesTool(EditorTool):
 
         # panel background
         self.background_settings = {
-            "size" : (self.WIDTH, self.HEIGHT),
-            "color" : (150, 100, 100, 255)
+            "size": (self.WIDTH, self.HEIGHT),
+            "color": (150, 100, 100, 255),
         }
         self.background = pg.image.SolidColorImagePattern(
-            self.background_settings.get("color"))
+            self.background_settings.get("color")
+        )
         self.background_image = self.background.create_image(
-            *self.background_settings.get("size"))
+            *self.background_settings.get("size")
+        )
 
         # panel labels
         pad = 5
         left, top = EditorToolbar.WIDTH + pad, self.HEIGHT - pad
 
         self.labels = [
-            pg.text.Label("Level Name", x=left, y=top-10, bold=True,
-                anchor_y='top', color=(0, 0, 0, 255), batch=self.batch),
-            pg.text.Label("Objectives", x=left, y=top-50, bold=True,
-                anchor_y='top', color=(0, 0, 0, 255), batch=self.batch)
+            pg.text.Label(
+                "Level Name",
+                x=left,
+                y=top - 10,
+                bold=True,
+                anchor_y="top",
+                color=(0, 0, 0, 255),
+                batch=self.batch,
+            ),
+            pg.text.Label(
+                "Objectives",
+                x=left,
+                y=top - 50,
+                bold=True,
+                anchor_y="top",
+                color=(0, 0, 0, 255),
+                batch=self.batch,
+            ),
         ]
 
         # panel inputs
         start_x = left + 100
         start_y = top - 30
-        width = self.WIDTH - (3*pad + 100)
+        width = self.WIDTH - (3 * pad + 100)
 
-        data = self.level_data or {'name': "Level Name", 'objectives': [f"Objective {i+1}" for i in range(3)]}
+        data = self.level_data or {
+            "name": "Level Name",
+            "objectives": [f"Objective {i+1}" for i in range(3)],
+        }
         has_objectives = data.get("objectives", None)
         self.inputs = [
             TextInput(data.get("name"), start_x, start_y, width, self.batch),
-
-            TextInput(data.get("objectives")[0], start_x, start_y - 40, width, self.batch),
-            TextInput(data.get("objectives")[1], start_x, start_y - 80, width, self.batch),
-            TextInput(data.get("objectives")[2], start_x, start_y - 120, width, self.batch),
+            TextInput(
+                data.get("objectives")[0], start_x, start_y - 40, width, self.batch
+            ),
+            TextInput(
+                data.get("objectives")[1], start_x, start_y - 80, width, self.batch
+            ),
+            TextInput(
+                data.get("objectives")[2], start_x, start_y - 120, width, self.batch
+            ),
         ]
 
-        self.text_cursor = Application.instance.window.get_system_mouse_cursor('text')
+        self.text_cursor = Application.instance.window.get_system_mouse_cursor("text")
         self.focus = None
         self.set_focus(self.inputs[0])
 
@@ -1000,15 +1071,13 @@ class ObjectivesTool(EditorTool):
 
     def next_focus(self):
         idx = self.inputs.index(self.focus) + 1
-        if idx > len(self.inputs)-1:
+        if idx > len(self.inputs) - 1:
             idx = 0
         self.set_focus(self.inputs[idx])
 
     def save_data(self):
-        self.level_data['name'] = self.inputs[0].document.text
-        self.level_data['objectives'] = [
-            inp.document.text for inp in self.inputs[1:]
-        ]
+        self.level_data["name"] = self.inputs[0].document.text
+        self.level_data["objectives"] = [inp.document.text for inp in self.inputs[1:]]
 
     def on_draw(self):
         super().on_draw()
@@ -1053,7 +1122,7 @@ class ObjectivesTool(EditorTool):
     def on_text(self, *args):
         if self.is_active and self.level_data:
             if self.focus:
-                if '\r' not in args:
+                if "\r" not in args:
                     self.focus.caret.on_text(*args)
             self.save_data()
 
@@ -1068,9 +1137,7 @@ class ObjectivesTool(EditorTool):
                 self.focus.caret.on_text_motion_select(*args)
 
 
-
 class TextInput:
-
     def __init__(self, text, x, y, width, batch=None):
         self.batch = batch
 
@@ -1080,7 +1147,8 @@ class TextInput:
         height = font.ascent - font.descent
 
         self.layout = pg.text.layout.IncrementalTextLayout(
-            self.document, width, height, multiline=False, batch=self.batch)
+            self.document, width, height, multiline=False, batch=self.batch
+        )
         self.caret = pg.text.caret.Caret(self.layout)
 
         self.layout.x = x
@@ -1088,20 +1156,25 @@ class TextInput:
 
         # Rectangular outline
         pad = 2
-        self.add_background(x - pad, y - pad,
-                            x + width + pad, y + height + pad)
+        self.add_background(x - pad, y - pad, x + width + pad, y + height + pad)
 
     def hit_test(self, x, y):
-        return (0 < x - self.layout.x < self.layout.width and
-                0 < y - self.layout.y < self.layout.height)
+        return (
+            0 < x - self.layout.x < self.layout.width
+            and 0 < y - self.layout.y < self.layout.height
+        )
 
     def add_background(self, x1, y1, x2, y2):
-        vert_list = self.batch.add(4, pg.gl.GL_QUADS, None,
-                                     ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
-                                     ('c4B', [200, 200, 220, 255] * 4))
+        vert_list = self.batch.add(
+            4,
+            pg.gl.GL_QUADS,
+            None,
+            ("v2i", [x1, y1, x2, y1, x2, y2, x1, y2]),
+            ("c4B", [200, 200, 220, 255] * 4),
+        )
+
 
 class Button(object):
-
     def __init__(self):
         self._callback = None
         self._callback_args = ()
@@ -1119,11 +1192,11 @@ class Button(object):
 
     def on_mouse_press(self, x, y, button, mod):
         if button == pg.window.mouse.LEFT:
-            if self.hover(x,y):
+            if self.hover(x, y):
                 self._callback(*self._callback_args)
 
-class TextButton(pg.text.Label, Button):
 
+class TextButton(pg.text.Label, Button):
     def __init__(self, *args, **kwargs):
         pg.text.Label.__init__(self, *args, **kwargs)
         Button.__init__(self)
@@ -1133,6 +1206,7 @@ class TextButton(pg.text.Label, Button):
 
     def _set_hcolor(self, val):
         self._hover_color = val
+
     hover_color = property(fset=_set_hcolor)
 
     def get_size(self):
@@ -1140,15 +1214,15 @@ class TextButton(pg.text.Label, Button):
 
     def hover(self, x, y):
         center = self.x, self.y
-        if mouse_over_rect((x,y), center, self.get_size()):
+        if mouse_over_rect((x, y), center, self.get_size()):
             self.color = self._hover_color
             return True
 
         self.color = self._start_color
         return False
 
-class ImageButton(Button):
 
+class ImageButton(Button):
     def __init__(self, image, position):
         Button.__init__(self)
         self.image = Resources.instance.sprite(image)
@@ -1165,7 +1239,7 @@ class ImageButton(Button):
         center = self.x, self.y
         size = self.sprite.width, self.sprite.height
 
-        if mouse_over_rect((x,y), center, size):
+        if mouse_over_rect((x, y), center, size):
             return True
         return False
 
@@ -1173,11 +1247,12 @@ class ImageButton(Button):
         self.sprite.draw()
 
 
-'''
+"""
 ============================================================
 ---   MAIN
 ============================================================
-'''
+"""
+
 
 def main():
     res = Resources()
@@ -1185,5 +1260,6 @@ def main():
     app.process(Editor())
     app.run()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

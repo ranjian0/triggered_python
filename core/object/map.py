@@ -23,16 +23,8 @@ import itertools as it
 from resources import Resources
 from core.app import Application
 from core.physics import PhysicsWorld
-from core.utils import (
-    reset_matrix,
-    image_set_size,
-    )
-from core.math import (
-    tadd,
-    tmul,
-    dist_sqr,
-    heuristic,
-    )
+from core.utils import reset_matrix, image_set_size
+from core.math import tadd, tmul, dist_sqr, heuristic
 
 
 class Map(object):
@@ -40,6 +32,7 @@ class Map(object):
 
     # -- singleton
     instance = None
+
     def __new__(cls, *args):
         if Map.instance is None:
             Map.instance = object.__new__(cls)
@@ -47,9 +40,10 @@ class Map(object):
 
     sprites = []
     node_size = (100, 100)
+
     def __init__(self, data):
         super(Map, self).__init__()
-        self.data = [r for r in data if '#' in r]
+        self.data = [r for r in data if "#" in r]
         self.batch = pg.graphics.Batch()
 
         self._minimap = None
@@ -62,39 +56,43 @@ class Map(object):
     def _get_size(self):
         nx, ny = self.node_size
         return nx * len(self.data[0]), ny * len(self.data)
+
     size = property(_get_size)
 
     def _generate(self):
-        wall_img = Resources.instance.sprite('wall')
+        wall_img = Resources.instance.sprite("wall")
         image_set_size(wall_img, *self.node_size)
-        floor_img = Resources.instance.sprite('floor')
+        floor_img = Resources.instance.sprite("floor")
         image_set_size(floor_img, *self.node_size)
 
         self.sprites.clear()
         nx, ny = self.node_size
         sx, sy = len(self.data[0]), len(self.data)
         for (ix, iy) in it.product(range(sx), range(sy)):
-            data   = self.data[iy][ix]
+            data = self.data[iy][ix]
             px, py = tmul((ix, iy), self.node_size)
             if data:
-                sp = pg.sprite.Sprite(wall_img if data == '#' else floor_img,
-                        x=px, y=py, batch=self.batch)
+                sp = pg.sprite.Sprite(
+                    wall_img if data == "#" else floor_img, x=px, y=py, batch=self.batch
+                )
                 self.sprites.append(sp)
 
-                if data == '#':
+                if data == "#":
                     # -- add collision box
                     world = PhysicsWorld.instance
-                    wall = pm.Poly.create_box(world.space.static_body, size=self.node_size)
-                    wall.body.position = (px + nx/2, py + ny/2)
+                    wall = pm.Poly.create_box(
+                        world.space.static_body, size=self.node_size
+                    )
+                    wall.body.position = (px + nx / 2, py + ny / 2)
                     world.add(wall)
 
     def _generate_minimap(self):
         wall_color = (50, 50, 50, 255)
         background_color = (200, 0, 0, 0)
         w, h = Application.instance.size
-        size = tuple(map(operator.mul, (w,h), (.9, .95)))
+        size = tuple(map(operator.mul, (w, h), (0.9, 0.95)))
 
-        sx, sy = [s/ms for s, ms in zip(size, self.size)]
+        sx, sy = [s / ms for s, ms in zip(size, self.size)]
         nsx, nsy = self.node_size
 
         background_image = pg.image.SolidColorImagePattern(background_color)
@@ -102,7 +100,7 @@ class Map(object):
         background = background_image.get_texture()
 
         wall_image = pg.image.SolidColorImagePattern(wall_color)
-        wall_image = wall_image.create_image(nsx//4, nsy//4)
+        wall_image = wall_image.create_image(nsx // 4, nsy // 4)
         wall = wall_image.get_texture()
 
         for y, row in enumerate(self.data):
@@ -112,14 +110,14 @@ class Map(object):
                     background.blit_into(wall_image, offx, offy, 0)
 
                     # -- fill x-gaps
-                    if x < len(row)-1 and row[x+1] == '#':
-                        for i in range(1,4):
-                            ox = offx + (i*(nsx//4))
+                    if x < len(row) - 1 and row[x + 1] == "#":
+                        for i in range(1, 4):
+                            ox = offx + (i * (nsx // 4))
                             background.blit_into(wall_image, ox, offy, 0)
                     # -- fill y-gaps
-                    if y < len(self.data)-1 and self.data[y+1][x] == '#':
-                        for i in range(1,4):
-                            oy = offy + (i*(nsy//4))
+                    if y < len(self.data) - 1 and self.data[y + 1][x] == "#":
+                        for i in range(1, 4):
+                            oy = offy + (i * (nsy // 4))
                             background.blit_into(wall_image, offx, oy, 0)
 
         sc = min(sx, sy)
@@ -175,8 +173,8 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
-class Astar:
 
+class Astar:
     def __init__(self, data, node_size):
         self.data = data
         self.node_size = node_size
@@ -189,19 +187,22 @@ class Astar:
 
     def closest_node(self, p):
         data = [(dist_sqr(p, point), point) for point in self._walkable]
-        return min(data, key=lambda d:d[0])[1]
+        return min(data, key=lambda d: d[0])[1]
 
     def _get_walkable_nodes(self):
         """ Find all node positions without a wall """
-        hns = (self.node_size[0]/2, self.node_size[1]/2)
-        walkable = [tadd(hns, tmul((x, y), self.node_size))
+        hns = (self.node_size[0] / 2, self.node_size[1] / 2)
+        walkable = [
+            tadd(hns, tmul((x, y), self.node_size))
             for y, data in enumerate(self.data)
-            for x, d in enumerate(data) if d == ' ']
+            for x, d in enumerate(data)
+            if d == " "
+        ]
         return walkable
 
     def _get_neighbours(self, p):
         """ Find all neightbours of p that are walkable"""
-        directions      = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         neigh_positions = [tadd(p, tmul(d, self.node_size)) for d in directions]
         return [n for n in neigh_positions if n in self._walkable]
 

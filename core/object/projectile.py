@@ -22,12 +22,12 @@ from resources import Resources
 from core.math import Vec2
 from core.collection import Collection
 from core.physics import PhysicsWorld, PhysicsBody
-from core.utils import (
-    image_set_size,
-    image_set_anchor_center)
+from core.utils import image_set_size, image_set_anchor_center
+
 
 def ProjectileCollection():
     return Collection(Projectile)
+
 
 class Projectile:
     SIZE = (15, 15)
@@ -42,25 +42,26 @@ class Projectile:
         self.image = Resources.instance.sprite("bullet")
         image_set_size(self.image, *self.SIZE)
         image_set_anchor_center(self.image)
-        self.sprite = pg.sprite.Sprite(self.image,
-            *position, batch=self.batch)
+        self.sprite = pg.sprite.Sprite(self.image, *position, batch=self.batch)
 
         # -- physics
         physics = PhysicsWorld.instance
         self.body = PhysicsBody(1, pm.moment_for_box(1, self.SIZE))
-        self.shape = pm.Poly.create_box(self.body, self.SIZE, radius=.6)
+        self.shape = pm.Poly.create_box(self.body, self.SIZE, radius=0.6)
         self.shape.filter = pm.ShapeFilter(categories=0x1)
 
         self.body.tag = tag
         self.body.position = position
         physics.add(self.body, self.shape)
-        physics.register_collision(self.shape.collision_type,
-            self.on_collision_enter, lambda other: None)
+        physics.register_collision(
+            self.shape.collision_type, self.on_collision_enter, lambda other: None
+        )
 
     def on_collision_enter(self, other):
-        #XXX Unwanted Behaviour: called for sensors shapes
+        # XXX Unwanted Behaviour: called for sensors shapes
         for shape in other.shapes:
-            if shape.sensor: continue
+            if shape.sensor:
+                continue
 
             res = shape.shapes_collide(self.shape)
             if res.points and not self.destroyed:
