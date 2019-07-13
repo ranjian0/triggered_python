@@ -16,7 +16,6 @@
 #  MA 02110-1301, USA.
 
 import types
-import pymunk as pm
 import pyglet as pg
 
 from core.scene import Scene
@@ -239,7 +238,7 @@ class Game(Application):
 
 
 def main():
-    res = Resources()
+    Resources()
     game = Game((1366, 680), "Triggered")
     game.run()
 
