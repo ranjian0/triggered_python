@@ -16,10 +16,7 @@
 #  MA 02110-1301, USA.
 
 import ctypes
-import pyglet as pg
-import itertools as it
-
-from pyglet.gl import *
+import pyglet.gl as gl
 from contextlib import contextmanager
 
 
@@ -31,7 +28,9 @@ def set_flag(name, value, items):
 @contextmanager
 def profile(perform=True):
     if perform:
-        import cProfile, pstats, io
+        import io
+        import pstats
+        import cProfile
 
         s = io.StringIO()
         pr = cProfile.Profile()
@@ -60,55 +59,55 @@ def profile(perform=True):
 
 @contextmanager
 def reset_matrix(w, h):
-    glMatrixMode(GL_MODELVIEW)
-    glPushMatrix()
-    glLoadIdentity()
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glPushMatrix()
+    gl.glLoadIdentity()
 
-    glMatrixMode(GL_PROJECTION)
-    glPushMatrix()
-    glLoadIdentity()
-    glOrtho(0, w, 0, h, -1, 1)
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPushMatrix()
+    gl.glLoadIdentity()
+    gl.glOrtho(0, w, 0, h, -1, 1)
 
     yield
 
-    glPopMatrix()
-    glMatrixMode(GL_MODELVIEW)
-    glPopMatrix()
+    gl.glPopMatrix()
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glPopMatrix()
 
 
 def draw_point(pos, color=(1, 0, 0, 1), size=5):
-    glColor4f(*color)
-    glPointSize(size)
+    gl.glColor4f(*color)
+    gl.glPointSize(size)
 
-    glBegin(GL_POINTS)
-    glVertex2f(*pos)
-    glEnd()
+    gl.glBegin(gl.GL_POINTS)
+    gl.glVertex2f(*pos)
+    gl.glEnd()
     # -- reset color
-    glColor4f(1, 1, 1, 1)
+    gl.glColor4f(1, 1, 1, 1)
 
 
 def draw_line(start, end, color=(1, 1, 0, 1), width=2):
-    glColor4f(*color)
-    glLineWidth(width)
+    gl.glColor4f(*color)
+    gl.glLineWidth(width)
 
-    glBegin(GL_LINES)
-    glVertex2f(*start)
-    glVertex2f(*end)
-    glEnd()
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex2f(*start)
+    gl.glVertex2f(*end)
+    gl.glEnd()
     # -- reset color
-    glColor4f(1, 1, 1, 1)
+    gl.glColor4f(1, 1, 1, 1)
 
 
 def draw_path(points, color=(1, 0, 1, 1), width=5):
-    glColor4f(*color)
-    glLineWidth(width)
+    gl.glColor4f(*color)
+    gl.glLineWidth(width)
 
-    glBegin(GL_LINE_STRIP)
+    gl.glBegin(gl.GL_LINE_STRIP)
     for point in points:
-        glVertex2f(*point)
-    glEnd()
+        gl.glVertex2f(*point)
+    gl.glEnd()
     # -- reset color
-    glColor4f(1, 1, 1, 1)
+    gl.glColor4f(1, 1, 1, 1)
 
 
 def image_set_size(img, w, h):
@@ -136,7 +135,7 @@ def get_gl_translation():
     """ return global gl translation """
     arr = ctypes.c_double * 16
     mat = arr(*list(range(16)))
-    glGetDoublev(GL_MODELVIEW_MATRIX, mat)
+    gl.glGetDoublev(gl.GL_MODELVIEW_MATRIX, mat)
     return list(mat)[-4:-1]
 
 
