@@ -130,11 +130,11 @@ class Resources:
     def _parse_level(self, file):
         try:
             return pickle.load(file)
-        except EOFError as e:
+        except EOFError:
             # -- file object already consumed
             try:
                 return pickle.load(open(file.name, "rb"))
-            except EOFError as e:
+            except EOFError:
                 # -- file is actually empty, return default data
                 return LevelData(
                     [[]],
@@ -145,3 +145,16 @@ class Resources:
                     [],
                     [f"Objective {i+1}" for i in range(3)],
                 )
+
+
+def sorted_levels(idx=None):
+    if idx or idx == 0:
+        return sorted(
+            Resources.instance.levels(),
+            key=lambda l: int(os.path.basename(l).split(".")[0].split("_")[-1]),
+        )[idx]
+    else:
+        return sorted(
+            Resources.instance.levels(),
+            key=lambda l: int(os.path.basename(l).split(".")[0].split("_")[-1]),
+        )
