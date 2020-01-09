@@ -517,7 +517,7 @@ class RectangleShape:
                 gl.GL_POLYGON,
                 self._group,
                 ("v2f", circle),
-                ("c4B", self._color * (len(circle) // 2)),
+                ("c4B", self._color * resolution),
             )
 
 
@@ -596,7 +596,7 @@ class CircleShape:
             gl.GL_POLYGON,
             self._group,
             ("v2f", circle),
-            ("c4B", self._color * (len(circle) // 2)),
+            ("c4B", self._color * resolution),
         )
 
 
