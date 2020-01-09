@@ -18,7 +18,7 @@
 import math
 import operator
 import pyglet as pg
-from pyglet.gl import *
+import pyglet.gl as gl
 from .math import Rect
 from .utils import reset_matrix
 
@@ -368,13 +368,13 @@ class Frame(Container):
 
     def on_draw(self):
         with reset_matrix(self.w, self.h):
-            glPushAttrib(GL_ENABLE_BIT)
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            gl.glPushAttrib(gl.GL_ENABLE_BIT)
+            gl.glEnable(gl.GL_BLEND)
+            gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
             super().on_draw()
 
-            glPopAttrib()
+            gl.glPopAttrib()
 
 
 class RectangleShape:
@@ -468,7 +468,7 @@ class RectangleShape:
             x2, y2 = x + w, y - h
             self._vertices = self._batch.add(
                 4,
-                GL_QUADS,
+                gl.GL_QUADS,
                 self._group,
                 ("v2f", [x1, y1, x2, y1, x2, y2, x1, y2]),
                 ("c4B", self._color * 4),
@@ -509,8 +509,8 @@ class RectangleShape:
                 )
 
             self._vertices = self._batch.add(
-                len(circle) // 2,
-                GL_POLYGON,
+                resolution,
+                gl.GL_POLYGON,
                 self._group,
                 ("v2f", circle),
                 ("c4B", self._color * (len(circle) // 2)),
@@ -588,8 +588,8 @@ class CircleShape:
             )
 
         self._vertices = self._batch.add(
-            len(circle) // 2,
-            GL_POLYGON,
+            resolution,
+            gl.GL_POLYGON,
             self._group,
             ("v2f", circle),
             ("c4B", self._color * (len(circle) // 2)),
