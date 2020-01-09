@@ -102,17 +102,21 @@ class Widget(object):
 
     def on_draw(self):
         self._batch.draw()
+        for shape in self.shapes.values():
+            shape._batch.draw()
+        for elem in self.elements.values():
+            elem._batch.draw()
 
     def on_update(self, dt):
         if self._dirty:
             # -- update size
             self.determine_size()
 
-            # -- update batches and groups
-            for k, v in self.shapes.items():
-                v.update_batch(self._batch, self._group)
-            for k, v in self.elements.items():
-                v.update_batch(self._batch, self._group)
+            # # -- update batches and groups
+            for idx, v in enumerate(self.shapes.values()):
+                v.update_batch(pg.graphics.Batch(), pg.graphics.OrderedGroup(idx))
+            for idx, v in enumerate(self.elements.values()):
+                v.update_batch(pg.graphics.Batch(), pg.graphics.OrderedGroup(idx))
             self._dirty = False
 
     def on_resize(self, *args):
