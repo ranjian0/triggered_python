@@ -677,8 +677,8 @@ class Label(Widget):
         font = self.content.document.get_font()
         height = font.ascent - font.descent
 
-        self._w = self.content.content_width
-        self._h = height
+        self._w = max(self.content.content_width, self._w)
+        self._h = max(height, self._h)
 
     def on_update(self, dt):
         if self._dirty:
@@ -743,8 +743,8 @@ class TextButton(BaseButton):
         font = self.content.document.get_font()
         height = font.ascent - font.descent
 
-        self._w = self.content.content_width
-        self._h = height
+        self._w = max(self.content.content_width, self._w)
+        self._h = max(height, self._h)
 
     def on_update(self, dt):
         if self._dirty:
