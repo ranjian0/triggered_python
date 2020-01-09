@@ -732,6 +732,9 @@ class TextButton(BaseButton):
         self.elements["text"] = self.content
         self.shapes["background"] = RectangleShape()
 
+        self._radius = kwargs.get("radius", 0)
+        self.shapes["background"].radius = self._radius
+
     def _get_text(self):
         return self.elements["text"].text
 
