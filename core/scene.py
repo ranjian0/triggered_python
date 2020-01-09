@@ -15,6 +15,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import pprint
 import operator as op
 
 
@@ -25,6 +26,9 @@ class Scene(object):
         super().__init__()
         self.name = name
         self.objects = dict()
+
+    def __repr__(self):
+        return "Scene<name={}, {}>".format(self.name, pprint.pformat(self.objects))
 
     def add(self, name, obj):
         if name in self.objects.keys():
