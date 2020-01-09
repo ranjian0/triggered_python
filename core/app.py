@@ -45,8 +45,12 @@ class Application(object):
         self._window.push_handlers(on_key_press=self._skip_escape)
 
         # XXX A CUSTOM EVENT DISPATCHER
-        # Why? - Guarantees a symmetrical stack with process and remove methods
-        # NOTICE:: we push an on_draw event to the window during run, making its stack unsymmetrical
+        # WHY:
+        # Guarantees a symmetrical stack with process and remove methods
+
+        # NOTE:
+        # we push an on_draw event to the window during run, making its stack unsymmetrical
+
         self._events = AppEvents()
         self._window.push_handlers(
             **{ev: getattr(self._events, "do_" + ev[3:]) for ev in EVENTS}
