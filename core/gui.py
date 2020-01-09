@@ -168,7 +168,6 @@ class Container(Widget):
         self.children.append(item)
         item.parent = self
         item._dirty = True
-        self._dirty = True
 
     def __iadd__(self, item):
         if isinstance(item, (list, tuple)):
