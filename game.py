@@ -18,8 +18,9 @@
 import types
 import pyglet as pg
 
-from core.scene import Scene
 from resources import Resources
+
+from core.scene import Scene
 from core.app import Application
 from core.object import Camera, Map
 from core.physics import PhysicsWorld
@@ -124,14 +125,17 @@ class Game(Application):
             # -- buttons
             VLayout(
                 TextButton(
-                    "Play", font_size=24, callback=lambda: self._switch_scene("game")
+                    "Play", font_size=24, w=200, radius=10,
+                    callback=lambda: self._switch_scene("game")
                 ),
                 TextButton(
-                    "Settings",
-                    font_size=24,
+                    "Settings", font_size=24, w=200, radius=10,
                     callback=lambda: self._switch_scene("settings"),
                 ),
-                TextButton("Exit", font_size=24, callback=lambda: pg.app.exit()),
+                TextButton(
+                    "Exit", font_size=24, w=200, radius=10,
+                    callback=lambda: pg.app.exit()
+                ),
             ),
         )
         gui += layout
