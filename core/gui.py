@@ -488,9 +488,9 @@ class RectangleShape:
             h -= self._radius * 2
 
             transform = [
-                (x + w, y),  # - top right
-                (x, y),  # - top left
-                (x, y - h),  # - bottom left
+                (x + w, y),      # - top right
+                (x, y),          # - top left
+                (x, y - h),      # - bottom left
                 (x + w, y - h),  # - bottom right
             ]
 
@@ -640,12 +640,12 @@ class InputElement(object):
         self.caret.delete()
         self.layout.delete()
 
-        ### workaround for pyglet issue 408
+        # workaround for pyglet issue 408
         self.layout.batch = None
         if self.layout._document:
             self.layout._document.remove_handlers(self.layout)
         self.layout._document = None
-        ### end workaround
+        # end workaround
 
         self.layout = pg.text.layout.IncrementalTextLayout(
             self.document,
