@@ -16,6 +16,7 @@
 #  MA 02110-1301, USA.
 
 import math
+import pprint
 import operator
 import pyglet as pg
 import pyglet.gl as gl
@@ -159,6 +160,9 @@ class Container(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.children = []
+
+    def __repr__(self):
+        return "Frame<children={}>".format(pprint.pformat(self.children))
 
     def _add(self, item):
         self.children.append(item)
