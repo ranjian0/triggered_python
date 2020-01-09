@@ -454,20 +454,17 @@ class RectangleShape:
 
     def update_batch(self, batch, group):
         self._batch, self._group = batch, group
-        if self._vertices:
-            self._vertices.delete()
-            self._vertices = None
-
         self._update()
 
     def update(self, x, y, w, h):
         self._x, self._y, self._w, self._h = x, y, w, h
-        if self._vertices:
-            self._vertices.delete()
-            self._vertices = None
         self._update()
 
     def _update(self):
+        if self._vertices:
+            self._vertices.delete()
+            self._vertices = None
+
         x, y, w, h = self._x, self._y, self._w, self._h
 
         if self._radius == 0:
