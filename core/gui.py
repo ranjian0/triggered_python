@@ -697,6 +697,7 @@ class BaseButton(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._callback = kwargs.get("callback", None)
+        self._hover_color = kwargs.get("hover_color", (200, 200, 0, 255))
         self._state = BaseButton.STATE_DEFAULT
 
     def on_mouse_motion(self, x, y, dx, dy):
@@ -756,7 +757,7 @@ class TextButton(BaseButton):
             if self._state == BaseButton.STATE_DEFAULT:
                 background.color = (100, 100, 100, 255)
             elif self._state == BaseButton.STATE_HOVERED:
-                background.color = (200, 200, 0, 255)
+                background.color = self._hover_color
             elif self._state == BaseButton.STATE_PRESSED:
                 background.color = (200, 200, 200, 255)
 
