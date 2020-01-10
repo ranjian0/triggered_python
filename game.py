@@ -244,7 +244,7 @@ class Game(Application):
 
 def main():
     Resources()
-    game = Game((1366, 680), "Triggered")
+    game = Game((1280, 720), "Triggered")
     game.run()
 
 
