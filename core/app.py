@@ -15,10 +15,8 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import functools
 import pyglet as pg
-
-from .utils import profile
+from core.utils import profile
 
 
 class Application(object):
