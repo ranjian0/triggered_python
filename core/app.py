@@ -110,7 +110,7 @@ class Application(object):
     @classmethod
     def remove(cls, obj):
         self = cls.instance
-        self._events.pop_handlers()
+        self._events.remove_handlers()
         if hasattr(obj, "on_update"):
             pg.clock.unschedule(obj.on_update)
 
