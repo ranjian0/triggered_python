@@ -118,7 +118,7 @@ class Game(Application):
         gui = Frame()
 
         # Main Layout
-        layout = VLayout()
+        layout = VLayout(margins=(50, 20))
         layout += (
             # -- title text
             HLayout(Label("TRIGGERED", font_size=42)),
@@ -136,6 +136,7 @@ class Game(Application):
                     "Exit", font_size=24, w=200, radius=10,
                     callback=lambda: pg.app.exit()
                 ),
+                margins=(0, 20)
             ),
         )
         gui += layout
@@ -243,7 +244,7 @@ class Game(Application):
 
 def main():
     Resources()
-    game = Game((1366, 680), "Triggered")
+    game = Game((1280, 720), "Triggered")
     game.run()
 
 

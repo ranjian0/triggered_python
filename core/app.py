@@ -16,8 +16,7 @@
 #  MA 02110-1301, USA.
 
 import pyglet as pg
-
-from .utils import profile
+from core.utils import profile
 
 
 class Application(object):
